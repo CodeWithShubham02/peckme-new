@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:peckme/view/postponed_lead_screen.dart';
 import 'package:peckme/view/refix_lead_screen.dart';
+import 'package:peckme/view/widget/webview_widget.dart';
 
 import '../controller/lead_detail_controller.dart';
 import '../model/lead_detail_model.dart';
@@ -44,6 +45,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
         if (snapshot.hasData && snapshot.data!.data.isNotEmpty) {
           final lead = snapshot.data!.data[0]; // Get the first item
           final String? callDate = lead.callDate;
+
           print("Shubham id :$callDate");
           return SingleChildScrollView(
             child: Padding(
@@ -225,7 +227,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                       child: const  Center(child: Text('Open Client App', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
                     ):
                   lead.client_mobile_app=="2"?
-                    lead.fiData=="1"?
+                    lead.fiData==1?
                     ElevatedButton(
                       onPressed: (){},
                       style: ElevatedButton.styleFrom(
@@ -234,8 +236,172 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                       ),
                       child: const  Center(child: Text('Select Doc', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
                     ):
-                    ElevatedButton(
-                      onPressed: (){},
+                    lead.clientId=="61"?ElevatedButton(
+                      onPressed: (){
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => WebViewScreen(
+                              url:"https://fms.bizipac.com/apinew/apps1/index.php?lead_id=${lead.leadId}#!/",
+                              customerName:lead.customerName,
+                              client: lead.clientName,
+                              leadid: lead.leadId,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:  AppConstant.appBattonBack,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                      ),
+                      child: const  Center(child: Text('Field Invest', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                    ):lead.clientId=="63"?ElevatedButton(
+                      onPressed: (){
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => WebViewScreen(
+                              url:"https://fms.bizipac.com/apinew/fpl_fi/index.php?lead_id=${lead.leadId}#!/",
+                              customerName:lead.customerName,
+                              client: lead.clientName,
+                              leadid: lead.leadId,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:  AppConstant.appBattonBack,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                      ),
+                      child: const  Center(child: Text('Field Invest', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                    ):lead.clientId=="68"?ElevatedButton(
+                      onPressed: (){
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => WebViewScreen(
+                              url:"https://fms.bizipac.com/apinew/chola_fi/index.php?lead_id=${lead.leadId}#!/",
+                              customerName:lead.customerName,
+                              client: lead.clientName,
+                              leadid: lead.leadId,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:  AppConstant.appBattonBack,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                      ),
+                      child: const  Center(child: Text('Field Invest', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                    ):lead.clientId=="71"?ElevatedButton(
+                      onPressed: (){
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => WebViewScreen(
+                              url:"https://fms.bizipac.com/apinew/paysense_fi/index.php?lead_id=${lead.leadId}#!/",
+                              customerName:lead.customerName,
+                              client: lead.clientName,
+                              leadid: lead.leadId,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:  AppConstant.appBattonBack,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                      ),
+                      child: const  Center(child: Text('Field Invest', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                    ):lead.clientId=="72"?ElevatedButton(
+                      onPressed: (){
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => WebViewScreen(
+                              url:"https://fms.bizipac.com/apinew/tata_fi/index.php?lead_id=${lead.leadId}#!/",
+                              customerName:lead.customerName,
+                              client: lead.clientName,
+                              leadid: lead.leadId,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:  AppConstant.appBattonBack,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                      ),
+                      child: const  Center(child: Text('Field Invest', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                    ):lead.clientId=="75"?ElevatedButton(
+                      onPressed: (){
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => WebViewScreen(
+                              url:"https://fms.bizipac.com/apinew/hytone_fi/index.php?lead_id=${lead.leadId}#!/",
+                              customerName:lead.customerName,
+                              client: lead.clientName,
+                              leadid: lead.leadId,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:  AppConstant.appBattonBack,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                      ),
+                      child: const  Center(child: Text('Field Invest', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                    ):lead.clientId=="79"?ElevatedButton(
+                      onPressed: (){
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => WebViewScreen(
+                              url:"https://fms.bizipac.com/apinew/fmec_fi/index.php?lead_id=${lead.leadId}#!/",
+                              customerName:lead.customerName,
+                              client: lead.clientName,
+                              leadid: lead.leadId,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:  AppConstant.appBattonBack,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                      ),
+                      child: const  Center(child: Text('Field Invest', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                    ):lead.clientId=="80"?ElevatedButton(
+                      onPressed: (){
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => WebViewScreen(
+                              url:"https://fms.bizipac.com/apinew/fmec_Rem_fi/index.php?lead_id=${lead.leadId}#!/",
+                              customerName:lead.customerName,
+                              client: lead.clientName,
+                              leadid: lead.leadId,
+                            ),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:  AppConstant.appBattonBack,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                      ),
+                      child: const  Center(child: Text('Field Invest', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                    ):ElevatedButton(
+                      onPressed: (){
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => WebViewScreen(
+                              url:"https://fms.bizipac.com/fi/index.php?lead_id=${lead.leadId}#!/",
+                              customerName:lead.customerName,
+                              client: lead.clientName,
+                              leadid: lead.leadId,
+                            ),
+                          ),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor:  AppConstant.appBattonBack,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
@@ -258,6 +424,8 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                     ),
                     child: const  Center(child: Text('Select doc', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
                   ),
+                  lead.clientId==49?
+                    Text("Message (Bank Bazar staus ${lead.surrogate})"):Text(''),
                   ElevatedButton(
                     onPressed: (){},
                     style: ElevatedButton.styleFrom(
@@ -266,9 +434,6 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                     ),
                     child: const  Center(child: Text('Status', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
                   ),
-                  lead.clientId==49?
-                    Text("Message (Bank Bazar staus ${lead.surrogate})"):Text(''),
-            
                   ElevatedButton(
                     onPressed: (){},
                     style: ElevatedButton.styleFrom(
