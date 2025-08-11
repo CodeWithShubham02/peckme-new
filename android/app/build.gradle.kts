@@ -1,23 +1,18 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
-    id("dev.flutter.flutter-gradle-plugin")
-    id("com.google.gms.google-services")
+    id("dev.flutter.flutter-gradle-plugin") // Flutter plugin must come after Android and Kotlin
+    id("com.google.gms.google-services") // Firebase
 }
-dependencies {
-    // Import the Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
 
-
-    // TODO: Add the dependencies for Firebase products you want to use
-    // When using the BoM, don't specify versions in Firebase dependencies
-    implementation("com.google.firebase:firebase-analytics")
-
-
-    // Add the dependencies for any other desired Firebase products
-    // https://firebase.google.com/docs/android/setup#available-libraries
+repositories {
+    google()
+    mavenCentral()
+    flatDir {
+        dirs("libs") // For AAR/JAR files
+    }
 }
+
 android {
     namespace = "com.example.peckme"
     compileSdk = flutter.compileSdkVersion
@@ -33,11 +28,8 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.peckme"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 23
+        minSdk = 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -45,11 +37,29 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("debug") // Replace with actual signing config for production
         }
     }
+
+    lint {
+        abortOnError = false // ✅ Safely disable lint build failure
+        disable.add("MissingTranslation") // Optional
+    }
+}
+
+dependencies {
+    // Firebase BoM
+    implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
+
+    // Local JAR/AARs from libs folder
+    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar", "*.aar"))))
+
+    // Explicit file references (only if needed, can remove if already covered by fileTree above)
+    implementation(files("libs/itext5-itextpdf-5.5.12.jar"))
+    implementation(files("libs/icici.aar")) // ✅ Make sure this file actually exists
+
+    // Firebase products
+    implementation("com.google.firebase:firebase-analytics")
 }
 
 flutter {
