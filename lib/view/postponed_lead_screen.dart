@@ -77,11 +77,11 @@ class _PostponeLeadScreenState extends State<PostponeLeadScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.location.toString()),
-            Text(widget.leadId.toString()),
-            Text(uid.toString()),
-            Text(currentDate.toString()),
-            Text(currentTime.toString()),
+            // Text(widget.location.toString()),
+            // Text(widget.leadId.toString()),
+            // Text(uid.toString()),
+            // Text(currentDate.toString()),
+            // Text(currentTime.toString()),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text('Select reason for Refix Appointment : *',style: TextStyle(color: Colors.black,fontSize: 14,fontWeight: FontWeight.bold,fontFamily: 'RaleWay'),),

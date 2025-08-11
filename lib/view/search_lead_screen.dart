@@ -45,7 +45,6 @@ class _SearchLeadScreenState extends State<SearchLeadScreen> {
           children: [
             Column(
               children: [
-                Text("Mobile : ${uid.toString() + mobile.toString()}"),
                 SizedBox(height: 16),
                 Padding(
                   padding: const EdgeInsets.all(8.0),

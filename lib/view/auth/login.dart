@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -13,6 +15,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../controller/auth_controller.dart';
 import '../../controller/get_device_token_controller.dart';
 import '../../controller/otp_controller.dart';
+import '../../model/user_model.dart';
 import '../../utils/app_constant.dart';
 import 'forgot.dart';
 
@@ -368,6 +371,8 @@ class _LoginState extends State<Login> {
                            dismissDirection: DismissDirection.horizontal,
 
                          );
+
+
 
                         } else {
                           Get.snackbar("Error", 'Your OTP does not match please check the otp!!',

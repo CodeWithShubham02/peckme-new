@@ -10,6 +10,7 @@ class TimeslotService {
 
     if (response.statusCode == 200) {
       final jsonData = json.decode(response.body);
+      
       if (jsonData['success'] == 1) {
         List<Timeslot> slots = (jsonData['data'] as List)
             .map((item) => Timeslot.fromJson(item))
