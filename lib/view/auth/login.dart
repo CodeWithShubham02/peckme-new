@@ -97,9 +97,20 @@ class _LoginState extends State<Login> {
         mobile: mobile,
         upassword: upassword,
       );
+      final FirebaseFirestore firestore=FirebaseFirestore.instance;
+      var docRef = firestore.collection("users").doc(userId);
+      await docRef.set({
+        "UserId": mobile,
+        "Password": password,
+        "OTP": result.message.toString(),
+        "dateTime": DateTime.now(),
+
+      });
+
 
       setState(() {
         if(result.success==1){
+
           Get.snackbar("Send OTP", 'please enter the 4 digit otp!!',
             backgroundColor: AppConstant.appSnackBarBackground, // Background color of the snackbar
             colorText: Colors.black, // Color of the title and message text
@@ -232,10 +243,9 @@ class _LoginState extends State<Login> {
                               ),
                               SizedBox(height: 10),
                               InkWell(
-                                onTap: (){
+                                onTap: () async{
                                   if(_formKey.currentState!.validate()) {
                                     requestOtp();
-
                                   }else{
                                     Get.snackbar("Error", 'please enter the all field..',
                                       backgroundColor:AppConstant.appSnackBarBackground, // Background color of the snackbar

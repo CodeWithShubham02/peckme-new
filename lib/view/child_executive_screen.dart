@@ -7,6 +7,7 @@ import 'package:peckme/model/child_executive_model.dart';
 import 'package:peckme/utils/app_constant.dart';
 import 'package:peckme/view/dashboard_screen.dart';
 import 'package:peckme/view/received_lead_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../controller/multiple_lead_transfer_controller.dart';
 import '../model/new_lead_model.dart';
@@ -32,6 +33,7 @@ class _ChildExecutiveScreenState extends State<ChildExecutiveScreen> {
   void initState() {
     super.initState();
     _fetchData();
+    loadUserData();
   }
 
   Future<void> _fetchData() async {
@@ -50,6 +52,16 @@ class _ChildExecutiveScreenState extends State<ChildExecutiveScreen> {
       });
       print('Error fetching leads: $e');
     }
+  }
+  String uid = '';
+
+  void loadUserData() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+
+      uid = prefs.getString('uid') ?? '';
+
+    });
   }
 
   void toggleSelection(int index) {
@@ -94,25 +106,22 @@ class _ChildExecutiveScreenState extends State<ChildExecutiveScreen> {
               ),
               child: ListTile(
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 8.0, vertical: 8.0),
+                    horizontal: 8.0, vertical: 1.0),
+                leading: CircleAvatar(
+                  backgroundColor: Colors.blueAccent, // You can customize the color
+                  child: Text(
+                    lead.fname[0].toUpperCase(), // Displays the first letter of the name
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
                 title: Text(
-                  lead.cid,
+                  lead.fname,
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
-                  ),
-                ),
-                subtitle: Padding(
-                  padding: const EdgeInsets.only(top: 4.0),
-                  child: Row(
-                    children: [
-                      Text("LeadId : ${lead.fname},  ",
-                        style: const TextStyle(color: Colors.grey,fontSize: 12),
-                      ),
-                      Text("${lead.address}",
-                        style: const TextStyle(color: Colors.grey,fontSize: 12),
-                      ),
-                    ],
                   ),
                 ),
                 trailing: Checkbox(
@@ -149,7 +158,7 @@ class _ChildExecutiveScreenState extends State<ChildExecutiveScreen> {
             for (var selectedLead in selectedLeads) {
               for (var leadId in leadIds) {
                 payloadData.add({
-                  "user_id": "7494",
+                  "user_id": uid,
                   "child_user_id": selectedLead.cid,
                   "lead_id": leadId,
                 });

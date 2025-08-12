@@ -229,12 +229,10 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
                                         try {
                                           // // Get coordinates from both addresses
                                           List<Location>
-                                          locations = await locationFromAddress(
-                                            "Bizi Couriers Pvt Ltd 337, Omkar Apartment Mumbai-400057, Mahaashtra ,india ",
-                                          );
+                                          locations = await locationFromAddress(lead.resAddress);
                                           List<Location> locations2 =
                                               await locationFromAddress(
-                                                "Malad West Mumbai Station",
+                                                lead.clientname
                                               );
                                           // print("----------------");
                                           // print(locations);

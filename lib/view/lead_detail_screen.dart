@@ -34,11 +34,14 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
   Future<LeadResponse?>? _futureLead;
   final platform=const MethodChannel("com.example.peckme/channel1");
   String user_id = '';
+  String branchId='';
   void loadUserData() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
 
       user_id = prefs.getString('uid') ?? '';
+      branchId = prefs.getString('branchId') ?? '';
+
 
     });
   }
@@ -102,6 +105,17 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
     // Or, if you know the package ID for Android:
     // launchOtherApp('market://details?id=com.facebook.lite'); // Opens Play Store page
   }
+  void _launchInBrowser(String url) async {
+    Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(
+        uri,
+        mode: LaunchMode.platformDefault,
+      );
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
 
   // Function to launch another app
   Future<void> launchOtherApp(String url) async {
@@ -144,6 +158,8 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
   }
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
         backgroundColor:AppConstant.appInsideColor,
@@ -168,123 +184,326 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   //Text(location_lat+location_long),
-
-                  Card(
-                    color: Colors.white,
-                    elevation: 5,
-                    child: Container(
-                      //color: Colors.white,
-                      height: MediaQuery.of(context).size.height*0.4,
-                      child: Column(
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text("Lead_id - ", style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 13,color: Colors.black)),
-                                          Text(lead.leadId, style: const TextStyle(fontWeight: FontWeight.normal,color: Colors.black,fontSize: 12)),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
+                  // Card Section
+                  Container(
+                    padding: EdgeInsets.all(screenWidth * 0.04),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.2),
+                          blurRadius: 61,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  "Lead_id - ",
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold, fontSize: 15),
                                 ),
+                                Text(
+                                  "${lead.leadId}",
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.normal, fontSize: 14),
+                                ),
+                              ],
+                            ),
+                            SizedBox(width: screenWidth * 0.20),
+                            Row(
+                              children: [
+                                Text(
+                                  "Client_id - ",
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold, fontSize: 15),
+                                ),
+                                Text(
+                                  "${lead.clientId}",
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.normal, fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: screenHeight * 0.01),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Text(
+                                    "Customer Name - ",
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold, fontSize: 15),
+                                  ),
+                                  SizedBox(width: screenWidth * 0.005),
+                                  Expanded(
+                                    child: Text(
+                                      "${lead.customerName}",
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      softWrap: true,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.normal, fontSize: 14),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Column(
-                                  children: [
-                                    Row(
+                            ),
+
+                          ],
+                        ),
+                        SizedBox(height: screenHeight * 0.005),
+                        Row(
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  "Product - ",
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold, fontSize: 15),
+                                ),
+                                Text(
+                                  "${lead.product}",
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.normal, fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: screenHeight * 0.005),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Text(
+                                    "Lead Date - ",
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold, fontSize: 15),
+                                  ),
+                                  SizedBox(width: screenWidth * 0.005),
+                                  Expanded(
+                                    child: Text(
+                                      "${lead.leadDate}",
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      softWrap: true,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.normal, fontSize: 14),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          ],
+                        ),
+                        SizedBox(height: screenHeight * 0.005),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Text(
+                                    "Athena Lead Id - ",
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold, fontSize: 15),
+                                  ),
+                                  SizedBox(width: screenWidth * 0.005),
+                                  Expanded(
+                                    child: Text(
+                                      "${lead.athenaLeadId}",
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      softWrap: true,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.normal, fontSize: 14),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          ],
+                        ),
+                        SizedBox(height: screenHeight * 0.005),
+                        Row(
+
+                          children: [
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Text(
+                                    "Address - ",
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold, fontSize: 15),
+                                  ),
+                                  SizedBox(width: screenWidth * 0.05),
+                                  Expanded(
+                                    child: Text(
+                                      "${lead.resAddress}",
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      softWrap: true,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.normal, fontSize: 14),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          ],
+                        ),
+                        SizedBox(height: screenHeight * 0.005),
+                        Center(child: InkWell(
+                          onTap: (){
+                            showDialog(context: context, builder: (_)=>
+                                AlertDialog(
+                                  elevation: 5,
+                                  clipBehavior:Clip.hardEdge,
+                                  backgroundColor: Colors.white,
+                                  title: Container(
+                                    height: MediaQuery.of(context).size.height*.7,
+                                    width:800,
+                                    color: Colors.white,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text("Client_id - ", style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 13,color: Colors.black)),
-                                        Text(lead.clientId, style: const TextStyle(fontWeight: FontWeight.normal,color: Colors.black,fontSize: 12)),
+                                        Row(
+                                          children: [
+                                            IconButton(onPressed: (){
+                                              Navigator.pop(context);
+                                            }, icon: Icon(Icons.cancel),),
+                                          ],
+                                        ),
+
+                                        Row(
+                                          children: [
+                                            Text("Emp Name : ",style: TextStyle(fontSize: 12,color: Colors.black,fontWeight: FontWeight.bold),),
+                                            Flexible(child: Text(lead.empName,softWrap:true,maxLines:2,style: TextStyle(fontSize: 10,color: Colors.black,fontWeight: FontWeight.normal))),
+                                          ],
+                                        ),
+                                        SizedBox(height: 2,),
+
+                                        Row(
+                                          children: [
+                                            Text("Client Name : ",style: TextStyle(fontSize: 12,color: Colors.black,fontWeight: FontWeight.bold),),
+                                            Flexible(child: Text(lead.clientName,softWrap:true,maxLines:2,style: TextStyle(fontSize: 10,color: Colors.black,fontWeight: FontWeight.normal))),
+                                          ],
+                                        ),
+                                        SizedBox(height: 2,),
+                                        Row(
+                                          children: [
+                                            Text("Product : ",style: TextStyle(fontSize: 12,color: Colors.black,fontWeight: FontWeight.bold),),
+                                            Flexible(child: Text(lead.product,softWrap:true,maxLines:2,style: TextStyle(fontSize: 10,color: Colors.black,fontWeight: FontWeight.normal))),
+                                            SizedBox(width: 1,),
+                                            Text("Sourse : ",style: TextStyle(fontSize: 12,color: Colors.black,fontWeight: FontWeight.bold),),
+                                            Flexible(child: Text(lead.source,softWrap:true,maxLines:2,style: TextStyle(fontSize: 10,color: Colors.black,fontWeight: FontWeight.normal))),
+
+                                          ],
+                                        ),
+                                        SizedBox(height: 2,),
+                                        Row(
+                                          children: [
+                                            Text("App Location : ",style: TextStyle(fontSize: 12,color: Colors.black,fontWeight: FontWeight.bold),),
+                                            Text(lead.appLoc,softWrap:true,maxLines:2,style: TextStyle(fontSize: 10,color: Colors.black,fontWeight: FontWeight.normal)),
+                                          ],
+                                        ),
+                                        SizedBox(height: 2,),
+                                        Row(
+                                          children: [
+                                            Text("Doc By Tc : ",style: TextStyle(fontSize: 12,color: Colors.black,fontWeight: FontWeight.bold),),
+                                            Flexible(child: Text(lead.doc,softWrap:true,maxLines:5,style: TextStyle(fontSize: 10,color: Colors.black,fontWeight: FontWeight.normal))),
+                                          ],
+                                        ),
+                                        SizedBox(height: 2,),
+                                        Row(
+                                          children: [
+                                            Text("Account Holder : ",style: TextStyle(fontSize: 12,color: Colors.black,fontWeight: FontWeight.bold),),
+                                            Text(lead.accHolder,softWrap:true,maxLines:5,style: TextStyle(fontSize: 10,color: Colors.black,fontWeight: FontWeight.normal)),
+                                          ],
+                                        ),
+                                        SizedBox(height: 2,),
+
+                                        Row(
+                                          children: [
+                                            Text("Aadharcard : ",style: TextStyle(fontSize: 12,color: Colors.black,fontWeight: FontWeight.bold),),
+                                            Text(lead.aadharCard,softWrap:true,maxLines:5,style: TextStyle(fontSize: 10,color: Colors.black,fontWeight: FontWeight.normal)),
+                                          ],
+                                        ),
+                                        SizedBox(height: 2,),
+                                        Row(
+                                          children: [
+                                            Text("Athena Lead : ",style: TextStyle(fontSize: 12,color: Colors.black,fontWeight: FontWeight.bold),),
+                                            Text(lead.athenaLeadId,softWrap:true,maxLines:2,style: TextStyle(fontSize: 10,color: Colors.black,fontWeight: FontWeight.normal)),
+                                          ],
+                                        ),
+                                        SizedBox(height: 2,),
+                                        Row(
+                                          children: [
+                                            Text("City : ",style: TextStyle(fontSize: 12,color: Colors.black,fontWeight: FontWeight.bold),),
+                                            Text(lead.city,softWrap:true,maxLines:2,style: TextStyle(fontSize: 10,color: Colors.black,fontWeight: FontWeight.normal)),
+                                          ],
+                                        ),
+                                        SizedBox(height: 2,),
+                                        Row(
+                                          children: [
+                                            Text("office Pin Code : ",style: TextStyle(fontSize: 12,color: Colors.black,fontWeight: FontWeight.bold),),
+                                            Text(lead.offPincode,softWrap:true,maxLines:2,style: TextStyle(fontSize: 10,color: Colors.black,fontWeight: FontWeight.normal)),
+                                          ],
+                                        ),
+                                        SizedBox(height: 2,),
+                                        Row(
+                                          children: [
+                                            Text("App Address : ",style: TextStyle(fontSize: 12,color: Colors.black,fontWeight: FontWeight.bold),),
+                                            Flexible(child: Text(lead.appAdd,softWrap:true,maxLines:5,style: TextStyle(fontSize: 10,color: Colors.black,fontWeight: FontWeight.normal))),
+                                          ],
+                                        ),
+                                        SizedBox(height: 2,),
+                                        Row(
+                                          children: [
+                                            Text("Off Address : ",style: TextStyle(fontSize: 12,color: Colors.black,fontWeight: FontWeight.bold),),
+                                            Flexible(child: Text(lead.offAddress,softWrap:true,maxLines:5,style: TextStyle(fontSize: 10,color: Colors.black,fontWeight: FontWeight.normal))),
+                                          ],
+                                        ),
+                                        SizedBox(height: 2,),
+                                        Row(
+                                          children: [
+                                            Text("Res Address : ",style: TextStyle(fontSize: 12,color: Colors.black,fontWeight: FontWeight.bold),),
+                                            Flexible(child: Text(lead.resAddress,softWrap:true,maxLines:5,style: TextStyle(fontSize: 10,color: Colors.black,fontWeight: FontWeight.normal))),
+                                          ],
+                                        ),
+
+                                        SizedBox(height: 2,),
                                       ],
                                     ),
-                                  ],
-                                ),
-                              ),
-
-                            ],
-                          ),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text("Customer Name - ", style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 13,color: Colors.black)),
-                                          Text(lead.customerName, style: const TextStyle(fontWeight: FontWeight.normal,color: Colors.black,fontSize: 12)),
-                                        ],
-                                      ),
-                                    ],
                                   ),
                                 ),
-                              ),
-
-
-                            ],
-                          ),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            );
+                          },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        children: [
-                                          Text("Address - ", style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 13,color: Colors.black)),
-                                          Expanded(child: Text(lead.resAddress,textAlign:TextAlign.left,maxLines: 6,overflow: TextOverflow.clip, style: const TextStyle(fontWeight: FontWeight.normal,color: Colors.black,fontSize: 12))),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-
-
+                              Icon(Icons.arrow_drop_down,color: Colors.black,size: 30,),
                             ],
                           ),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text("Customer Name - ", style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 13,color: Colors.black)),
-                                          Text(lead.customerName, style: const TextStyle(fontWeight: FontWeight.normal,color: Colors.black,fontSize: 12)),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-
-
-                            ],
-                          ),
-                        ],
-                      ),
+                        )),
+                      ],
                     ),
                   ),
-
-                  Divider(),
+                  SizedBox(height: screenHeight * 0.0),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -293,18 +512,14 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                       Padding(
                         padding: const EdgeInsets.all(1.0),
                         child: Container(
-                          width: MediaQuery.of(context).size.width*0.9,
+                          width: MediaQuery.of(context).size.width*0.95,
                           child: ElevatedButton(
                             onPressed: () async {
                               List<Map<String, dynamic>> leadData = [];
-
                               // 2. Iterate through the selectedLeads and format each one
-
                                 leadData.add({
                                   "leadid": lead.leadId, // Get the lead ID from the current lead object
                                 });
-
-
                               // 3. Wrap the list in the final parent map
                               Map<String, dynamic> finalPayload = {
                                 "lead_id": leadData,
@@ -401,18 +616,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                     lead.clientId=="89"?
                     ElevatedButton(
                       onPressed: (){
-                        Get.snackbar("Onfield Prepaid", 'Onfield Prepaid Card',
-                          backgroundColor:AppConstant.appSnackBarBackground, // Background color of the snackbar
-                          colorText: Colors.black, // Color of the title and message text
-                          snackPosition: SnackPosition.TOP, // Position of the snackbar (TOP or BOTTOM)
-                          margin: const EdgeInsets.all(10), // Margin around the snackbar
-                          borderRadius: 10, // Border radius of the snackbar
-                          animationDuration: const Duration(milliseconds: 500), // Animation duration
-                          duration: const Duration(seconds: 3), // Duration the snackbar is displayed
-                          icon: const Icon(Icons.error, color: Colors.black), // Optional icon
-                          shouldIconPulse: true, // Whether the icon should pulse
-                          isDismissible: true, // Whether the snackbar can be dismissed by swiping
-                          dismissDirection: DismissDirection.horizontal,);
+                        _launchInBrowser('https://fms.bizipac.com/apinew/secureapi/icici_pre_paid_card_gen.php?user_id=$user_id&branch_id=$branchId#!/');
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor:  AppConstant.appBattonBack,

@@ -11,5 +11,5 @@ class AppConstant{
   static const appSecondaryColor=Colors.orangeAccent;
   static const appTextColor=Colors.white;
   static const appStatusBarColor=Colors.white30;
-  static final appBattonBack=Colors.red[400];
+  static final appBattonBack=Colors.blueAccent[200];
 }

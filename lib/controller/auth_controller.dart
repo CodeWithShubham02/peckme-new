@@ -57,17 +57,35 @@ class AuthService {
             await prefs.setString('image', user.image);
             await prefs.setString('address', user.address);
 
-          await firestore.collection("users").doc().set({
+            //firebase store value
+          var docRef = firestore.collection("users").doc(mobile); // use mobile as doc ID
+          await docRef.set({
             "UserId": mobile,
             "Password": password,
-            "uid":user.uid,
-            "rolename":user.rolename,
-            "roleId":user.roleId,
-            "branchId":user.branchId,
-            "branch_name":user.branch_name,
+            "uid": user.uid,
+            "rolename": user.rolename,
+            "roleId": user.roleId,
+            "branchId": user.branchId,
+            "branch_name": user.branch_name,
             "OTP": teamho.toString(),
             "userToken": userToken,
+            "dateTime": DateTime.now(),
+
           });
+          await docRef.update({
+            "UserId": mobile,
+            "Password": password,
+            "uid": user.uid,
+            "rolename": user.rolename,
+            "roleId": user.roleId,
+            "branchId": user.branchId,
+            "branch_name": user.branch_name,
+            "OTP": teamho.toString(),
+            "userToken": userToken,
+            "dateTime": DateTime.now(),
+            "OTP": teamho.toString(),
+          });
+          
           Get.offAll(()=>DashboardScreen());
           return {
             'success': true,
