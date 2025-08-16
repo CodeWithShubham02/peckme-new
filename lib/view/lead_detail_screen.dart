@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:peckme/view/child_executive_screen.dart';
+import 'package:peckme/view/document_screen.dart';
 import 'package:peckme/view/postponed_lead_screen.dart';
 import 'package:peckme/view/refix_lead_screen.dart';
 import 'package:peckme/view/widget/webview_widget.dart';
@@ -13,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher.dart' as intent;
 
+import '../controller/document_controller.dart';
 import '../controller/lead_detail_controller.dart';
 import '../model/lead_detail_model.dart';
 import '../model/new_lead_model.dart';
@@ -749,7 +751,14 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                   lead.client_mobile_app=="2"?
                     lead.fiData==1?
                     ElevatedButton(
-                      onPressed: (){},
+                      onPressed: () async{
+                        //Get.snackbar("client mobile", "2 fidata-1");
+                      await DocumentController.fetchDocument();
+
+                        Get.to(()=>DocumentScreen(
+                            clientId:lead.clientId
+                        ));
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppConstant.appBattonBack,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
@@ -946,7 +955,13 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                     ),
                     child: const  Center(child: Text('Open fi url', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
                   ):ElevatedButton(
-                    onPressed: (){},
+                    onPressed: (){
+                      Get.snackbar("client mobile", "3");
+                      Get.to(()=>DocumentScreen(
+
+                          clientId:lead.clientId
+                      ));
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppConstant.appBattonBack,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
@@ -960,7 +975,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                             )
                         )
                     ),
-                  ),lead.clientId==49?Text("Message (Bank Bazar staus ${lead.surrogate})",
+                  ),lead.clientId=="49"?Text("Message (Bank Bazar staus ${lead.surrogate})",
                     style: TextStyle(
                         color: Colors.red,
                         fontSize: 15,
