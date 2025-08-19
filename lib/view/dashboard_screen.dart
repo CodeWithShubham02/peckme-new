@@ -78,14 +78,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          iconTheme: IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color: Colors.black),
         backgroundColor:AppConstant.appInsideColor,
-        title: Text("Peck Me",style: TextStyle(color: Colors.white),),
+        title: Text("Peck Me",style: TextStyle(color: Colors.black),),
         actions: [
           IconButton(onPressed: (){
             Get.to(()=>ProfileScreen(
             ));
-          }, icon: Icon(Icons.person,color: Colors.white,)),
+          }, icon: Icon(Icons.person,color: Colors.black,)),
           IconButton(onPressed: ()async{
             showDialog(context: context, builder: (_)=>
             AlertDialog(
@@ -107,7 +107,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               backgroundColor: Colors.white70,
             ),
             );
-          }, icon: Icon(Icons.logout,color: Colors.white))
+          }, icon: Icon(Icons.logout,color: Colors.black))
         ],
       ),
       drawer: AdminDrawerWidget(),
@@ -125,12 +125,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color:  Color(0xFFCCE5FF),
-                        borderRadius: BorderRadius.circular(20),
+                        color:  Colors.orange[100],
+                        borderRadius: BorderRadius.circular(5),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.grey.shade300,
-                            blurRadius: 6,
+                            blurRadius: 5,
                             offset: Offset(0, 4),
                           )
                         ],
@@ -161,12 +161,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color: Color(0xFFCCE5FF),
-                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.orange[100],
+                        borderRadius: BorderRadius.circular(5),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.grey.shade300,
-                            blurRadius: 6,
+                            blurRadius: 5,
                             offset: Offset(0, 4),
                           )
                         ],
@@ -203,12 +203,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color: Color(0xFFCCE5FF),
-                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.orange[100],
+                        borderRadius: BorderRadius.circular(5),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.grey.shade300,
-                            blurRadius: 6,
+                            blurRadius: 5,
                             offset: Offset(0, 4),
                           )
                         ],
@@ -239,12 +239,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color:  Color(0xFFCCE5FF),
-                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.orange[100],
+                        borderRadius: BorderRadius.circular(5),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.grey.shade300,
-                            blurRadius: 6,
+                            blurRadius: 5,
                             offset: Offset(0, 4),
                           )
                         ],
@@ -295,12 +295,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color:  Color(0xFFCCE5FF),
-                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.orange[100],
+                        borderRadius: BorderRadius.circular(5),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.grey.shade300,
-                            blurRadius: 6,
+                            blurRadius: 5,
                             offset: Offset(0, 4),
                           )
                         ],
@@ -332,12 +332,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color:  Color(0xFFCCE5FF),
-                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.orange[100],
+                        borderRadius: BorderRadius.circular(5),
                         boxShadow: [
                           BoxShadow(
-                            color:  Color(0xFFCCE5FF),
-                            blurRadius: 1,
+                            color: Colors.grey.shade300,
+                            blurRadius: 5,
                             offset: Offset(1, 4),
                           )
                         ],
@@ -374,12 +374,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color:  Color(0xFFCCE5FF),
-                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.orange[100],
+                        borderRadius: BorderRadius.circular(5),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.grey.shade300,
-                            blurRadius: 6,
+                            blurRadius: 5,
                             offset: Offset(0, 4),
                           )
                         ],

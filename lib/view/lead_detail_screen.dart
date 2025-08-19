@@ -9,6 +9,7 @@ import 'package:peckme/view/child_executive_screen.dart';
 import 'package:peckme/view/document_screen.dart';
 import 'package:peckme/view/postponed_lead_screen.dart';
 import 'package:peckme/view/refix_lead_screen.dart';
+import 'package:peckme/view/widget/doc_scren.dart';
 import 'package:peckme/view/widget/webview_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -165,8 +166,8 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor:AppConstant.appInsideColor,
-        title: Text('Lead Details ',style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold,color: Colors.white),),
-          iconTheme: IconThemeData(color: Colors.white),
+        title: Text('Lead Details ',style: const TextStyle(fontSize: 20, fontWeight: FontWeight.normal,color:  AppConstant.appTextColor),),
+          iconTheme: IconThemeData(color:  AppConstant.appIconColor),
       ),
       body: FutureBuilder<LeadResponse?>(
       future: _futureLead,
@@ -532,7 +533,14 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                               backgroundColor: AppConstant.appBattonBack,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                             ),
-                            child: Text('Transfer Lead'.toUpperCase(),style: TextStyle(color: Colors.white),),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text('Transfer Lead'.toUpperCase(),style: TextStyle(color: AppConstant.appTextColor),),
+                                SizedBox(width: 5,),
+                                Icon(Icons.send_to_mobile_outlined,color:  AppConstant.appIconColor,)
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -553,7 +561,14 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                             backgroundColor: AppConstant.appBattonBack,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                           ),
-                          child:   Text('Postponed', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal)),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('Postponed', style: TextStyle(color: AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal)),
+                              SizedBox(width: 5,),
+                              Icon(Icons.send,color:  AppConstant.appIconColor,)
+                            ],
+                          ),
                         ),
                       ),
                       SizedBox(width: 10,),
@@ -568,7 +583,14 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                             backgroundColor: AppConstant.appBattonBack,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                           ),
-                          child:   Text('Reflix', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal)),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('Reflix', style: TextStyle(color: AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal)),
+                              SizedBox(width: 5,),
+                              Icon(Icons.schedule_outlined,color:  AppConstant.appIconColor,)
+                            ],
+                          ),
                         ),
                       ),
             
@@ -613,7 +635,15 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                         backgroundColor:  AppConstant.appBattonBack,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                       ),
-                      child: const  Center(child: Text('Start Biometrics', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                      child: const Center(child:
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Start Biometrics', style: TextStyle(color: AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal)),
+                          SizedBox(width: 5,),
+                          Icon(Icons.fingerprint_outlined,color:  AppConstant.appIconColor,)
+                        ],
+                      )),
                     ):
                     lead.clientId=="89"?
                     ElevatedButton(
@@ -624,9 +654,16 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                         backgroundColor:  AppConstant.appBattonBack,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                       ),
-                      child: const  Center(child: Text('Add Details',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal,fontFamily: 'impact',))),
+                      child: const  Center(child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Add Details',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal,fontFamily: 'impact',)),
+                          SizedBox(width: 5,),
+                          Icon(Icons.add,color:  AppConstant.appIconColor,)
+                        ],
+                      )),
                     ):
                     lead.clientId=="38"?
                     ElevatedButton(
@@ -667,7 +704,14 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                         backgroundColor: AppConstant.appBattonBack,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                       ),
-                      child: const  Center(child: Text('OAPNxt App', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                      child: const  Center(child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('OAPNxt App', style: TextStyle(color: AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal)),
+                          SizedBox(width: 5,),
+                          Icon(Icons.app_shortcut,color:  AppConstant.appIconColor,)
+                        ],
+                      )),
                     ):
                     lead.clientId=="28"?
                     ElevatedButton(
@@ -707,7 +751,14 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                         backgroundColor:  AppConstant.appBattonBack,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                       ),
-                      child: const  Center(child: Text('Opennxt Assisted', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                      child: const  Center(child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Opennxt Assisted', style: TextStyle(color: AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal)),
+                          SizedBox(width: 5,),
+                          Icon(Icons.food_bank_rounded,color:  AppConstant.appIconColor,)
+                        ],
+                      )),
                     ):
                     ElevatedButton(
                       onPressed: ()async{
@@ -746,7 +797,14 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                         backgroundColor:  AppConstant.appBattonBack,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                       ),
-                      child: const  Center(child: Text('Open ICICI App', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                      child: const  Center(child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Open ICICI App', style: TextStyle(color: AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal)),
+                          SizedBox(width: 5,),
+                          Icon(Icons.app_registration_outlined,color:  AppConstant.appIconColor,)
+                        ],
+                      )),
                     ):
                   lead.client_mobile_app=="2"?
                     lead.fiData==1?
@@ -754,16 +812,23 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                       onPressed: () async{
                         //Get.snackbar("client mobile", "2 fidata-1");
                       await DocumentController.fetchDocument();
-
-                        Get.to(()=>DocumentScreen(
-                            clientId:lead.clientId
-                        ));
+                      Get.to(()=>DocumentScreenTest(
+                          clientId:lead.clientId,
+                          docum:lead.doc
+                      ));
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppConstant.appBattonBack,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                       ),
-                      child: const  Center(child: Text('Select Doc', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                      child: const  Center(child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Select Doc', style: TextStyle(color: AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal)),
+                          SizedBox(width: 5,),
+                          Icon(Icons.file_copy_outlined,color:  AppConstant.appIconColor,)
+                        ],
+                      )),
                     ):
                     lead.clientId=="61"?ElevatedButton(
                       onPressed: (){
@@ -784,7 +849,14 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                         backgroundColor:  AppConstant.appBattonBack,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                       ),
-                      child: const  Center(child: Text('Field Invest', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                      child: const  Center(child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Field Invest', style: TextStyle(color: AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal)),
+                          SizedBox(width: 5,),
+                          Icon(Icons.person_outline_outlined,color:  AppConstant.appIconColor,)
+                        ],
+                      )),
                     ):lead.clientId=="63"?ElevatedButton(
                       onPressed: (){
                         Navigator.push(
@@ -804,7 +876,14 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                         backgroundColor:  AppConstant.appBattonBack,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                       ),
-                      child: const  Center(child: Text('Field Invest', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                      child: const  Center(child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Field Invest', style: TextStyle(color: AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal)),
+                          SizedBox(width: 5,),
+                          Icon(Icons.person_outline_outlined,color:  AppConstant.appIconColor,)
+                        ],
+                      )),
                     ):lead.clientId=="68"?ElevatedButton(
                       onPressed: (){
                         Navigator.push(
@@ -824,7 +903,14 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                         backgroundColor:  AppConstant.appBattonBack,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                       ),
-                      child: const  Center(child: Text('Field Invest', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                      child: const  Center(child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Field Invest', style: TextStyle(color: AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal)),
+                          SizedBox(width: 5,),
+                          Icon(Icons.person_outline_outlined,color:  AppConstant.appIconColor,)
+                        ],
+                      )),
                     ):lead.clientId=="71"?ElevatedButton(
                       onPressed: (){
                         Navigator.push(
@@ -844,7 +930,14 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                         backgroundColor:  AppConstant.appBattonBack,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                       ),
-                      child: const  Center(child: Text('Field Invest', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                      child: const  Center(child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Field Invest', style: TextStyle(color:AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal)),
+                          SizedBox(width: 5,),
+                          Icon(Icons.person_outline_outlined,color:  AppConstant.appIconColor,)
+                        ],
+                      )),
                     ):lead.clientId=="72"?ElevatedButton(
                       onPressed: (){
                         Navigator.push(
@@ -864,7 +957,14 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                         backgroundColor:  AppConstant.appBattonBack,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                       ),
-                      child: const  Center(child: Text('Field Invest', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                      child: const  Center(child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Field Invest', style: TextStyle(color: AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal)),
+                          SizedBox(width: 5,),
+                          Icon(Icons.person_outline_outlined,color:  AppConstant.appIconColor,)
+                        ],
+                      )),
                     ):lead.clientId=="75"?ElevatedButton(
                       onPressed: (){
                         Navigator.push(
@@ -884,7 +984,14 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                         backgroundColor:  AppConstant.appBattonBack,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                       ),
-                      child: const  Center(child: Text('Field Invest', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                      child: const  Center(child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Field Invest', style: TextStyle(color: AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal)),
+                          SizedBox(width: 5,),
+                          Icon(Icons.person_outline_outlined,color:  AppConstant.appIconColor,)
+                        ],
+                      )),
                     ):lead.clientId=="79"?ElevatedButton(
                       onPressed: (){
                         Navigator.push(
@@ -904,7 +1011,14 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                         backgroundColor:  AppConstant.appBattonBack,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                       ),
-                      child: const  Center(child: Text('Field Invest', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                      child: const  Center(child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Field Invest', style: TextStyle(color: AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal)),
+                          SizedBox(width: 5,),
+                          Icon(Icons.person_outline_outlined,color:  AppConstant.appIconColor,)
+                        ],
+                      )),
                     ):lead.clientId=="80"?ElevatedButton(
                       onPressed: (){
                         Navigator.push(
@@ -924,7 +1038,14 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                         backgroundColor:  AppConstant.appBattonBack,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                       ),
-                      child: const  Center(child: Text('Field Invest', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                      child: const  Center(child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Field Invest', style: TextStyle(color:AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal)),
+                          SizedBox(width: 5,),
+                          Icon(Icons.person_outline_outlined,color:  AppConstant.appIconColor,)
+                        ],
+                      )),
                     ):ElevatedButton(
                       onPressed: (){
                         Navigator.push(
@@ -944,7 +1065,14 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                         backgroundColor:  AppConstant.appBattonBack,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                       ),
-                      child: const  Center(child: Text('Field Invest', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                      child: const  Center(child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Field Invest', style: TextStyle(color: AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal)),
+                          SizedBox(width: 5,),
+                          Icon(Icons.person_outline_outlined,color:  AppConstant.appIconColor,)
+                        ],
+                      )),
                     ):
                   lead.client_mobile_app=="3"?
                   ElevatedButton(
@@ -957,9 +1085,9 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                   ):ElevatedButton(
                     onPressed: (){
                       Get.snackbar("client mobile", "3");
-                      Get.to(()=>DocumentScreen(
-
-                          clientId:lead.clientId
+                      Get.to(()=>DocumentScreenTest(
+                          clientId:lead.clientId,
+                          docum:lead.doc
                       ));
                     },
                     style: ElevatedButton.styleFrom(
@@ -967,12 +1095,19 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                     ),
                     child: const Center(
-                        child: Text('Select doc',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight:FontWeight.normal
-                            )
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('Select doc',
+                                style: TextStyle(
+                                    color: AppConstant.appTextColor,
+                                    fontSize: 15,
+                                    fontWeight:FontWeight.normal
+                                )
+                            ),
+                            SizedBox(width: 5,),
+                            Icon(Icons.file_copy_outlined,color:  AppConstant.appIconColor,)
+                          ],
                         )
                     ),
                   ),lead.clientId=="49"?Text("Message (Bank Bazar staus ${lead.surrogate})",
@@ -980,22 +1115,37 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                         color: Colors.red,
                         fontSize: 15,
                         fontWeight:FontWeight.bold
-                    ),):Text(''),
+                    ),):SizedBox.shrink(),
                   ElevatedButton(
                     onPressed: (){},
                     style: ElevatedButton.styleFrom(
                       backgroundColor:  Colors.green,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                     ),
-                    child: const  Center(child: Text('Status', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                    child: const  Center(child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Status', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal)),
+                        SizedBox(width: 5,),
+                        Icon(Icons.mark_chat_read_outlined,color:  AppConstant.appIconColor,)
+                      ],
+                    )),
                   ),
                   ElevatedButton(
-                    onPressed: (){},
+                    onPressed: (){
+
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppConstant.appInsideColor,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                     ),
-                    child: const  Center(child: Text('Generate Submission Result', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
+                    child: const  Center(child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Generate Submission Result', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal)),
+
+                      ],
+                    )),
                   ),
                 ],
                 

@@ -85,8 +85,8 @@ class _TransferLeadScreenState extends State<TransferLeadScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppConstant.appInsideColor,
-        title: const Text('Transfer Lead', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text('Transfer Lead', style: TextStyle(fontSize: 20, fontWeight: FontWeight.normal, color: AppConstant.appTextColor)),
+        iconTheme: const IconThemeData(color: AppConstant.appIconColor),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -170,11 +170,11 @@ class _TransferLeadScreenState extends State<TransferLeadScreen> {
           }
               : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor:AppConstant.appInsideColor,
+            backgroundColor:AppConstant.appBattonBack,
 
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(1)),
           ),
-          child: Text('CONTINUE (${selectedLeads.length})',style: TextStyle(color: Colors.white),),
+          child: Text('CONTINUE (${selectedLeads.length})',style: TextStyle(color: AppConstant.appTextColor),),
         ),
       ),
     );

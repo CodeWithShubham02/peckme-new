@@ -83,8 +83,8 @@ class _ChildExecutiveScreenState extends State<ChildExecutiveScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppConstant.appInsideColor,
-        title: const Text('Child Excutive Lead', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text('Child Excutive Lead', style: TextStyle(fontSize: 20, fontWeight: FontWeight.normal, color: AppConstant.appTextColor)),
+        iconTheme: const IconThemeData(color: AppConstant.appIconColor),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -108,11 +108,11 @@ class _ChildExecutiveScreenState extends State<ChildExecutiveScreen> {
                 contentPadding: const EdgeInsets.symmetric(
                     horizontal: 8.0, vertical: 1.0),
                 leading: CircleAvatar(
-                  backgroundColor: Colors.blueAccent, // You can customize the color
+                  backgroundColor: AppConstant.appBattonBack, // You can customize the color
                   child: Text(
                     lead.fname[0].toUpperCase(), // Displays the first letter of the name
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppConstant.appTextColor,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -195,11 +195,11 @@ class _ChildExecutiveScreenState extends State<ChildExecutiveScreen> {
           }
               : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor:AppConstant.appInsideColor,
+            backgroundColor:AppConstant.appBattonBack,
 
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(1)),
           ),
-          child: Text('CONTINUE (${selectedLeads.length})',style: TextStyle(color: Colors.white),),
+          child: Text('CONTINUE (${selectedLeads.length})',style: TextStyle(color: AppConstant.appTextColor),),
         ),
       ),
     );

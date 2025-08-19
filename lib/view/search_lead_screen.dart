@@ -36,9 +36,9 @@ class _SearchLeadScreenState extends State<SearchLeadScreen> {
       appBar: AppBar(
         backgroundColor: AppConstant.appInsideColor,
         title:  Text('Search Lead',
-          style: TextStyle(color: Colors.white,fontSize: 17),
+          style: TextStyle(color: AppConstant.appTextColor),
         ),
-          iconTheme: IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color: AppConstant.appIconColor),
       ),
       body: SingleChildScrollView(
         child: Column(

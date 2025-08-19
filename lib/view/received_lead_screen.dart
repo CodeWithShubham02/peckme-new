@@ -97,14 +97,14 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
       appBar: AppBar(
         backgroundColor: AppConstant.appInsideColor,
         title: Text(
-          'Lead Received ${total.toString()}',
+          'Lead Received - ${total.toString()}'.toUpperCase(),
           style: const TextStyle(
             fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+            fontWeight: FontWeight.normal,
+            color:  AppConstant.appTextColor,
           ),
         ),
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: AppConstant.appIconColor),
       ),
       body: leads == null
           ? const Center(child: CircularProgressIndicator())
@@ -162,7 +162,7 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
                                       },
                                       icon: Icon(
                                         Icons.call,
-                                        color: AppConstant.appTextColor,
+                                        color: AppConstant.appIconColor,
                                       ),
                                     ),
                                   ),
@@ -175,7 +175,7 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
                                     backgroundColor: AppConstant.appInsideColor,
                                     child: Icon(
                                       Icons.location_on,
-                                      color: Colors.white,
+                                      color: AppConstant.appIconColor,
                                     ),
                                   ),
                                   SizedBox(width: 10),
@@ -200,7 +200,7 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
                                     backgroundColor: AppConstant.appInsideColor,
                                     child: Icon(
                                       Icons.date_range,
-                                      color: Colors.white,
+                                      color: AppConstant.appIconColor,
                                     ),
                                   ),
                                   const SizedBox(width: 8),
@@ -278,7 +278,7 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
                                       },
                                       child: Icon(
                                         Icons.location_on,
-                                        color: Colors.white,
+                                        color: AppConstant.appIconColor,
                                       ),
                                     ),
                                   ),
@@ -301,7 +301,7 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
                                   Get.to(() => LeadDetailScreen(lead: lead));
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppConstant.appInsideColor,
+                                  backgroundColor: AppConstant.appBattonBack,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -310,7 +310,7 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
                                   child: Text(
                                     'More Details',
                                     style: TextStyle(
-                                      color: Colors.white,
+                                      color: Colors.black,
                                       fontSize: 15,
                                     ),
                                   ),
@@ -341,7 +341,7 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
             MaterialPageRoute(builder: (context) => ReceivedLeadScreen()),
           );
         },
-        child: const Icon(Icons.refresh, color: Colors.white),
+        child: const Icon(Icons.refresh, color: AppConstant.appIconColor),
       ),
     );
   }

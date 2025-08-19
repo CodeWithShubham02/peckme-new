@@ -4,12 +4,13 @@ class AppConstant{
   static String appPowerBy='Created By Shubham';
   static String appVersion='4.1.1';
   static const appMainColor=Colors.orange;
-  static const appInsideColor=Color(0xFF043feb);
+  static final appInsideColor=Colors.orangeAccent[100];
   static const appSnackBarBackground=Colors.white70;
   static const appFontFamily='serif';
   static const appTextFamily='sens-serif';
   static const appSecondaryColor=Colors.orangeAccent;
-  static const appTextColor=Colors.white;
+  static const appIconColor=Colors.black;
+  static const appTextColor=Colors.black;
   static const appStatusBarColor=Colors.white30;
-  static final appBattonBack=Colors.blueAccent[200];
+  static final appBattonBack=Colors.orange[100];
 }

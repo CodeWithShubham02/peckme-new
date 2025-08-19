@@ -27,9 +27,9 @@ class _TodayTransferredScreenState extends State<TodayTransferredScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          iconTheme: IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color: AppConstant.appIconColor),
           backgroundColor: AppConstant.appInsideColor,
-          title: const Text('Today\'s Transfers',style: TextStyle(color: Colors.white),)),
+          title: const Text('Today\'s Transfers',style: TextStyle(color:AppConstant.appTextColor,fontWeight: FontWeight.normal),)),
       body: FutureBuilder<TodayTransferredResponse?>(
         future: _future,
         builder: (context, snapshot) {

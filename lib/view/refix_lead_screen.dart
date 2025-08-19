@@ -94,9 +94,9 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
       appBar: AppBar(
           backgroundColor: AppConstant.appInsideColor,
           title:  Text(widget.customer_name.toString(),
-            style: TextStyle(color: Colors.white,fontSize: 17),
+            style: TextStyle(color: AppConstant.appTextColor,fontSize: 17),
           ),
-          iconTheme: IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color:AppConstant.appIconColor),
       ),
       body:SingleChildScrollView(
         child: Column(
@@ -258,16 +258,14 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        width: 416,
-        height: 50,
-        
-        clipBehavior: Clip.hardEdge,
-        decoration:const BoxDecoration(
-
-        ),
-        child: ElevatedButton(
-            onPressed: () async{
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SizedBox(
+            width: double.infinity, // 👈 full width
+            height: 50,             // 👈 fixed height
+            child: ElevatedButton(
+              onPressed: () async{
 
                 if (_location.isEmpty || selectedReason == null || currentDate.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -293,14 +291,25 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                   Navigator.pop(context);
                 }
 
-        },
-            style: ElevatedButton.styleFrom(
-              backgroundColor:AppConstant.appInsideColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(1)),
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor:AppConstant.appBattonBack, // 👈 button color
+                foregroundColor: AppConstant.appTextColor,      // 👈 text color
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12), // 👈 rounded corners
+                ),
+                elevation: 4, // 👈 shadow
+              ),
+              child: const Text(
+                "Refix Appointment",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
             ),
-            child: Center(
-              child: Text("Refix Appointment",style: TextStyle(color: Colors.white,fontSize: 16),),
-            ))
+          ),
+        ),
       ),
     );
   }

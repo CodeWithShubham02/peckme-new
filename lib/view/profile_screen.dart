@@ -49,8 +49,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor:AppConstant.appInsideColor,
-        title: const Text('Profile',style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold,color: Colors.white),),
-          iconTheme: IconThemeData(color: Colors.white),
+        title: const Text('Profile',style: TextStyle(fontSize: 20, fontWeight: FontWeight.normal,color:AppConstant.appTextColor),),
+          iconTheme: IconThemeData(color: AppConstant.appIconColor),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -60,7 +60,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             CircleAvatar(
               radius: 50,
               backgroundColor: AppConstant.appInsideColor,
-              child: Icon(Icons.person_3,color: Colors.white,size: 50,),
+              child: Icon(Icons.person_3,color:AppConstant.appTextColor,size: 50,),
             ),
             const SizedBox(height: 16),
 

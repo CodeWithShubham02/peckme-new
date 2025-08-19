@@ -69,9 +69,9 @@ class _PostponeLeadScreenState extends State<PostponeLeadScreen> {
       appBar: AppBar(
         backgroundColor: AppConstant.appInsideColor,
         title:  Text(widget.customer_name.toString(),
-          style: TextStyle(color: Colors.white,fontSize: 17),
+          style: TextStyle(color: AppConstant.appTextColor,fontSize: 17),
         ),
-          iconTheme: IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color:AppConstant.appIconColor),
       ),
       body:SingleChildScrollView(
         child: Column(
@@ -132,15 +132,13 @@ class _PostponeLeadScreenState extends State<PostponeLeadScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-          width: 416,
-          height: 50,
-
-          clipBehavior: Clip.hardEdge,
-          decoration:const BoxDecoration(
-
-          ),
-          child: ElevatedButton(
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SizedBox(
+            width: double.infinity, // 👈 full width
+            height: 50,             // 👈 fixed height
+            child: ElevatedButton(
               onPressed: () async {
                 try {
                   final result = await postponeLead(
@@ -165,12 +163,23 @@ class _PostponeLeadScreenState extends State<PostponeLeadScreen> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor:AppConstant.appInsideColor,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(1)),
+                backgroundColor:AppConstant.appBattonBack, // 👈 button color
+                foregroundColor: AppConstant.appTextColor,      // 👈 text color
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12), // 👈 rounded corners
+                ),
+                elevation: 4, // 👈 shadow
               ),
-              child: Center(
-                child: Text("Postponed Appointment",style: TextStyle(color: Colors.white,fontSize: 16),),
-              ))
+              child: const Text(
+                "Postpone Lead",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
