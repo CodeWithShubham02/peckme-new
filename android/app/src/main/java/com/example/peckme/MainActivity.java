@@ -5,7 +5,8 @@ import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.MethodChannel;
 
-public class MainActivity extends FlutterActivity {
+public class MainActivity extends FlutterActivity
+{
     private static final String CHANNEL = "com.example.peckme/channel1";
 
 
@@ -36,24 +37,18 @@ public class MainActivity extends FlutterActivity {
                         // condiction check for client id
                         if ("38".equals(client_id)) {
                             result.success("OAPNxt app starting...");
-
                         } else if ("28".equals(client_id)) {
-//
                             result.success("Assisted app starting...");
                         } else if ("11".equals(client_id)) {
-
-                            openSDK();
-
+                           // openSDK();
+                            result.success("Start Biometrics app starting "+client_id+","+athena_lead_id+"...");
                         } else if ("12".equals(client_id)) {
-                            result.success("Start Biometrics app starting...");
+                            result.success("Client Id "+client_id+"...");
                         } else if ("89".equals(client_id)) {
-
                             result.success("IciciPrePaidCard  app starting...");
                         } else if ("10".equals(client_id)) {
-
                             result.success("GPS Lat Long ..." + gpslat + "," + gpslong);
                         } else {
-
                             result.success("Open ICICI APP ");
                         }
                     } else {
@@ -62,11 +57,6 @@ public class MainActivity extends FlutterActivity {
                 });
 
 
-    }
-    private void openSDK(){
-        System.out.println("------------------Hello World from MainActivity--------------------------");
-        Intent intent = new Intent(MainActivity.this, IciciPrePaidCardActivity.class);
-        startActivity(intent);
     }
 
 }

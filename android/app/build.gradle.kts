@@ -52,14 +52,19 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
 
     // Local JAR/AARs from libs folder
-    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar", "*.aar"))))
-
-    // Explicit file references (only if needed, can remove if already covered by fileTree above)
-    implementation(files("libs/itext5-itextpdf-5.5.12.jar"))
-    implementation(files("libs/icici.aar")) // ✅ Make sure this file actually exists
+//    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar", "*.aar"))))
+//
+//    // Explicit file references (only if needed, can remove if already covered by fileTree above)
+//    implementation(files("libs/itext5-itextpdf-5.5.12.jar"))
+//    implementation(files("libs/icici.aar")) // ✅ Make sure this file actually exists
 
     // Firebase products
     implementation("com.google.firebase:firebase-analytics")
+
+
+
+
+
 }
 
 flutter {
