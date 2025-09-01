@@ -4,7 +4,7 @@ class AppConstant{
   static String appPowerBy='Created By Shubham';
   static String appVersion='4.1.1';
   static const appMainColor=Colors.orange;
-  static final appInsideColor=Colors.orangeAccent[100];
+  static final appInsideColor=Colors.blueAccent[200];
   static const appSnackBarBackground=Colors.white70;
   static const appFontFamily='serif';
   static const appTextFamily='sens-serif';
@@ -12,5 +12,5 @@ class AppConstant{
   static const appIconColor=Colors.black;
   static const appTextColor=Colors.black;
   static const appStatusBarColor=Colors.white30;
-  static final appBattonBack=Colors.orange[100];
+  static final appBattonBack=Colors.lightBlueAccent[100];
 }

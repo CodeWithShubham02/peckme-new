@@ -48,8 +48,6 @@ class _WebViewScreenState extends State<WebViewScreen> {
           iconTheme: IconThemeData(color: Colors.white),
           title: Container(
             height: 100,
-
-
             child: Padding(
               padding: const EdgeInsets.only(top: 20),
               child: Column(

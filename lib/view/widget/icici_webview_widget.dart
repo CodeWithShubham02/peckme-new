@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../../utils/app_constant.dart';
+
 class IciciWebviewWidget extends StatefulWidget {
-  const IciciWebviewWidget({super.key});
+  final String url;
+   IciciWebviewWidget({super.key , required this.url,});
 
   @override
   State<IciciWebviewWidget> createState() => _IciciWebviewWidgetState();
@@ -17,11 +20,18 @@ class _IciciWebviewWidgetState extends State<IciciWebviewWidget> {
 
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadRequest(Uri.parse('https://fms.bizipac.com/apinew/secureapi/icici_pre_paid_card_gen.php?user_id=7494&branch_id=53'));
+      ..loadRequest(Uri.parse(widget.url));
   }
 
   @override
   Widget build(BuildContext context) {
-    return  WebViewWidget(controller: _controller);
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: AppConstant.appInsideColor,
+        iconTheme: IconThemeData(color: Colors.black),
+        title: Text("Onfield Prepaid Card"),
+      ),
+      body: SafeArea(child: WebViewWidget(controller: _controller)),
+    );
   }
 }

@@ -15,7 +15,6 @@ class RefixLeadService {
 
   }) async {
     final Uri url = Uri.parse("https://fms.bizipac.com/ws/refixlead.php?loginid=$loginId&leadid=$leadId&newdate=$newDate&location=$location&reason=$reason&newtime=$newTime&remark=$remark");
-
     final response = await http.post(url);
       print('-------------------------shubham----------');
       print(response.body);
@@ -25,6 +24,5 @@ class RefixLeadService {
       } else {
         return RefixLeadResponse(success: 0, message: "Server error: ${response.statusCode}");
       }
-
   }
 }

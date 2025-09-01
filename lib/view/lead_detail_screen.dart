@@ -1,30 +1,31 @@
-import 'package:android_intent_plus/android_intent.dart';
-import 'package:android_intent_plus/flag.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:aws_s3_api/s3-2006-03-01.dart';
 import 'package:get/get.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:peckme/view/child_executive_screen.dart';
-import 'package:peckme/view/document_screen.dart';
 import 'package:peckme/view/postponed_lead_screen.dart';
 import 'package:peckme/view/refix_lead_screen.dart';
 import 'package:peckme/view/widget/doc_scren.dart';
+import 'package:peckme/view/widget/icici_webview_widget.dart';
 import 'package:peckme/view/widget/webview_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:url_launcher/url_launcher.dart' as intent;
-
 import '../controller/document_controller.dart';
 import '../controller/lead_detail_controller.dart';
 import '../model/lead_detail_model.dart';
 import '../model/new_lead_model.dart';
+import '../services/ExotelService.dart';
 import '../services/SDKLauncher.dart';
 import '../services/getCurrentLocation.dart';
 import '../utils/app_constant.dart';
 
 class LeadDetailScreen extends StatefulWidget {
   Lead lead;
+
    LeadDetailScreen({super.key, required this.lead});
 
   @override
@@ -33,20 +34,30 @@ class LeadDetailScreen extends StatefulWidget {
 
 class _LeadDetailScreenState extends State<LeadDetailScreen> {
 
-
+  late List<String> collectedDoc;
   Future<LeadResponse?>? _futureLead;
   final platform=const MethodChannel("com.example.peckme/channel1");
   String user_id = '';
   String branchId='';
+
   void loadUserData() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-
       user_id = prefs.getString('uid') ?? '';
       branchId = prefs.getString('branchId') ?? '';
 
 
     });
+  }
+  Future<void> _callLeads(BuildContext context,String leadId) async {
+    String? number = await ExotelService.getVirtualNumber(leadId);
+    if (number != null) {
+      await FlutterPhoneDirectCaller.callNumber(number);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No number found")),
+      );
+    }
   }
   _callNativeMethod({
     required String clientId,
@@ -103,32 +114,22 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
       print("Exception while calling Native Method  : $e");
     }
   }
-  void openNXTServices() {
-    launchOtherApp('https://oapnext.icicibank.com:8443/OAPNxtService/zct/SessionService/escpGetSessionId'); // Example deep link for Facebook Lite
-    // Or, if you know the package ID for Android:
-    // launchOtherApp('market://details?id=com.facebook.lite'); // Opens Play Store page
-  }
+  // void openNXTServices() {
+  //   launchOtherApp('https://oapnext.icicibank.com:8443/OAPNxtService/zct/SessionService/escpGetSessionId'); // Example deep link for Facebook Lite
+  //   // Or, if you know the package ID for Android:
+  //   // launchOtherApp('market://details?id=com.facebook.lite'); // Opens Play Store page
+  // }
+  
+  // Function to launch another app
   void _launchInBrowser(String url) async {
     Uri uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(
         uri,
-        mode: LaunchMode.platformDefault,
+        mode: LaunchMode.inAppBrowserView,
       );
     } else {
       throw 'Could not launch $url';
-    }
-  }
-
-  // Function to launch another app
-  Future<void> launchOtherApp(String url) async {
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url));
-    } else {
-      // Handle the case where the app cannot be launched (e.g., app not installed)
-      print('Could not launch $url');
-      // Optionally, redirect to the app store
-      // await launchUrl(Uri.parse('https://play.google.com/store/apps/details?id=com.example.otherapp'));
     }
   }
 
@@ -168,6 +169,24 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
         backgroundColor:AppConstant.appInsideColor,
         title: Text('Lead Details ',style: const TextStyle(fontSize: 20, fontWeight: FontWeight.normal,color:  AppConstant.appTextColor),),
           iconTheme: IconThemeData(color:  AppConstant.appIconColor),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 20),
+            child: CircleAvatar(
+              backgroundColor: AppConstant.appBattonBack,
+              child: IconButton(
+                onPressed: () async{
+                  final response = widget.lead.leadId;
+                 _callLeads(context,response);
+                },
+                icon: Icon(
+                  Icons.call,
+                  color: AppConstant.appIconColor,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: FutureBuilder<LeadResponse?>(
       future: _futureLead,
@@ -649,7 +668,16 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                     ElevatedButton(
                       onPressed: (){
                         _launchInBrowser('https://fms.bizipac.com/apinew/secureapi/icici_pre_paid_card_gen.php?user_id=$user_id&branch_id=$branchId#!/');
-                      },
+
+                        // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //     builder: (_) => IciciWebviewWidget(
+                        //       url: "https://fms.bizipac.com/apinew/secureapi/icici_pre_paid_card_gen.php?user_id=$user_id&branch_id=$branchId#!/",
+                        //     ),
+                        //   ),
+                        // );
+                        },
                       style: ElevatedButton.styleFrom(
                         backgroundColor:  AppConstant.appBattonBack,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
@@ -698,7 +726,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                           gpslat:location_lat,
                           gpslong:location_long,
                         );
-                        openNXTServices();
+                        // openNXTServices();
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppConstant.appBattonBack,
@@ -812,10 +840,22 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                       onPressed: () async{
                         //Get.snackbar("client mobile", "2 fidata-1");
                       await DocumentController.fetchDocument();
-                      Get.to(()=>DocumentScreenTest(
-                          clientId:lead.clientId,
-                          docum:lead.doc
+                      final result = await Get.to(() => DocumentScreenTest(
+                        clientName:lead.clientName,
+                        leadId:lead.leadId,
+                        clientId:lead.clientId,
                       ));
+
+                      if (result != null && result is List<String>) {
+                        // ✅ Show result data in SnackBar or setState
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("You have collected following documents: [${result.join(", ")}]",
+                            style: const TextStyle(fontSize: 12,color: Colors.white),),
+                            duration: const Duration(seconds: 5),),
+
+                        );
+                        collectedDoc=result.join(", ") as List<String>;
+                      }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppConstant.appBattonBack,
@@ -1083,12 +1123,22 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                     ),
                     child: const  Center(child: Text('Open fi url', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal))),
                   ):ElevatedButton(
-                    onPressed: (){
-                      Get.snackbar("client mobile", "3");
-                      Get.to(()=>DocumentScreenTest(
-                          clientId:lead.clientId,
-                          docum:lead.doc
+                    onPressed: ()async{
+                      final result = await Get.to(() => DocumentScreenTest(
+                        clientName:lead.clientName,
+                        leadId:lead.leadId,
+                        clientId:lead.clientId,
                       ));
+                      if (result != null && result is List<String>) {
+                        // ✅ Show result data in SnackBar or setState
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("You have collected following documents: [${result.join(", ")}]",
+                            style: const TextStyle(fontSize: 12,color: Colors.white),),
+                            duration: const Duration(seconds: 5),),
+
+                        );
+                        collectedDoc=result.join(", ") as List<String>;
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppConstant.appBattonBack,
@@ -1117,7 +1167,9 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                         fontWeight:FontWeight.bold
                     ),):SizedBox.shrink(),
                   ElevatedButton(
-                    onPressed: (){},
+                    onPressed: (){
+                      _showConfirmDialog(context,lead.leadId,user_id);
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor:  Colors.green,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
@@ -1125,25 +1177,9 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                     child: const  Center(child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('Status', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal)),
+                        Text('Final Submit Lead', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal)),
                         SizedBox(width: 5,),
                         Icon(Icons.mark_chat_read_outlined,color:  AppConstant.appIconColor,)
-                      ],
-                    )),
-                  ),
-                  ElevatedButton(
-                    onPressed: (){
-
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppConstant.appInsideColor,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-                    ),
-                    child: const  Center(child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('Generate Submission Result', style: TextStyle(color: Colors.white,fontSize: 15,fontWeight:FontWeight.normal)),
-
                       ],
                     )),
                   ),
@@ -1161,3 +1197,31 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
     );
   }
 }
+void _showConfirmDialog(BuildContext context, String leadId, String user_id) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+       title: Text("$leadId $user_id"),
+      content: const Text("Are you sure you want to submit this lead?"),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(false); // ❌ No
+          },
+          child: const Text("No"),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.of(context).pop(true); // ✅ Yes
+            // 👉 यहाँ API call या submit logic लिख सकते हो
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Lead Submitted!")),
+            );
+          },
+          child: const Text("Yes"),
+        ),
+      ],
+    ),
+  );
+}
+

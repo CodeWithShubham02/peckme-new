@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:aws_s3_api/s3-2006-03-01.dart' hide Permission;
 import 'package:flutter/material.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
@@ -11,6 +14,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../controller/receivedLead_controller.dart';
 import '../model/new_lead_model.dart';
+import '../services/ExotelService.dart';
 import '../utils/app_constant.dart';
 import 'lead_detail_screen.dart';
 
@@ -42,14 +46,6 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
     branchId = prefs.getString('branchId') ?? '';
   }
 
-  void launchCaller(String number) async {
-    final Uri callUri = Uri(scheme: 'tel', path: number);
-    if (await canLaunchUrl(callUri)) {
-      await launchUrl(callUri);
-    } else {
-      print('Could not launch call');
-    }
-  }
 
   //this code use to open google map from <==> to
   Future<void> openMap({
@@ -66,6 +62,24 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
       await launchUrl(url);
     } else {
       throw 'Could not launch Maps';
+    }
+  }
+  Future<void> _callLeads(BuildContext context,String leadId) async {
+    String? number = await ExotelService.getVirtualNumber(leadId);
+    // check permission
+    var status = await Permission.phone.status;
+    if (!status.isGranted) {
+      status = await Permission.phone.request();
+      if (!status.isGranted) {
+        throw 'Phone call permission not granted';
+      }
+    }
+    if (number != null) {
+      await FlutterPhoneDirectCaller.callNumber(number);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No number found")),
+      );
     }
   }
 
@@ -97,7 +111,7 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
       appBar: AppBar(
         backgroundColor: AppConstant.appInsideColor,
         title: Text(
-          'Lead Received - ${total.toString()}'.toUpperCase(),
+          'Lead Received ${total.toString()}'.toUpperCase(),
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.normal,
@@ -112,10 +126,8 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
               future: leads,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  print('shubha : ' + snapshot.data.toString());
                   return const Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasError) {
-                  print('shubha : ' + snapshot.data.toString());
                   return Center(child: Text('Error: ${snapshot.error}'));
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return const Center(child: Text('No leads found.'));
@@ -154,11 +166,9 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
                                   CircleAvatar(
                                     backgroundColor: AppConstant.appInsideColor,
                                     child: IconButton(
-                                      onPressed: () {
-                                        print('hello');
-                                        // Step 1: Launch phone call
-                                        launchCaller(lead.mobile);
-                                        print('hello');
+                                      onPressed: () async{
+                                        final response = lead.leadId;
+                                        _callLeads(context,response);
                                       },
                                       icon: Icon(
                                         Icons.call,
@@ -174,7 +184,7 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
                                   CircleAvatar(
                                     backgroundColor: AppConstant.appInsideColor,
                                     child: Icon(
-                                      Icons.location_on,
+                                      Icons.house_outlined,
                                       color: AppConstant.appIconColor,
                                     ),
                                   ),
@@ -298,7 +308,10 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
                                 onPressed: () {
                                   // Get.snackbar("Name", lead.customerName);
 
-                                  Get.to(() => LeadDetailScreen(lead: lead));
+                                  Get.to(() => LeadDetailScreen(
+                                      lead: lead,
+
+                                  ));
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppConstant.appBattonBack,

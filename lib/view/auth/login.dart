@@ -357,7 +357,6 @@ class _LoginState extends State<Login> {
                         String message='';
                         late String name;
                         if (otp==newOtp) {
-
                             final result = await AuthService.login(
                               mobile: userId.trim(),
                               password: password.trim(),

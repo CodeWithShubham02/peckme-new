@@ -29,18 +29,32 @@ class _ChildExecutiveScreenState extends State<ChildExecutiveScreen> {
   List<ChildExecutiveModel> selectedLeads = [];
   List<int> selectedIndexes = [];
 
+
+  String uid = '';
+
+  void loadUserData() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      uid = prefs.getString('uid') ?? '';
+    });
+  }
   @override
   void initState() {
     super.initState();
-    _fetchData();
     loadUserData();
-  }
+    _fetchData();
 
+  }
   Future<void> _fetchData() async {
+    print("--------------");
+    print("User Id : $uid");
+    print("------------------");
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      uid = prefs.getString('uid') ?? '';
+    });
     try {
-      List<ChildExecutiveModel> fetchedLeads = await childExecutiveController.fetchChildExecutives(
-       "7494"
-      );
+      List<ChildExecutiveModel> fetchedLeads = await childExecutiveController.fetchChildExecutives(uid.toString());
 
       setState(() {
         leadsList = fetchedLeads;
@@ -52,16 +66,6 @@ class _ChildExecutiveScreenState extends State<ChildExecutiveScreen> {
       });
       print('Error fetching leads: $e');
     }
-  }
-  String uid = '';
-
-  void loadUserData() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-
-      uid = prefs.getString('uid') ?? '';
-
-    });
   }
 
   void toggleSelection(int index) {

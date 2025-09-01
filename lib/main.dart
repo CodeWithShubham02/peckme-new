@@ -5,7 +5,6 @@ import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:peckme/view/auth/login.dart';
 import 'package:peckme/view/dashboard_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -23,6 +22,7 @@ class MyApp extends StatelessWidget {
     final uid = prefs.getString('uid');
     return uid != null && uid.isNotEmpty;
   }
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -53,3 +53,5 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+

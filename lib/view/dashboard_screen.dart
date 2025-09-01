@@ -1,17 +1,24 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
-import 'package:peckme/view/icici_prepaid_card.dart';
 import 'package:peckme/view/profile_screen.dart';
 import 'package:peckme/view/received_lead_screen.dart';
 import 'package:peckme/view/search_lead_screen.dart';
 import 'package:peckme/view/today_transferd_lead_screen.dart';
 import 'package:peckme/view/transfer_lead_screen.dart';
 import 'package:peckme/view/widget/drawer_widget.dart';
+import 'package:peckme/view/widget/icici_webview_widget.dart';
+import 'package:peckme/view/widget/webview_widget.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../handler/NetworkMonitor.dart';
 import '../utils/app_constant.dart';
 import 'auth/login.dart';
 
@@ -27,6 +34,9 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  final Connectivity _connectivity = Connectivity();
+  ConnectivityResult _connectionStatus = ConnectivityResult.none;
+  bool _isDialogShowing = false; // track karega dialog chal raha hai ya nahi
 
   String name = '';
   String mobile = '';
@@ -54,28 +64,125 @@ class _DashboardScreenState extends State<DashboardScreen> {
       address = prefs.getString('address') ?? '';
     });
   }
-  void _launchInBrowser(String url) async {
-    Uri uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(
-        uri,
-        mode: LaunchMode.platformDefault,
-      );
-    } else {
-      throw 'Could not launch $url';
-    }
-  }
+
+  DateTime _currentTime = DateTime.now();
+  // A Timer variable to control the periodic updates.
+  late Timer _timer;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     loadUserData();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        _currentTime = DateTime.now();
+      });
+    });
+    _checkConnection();
+    // Listen continuously
+    _connectivity.onConnectivityChanged.listen((List<ConnectivityResult> results) {
+      final result = results.isNotEmpty ? results.first : ConnectivityResult.none;
 
+      setState(() {
+        _connectionStatus = result;
+      });
+
+      if (result == ConnectivityResult.none) {
+        _showNoInternetDialog();
+      } else {
+        _closeDialogIfOpen();
+      }
+    });
+  }
+  Future<void> _checkConnection() async {
+    final result = await _connectivity.checkConnectivity();
+    setState(() {
+      _connectionStatus = result as ConnectivityResult;
+    });
+
+    if (result == ConnectivityResult.none) {
+      _showNoInternetDialog();
+    }
+  }
+  void _launchInBrowser(String url) async {
+    Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(
+        uri,
+        mode: LaunchMode.inAppBrowserView,
+      );
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+  void _showNoInternetDialog() {
+    if (!_isDialogShowing && mounted) {
+      _isDialogShowing = true;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text("No Internet"),
+            content: const Text("Your internet is off. Please check WiFi or Mobile Data."),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  _isDialogShowing = false;
+                  Navigator.of(context).pop();
+
+                  // ✅ Close the app
+                  if (Platform.isAndroid) {
+                    SystemNavigator.pop(); // Android style close
+                  } else if (Platform.isIOS) {
+                    exit(0); // iOS में यह Apple guideline के खिलाफ है, लेकिन काम करेगा
+                  } else {
+                    exit(0); // fallback
+                  }
+                },
+                child: const Text("Retry & Exit"),
+              ),
+            ],
+          );
+        },
+      ).then((_) {
+        _isDialogShowing = false;
+      });
+    }
+  }
+
+  void _closeDialogIfOpen() {
+    if (_isDialogShowing && Navigator.canPop(context)) {
+      Navigator.of(context).pop(); // close dialog
+      _isDialogShowing = false;
+    }
+  }
+  String getConnectionType() {
+    switch (_connectionStatus) {
+      case ConnectivityResult.wifi:
+        return "✅ Connected via WiFi";
+      case ConnectivityResult.mobile:
+        return "✅ Connected via Mobile Data";
+      case ConnectivityResult.none:
+        return "❌ No Internet";
+      default:
+        return "Unknown";
+    }
+  }
+  @override
+  void dispose() {
+    _timer.cancel();
+
+    super.dispose();
   }
 
 
   @override
   Widget build(BuildContext context) {
+    final String timeString =
+        '${_currentTime.hour.toString().padLeft(2, '0')}:'
+        '${_currentTime.minute.toString().padLeft(2, '0')}:'
+        '${_currentTime.second.toString().padLeft(2, '0')}';
     return Scaffold(
       appBar: AppBar(
           iconTheme: IconThemeData(color: Colors.black),
@@ -85,7 +192,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           IconButton(onPressed: (){
             Get.to(()=>ProfileScreen(
             ));
-          }, icon: Icon(Icons.person,color: Colors.black,)),
+          }, icon: Icon(Icons.person_pin,color: Colors.black,)),
           IconButton(onPressed: ()async{
             showDialog(context: context, builder: (_)=>
             AlertDialog(
@@ -118,6 +225,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             padding: const EdgeInsets.all(8.0),
             child: Column(
               children: [
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -125,7 +233,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color:  Colors.orange[100],
+                        color: AppConstant.appBattonBack,
                         borderRadius: BorderRadius.circular(5),
                         boxShadow: [
                           BoxShadow(
@@ -161,7 +269,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color: Colors.orange[100],
+                        color: AppConstant.appBattonBack,
                         borderRadius: BorderRadius.circular(5),
                         boxShadow: [
                           BoxShadow(
@@ -203,7 +311,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color: Colors.orange[100],
+                        color:AppConstant.appBattonBack,
                         borderRadius: BorderRadius.circular(5),
                         boxShadow: [
                           BoxShadow(
@@ -239,7 +347,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color: Colors.orange[100],
+                        color: AppConstant.appBattonBack,
                         borderRadius: BorderRadius.circular(5),
                         boxShadow: [
                           BoxShadow(
@@ -253,22 +361,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: InkWell(
                         onTap: (){
                           _launchInBrowser('https://fms.bizipac.com/apinew/secureapi/icici_pre_paid_card_gen.php?user_id=$uid&branch_id=$branchId#!/');
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //     builder: (context) => IciciPrePaidCardScreen(
-                          //       userId: uid,           // optional, can be null
-                          //       branchId: branchId,         // optional, can be null
-                          //       bizipacLeadId: "789",    // optional, can be null
-                          //       clientLeadId: "1001",    // optional, can be null
-                          //       gpsLat: "28.6129",
-                          //       gpsLng: "77.2295",
-                          //     ),
-                          //   ),
-                          // );
-                         // Get.to(()=>ImeiScreen());
+
                         },
-                        child: Column(
+                          child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.card_travel_outlined, size: 22, color: Colors.black87),
@@ -295,7 +390,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color: Colors.orange[100],
+                        color: AppConstant.appBattonBack,
                         borderRadius: BorderRadius.circular(5),
                         boxShadow: [
                           BoxShadow(
@@ -332,7 +427,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color: Colors.orange[100],
+                        color: AppConstant.appBattonBack,
                         borderRadius: BorderRadius.circular(5),
                         boxShadow: [
                           BoxShadow(
@@ -374,7 +469,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color: Colors.orange[100],
+                        color: AppConstant.appBattonBack,
                         borderRadius: BorderRadius.circular(5),
                         boxShadow: [
                           BoxShadow(
@@ -392,7 +487,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.person, size: 30, color: Colors.black87),
+                            Icon(Icons.person_3_sharp, size: 30, color: Colors.black87),
                             SizedBox(height: 12),
                             Text(
                               "Profile",
@@ -409,7 +504,101 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   ],
                 ),
-                SizedBox(height: 10,)
+                SizedBox(height: 10,),
+
+                Container(
+                  child: Column(
+
+                      children: [
+                        SizedBox(height: 150,),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text("Current Time : ".toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),),
+                            Text(
+                              timeString,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.normal,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            SizedBox(width: 5,),
+                            Icon(
+                              Icons.access_time,
+                              size: 10,
+                              color: Colors.black87,
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+
+                            Text("Version : ",
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),),
+                            Text(
+                              '1.0.01',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            SizedBox(width: 5,),
+                            Icon(
+                              Icons.verified_outlined,
+                              size: 10,
+                              color: Colors.black87,
+                            ),
+
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Flexible(
+                                child: Center(
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          "Copyrights © 2025 All Rights Reserved by - ",maxLines:2,
+                                          style: TextStyle(
+                                              fontSize: 9,
+                                          ),
+                                        ),
+                                        Text(
+                                          "Bizipac Couriers Pvt. Ltd.",maxLines:2,
+                                          style: TextStyle(
+                                              fontSize: 9,
+                                            color: Colors.red,
+                                            fontWeight: FontWeight.bold
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                ),
+                            ),
+
+                          ],
+                        )
+
+                      ],
+                  ),
+                )
+
               ],
             ),
           ),
