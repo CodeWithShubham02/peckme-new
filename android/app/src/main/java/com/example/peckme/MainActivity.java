@@ -1,14 +1,20 @@
 package com.example.peckme;
+
 import android.content.Intent;
-import android.os.Bundle;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.MethodChannel;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
+import android.content.ActivityNotFoundException;
 
-public class MainActivity extends FlutterActivity
-{
+public class MainActivity extends FlutterActivity {
+
     private static final String CHANNEL = "com.example.peckme/channel1";
-
 
     @Override
     public void configureFlutterEngine(FlutterEngine flutterEngine) {
@@ -17,7 +23,7 @@ public class MainActivity extends FlutterActivity
         new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL)
                 .setMethodCallHandler((call, result) -> {
                     if ("callNativeMethod".equals(call.method)) {
-                        // Get arguments from Flutter
+                        // ✅ Get arguments from Flutter
                         String client_id = call.argument("client_id");
                         String lead_id = call.argument("lead_id");
                         String customerName = call.argument("customerName");
@@ -29,35 +35,116 @@ public class MainActivity extends FlutterActivity
                         String gpslat = call.argument("gpslat");
                         String gpslong = call.argument("gpslong");
                         String banID = call.argument("banID");
-                        String userName = call.argument("userName");
+                        String userMobile = call.argument("userMobile");
                         String athena_lead_id = call.argument("athena_lead_id");
                         String agentName = call.argument("agentName");
                         String client_lead_id = call.argument("client_lead_id");
 
-                        // condiction check for client id
-                        if ("38".equals(client_id)) {
-                            result.success("OAPNxt app starting...");
-                        } else if ("28".equals(client_id)) {
-                            result.success("Assisted app starting...");
-                        } else if ("11".equals(client_id)) {
-                           // openSDK();
-                            result.success("Start Biometrics app starting "+client_id+","+athena_lead_id+"...");
-                        } else if ("12".equals(client_id)) {
-                            result.success("Client Id "+client_id+"...");
-                        } else if ("89".equals(client_id)) {
-                            result.success("IciciPrePaidCard  app starting...");
-                        } else if ("10".equals(client_id)) {
-                            result.success("GPS Lat Long ..." + gpslat + "," + gpslong);
-                        } else {
-                            result.success("Open ICICI APP ");
+                        try {
+                            switch (client_id) {
+                                case "38": {
+                                    String msg = startICICIApp(
+                                            "com.servo.icici.oapnxt",
+                                            "com.servo.icici.oapnxt.OPENOAPNXT",
+                                            "Hkz4ZcaYQeL/H341/8fmcf0gcrzOzziLPrJnV/L23yHhoEzxCojofUUFuqtW32mgadhGIOZM4GZiRXfkdm5nmA==",
+                                            "BAN488780",
+                                            athena_lead_id
+                                    );
+                                    result.success(msg);
+                                    break;
+                                }
+                                case "28": {
+                                    String msg = startICICIApp(
+                                            "com.servo.icici.oapnxt",
+                                            "com.servo.icici.oapnxt.OPENOAPNXT",
+                                            sessionId,
+                                            agentName,
+                                            athena_lead_id
+                                    );
+                                    result.success(msg);
+                                    break;
+                                }
+                                case "11": { // ICICI SDK
+                                    try {
+                                        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault());
+                                        String currentDate = sdf.format(new Date());
+
+                                        String agentVeerID = String.format("BIZ%05d", Integer.parseInt(user_id));
+
+                                        Intent intent = new Intent(this, Class.forName("com.bcpl.icici.IciciActivity"));
+                                        intent.putExtra("appId", athena_lead_id);
+                                        intent.putExtra("firstCallDate", currentDate);
+                                        intent.putExtra("appointmentDate", currentDate);
+                                        intent.putExtra("lastActionDate", currentDate);
+                                        intent.putExtra("customerName", customerName);
+                                        intent.putExtra("userName", banID);
+                                        intent.putExtra("AgentId", agentVeerID);
+                                        intent.putExtra("AgentName", agentName);
+                                        intent.putExtra("LeadId", lead_id);
+
+                                        if (intent.resolveActivity(getPackageManager()) != null) {
+                                            startActivity(intent);
+                                            result.success("ICICI SDK Activity Started");
+                                        } else {
+                                            result.error("ACTIVITY_NOT_FOUND", "ICICI Activity not installed/found!", null);
+                                        }
+                                    } catch (Exception e) {
+                                        result.error("INTENT_ERROR", e.getMessage(), null);
+                                    }
+                                    break;
+                                }
+                                case "12":
+                                    result.success("Client Id " + client_id + "...");
+                                    break;
+                                case "10":
+                                    result.success("GPS Lat Long ..." + gpslat + "," + gpslong);
+                                    break;
+                                default:
+                                    result.success("Open ICICI APP ");
+                                    break;
+                            }
+                        } catch (Exception e) {
+                            result.error("NATIVE_ERROR", e.getMessage(), null);
                         }
                     } else {
                         result.notImplemented();
                     }
                 });
-
-
     }
 
-}
+    // ✅ Now returns String instead of void
+    private String startICICIApp(
+            String packageName,
+            String action,
+            String sessionValue,
+            String agentName,
+            String athena_lead_id
+    ) {
+        try {
+            PackageManager pm = getPackageManager();
+            pm.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
 
+            Intent intent = new Intent();
+            intent.setPackage(packageName);
+            intent.setAction(action);
+
+            Bundle bundle = new Bundle();
+            bundle.putString("userName", agentName);
+            bundle.putString("sessionId", sessionValue);
+            bundle.putString("appId", athena_lead_id);
+            bundle.putString("sourcing_application", "com.bizipac");
+            intent.putExtras(bundle);
+
+            startActivityForResult(intent, packageName.equals("com.servo.icici.oapnxt") ? 2 : 6);
+
+            return "Opened ICICI app: " + packageName;
+
+        } catch (PackageManager.NameNotFoundException e) {
+            return "APP_NOT_FOUND is not installed. Please install it first.";
+        } catch (ActivityNotFoundException ex) {
+            return "ACTIVITY_NOT_FOUND: No matching activity found for " + packageName;
+        } catch (Exception ex) {
+            return "ERROR: " + ex.getMessage();
+        }
+    }
+}

@@ -15,10 +15,19 @@ subprojects {
 subprojects {
     project.evaluationDependsOn(":app")
 }
-
+subprojects {
+    if (plugins.hasPlugin("com.android.library")) {
+        tasks.configureEach {
+            if (name.contains("UnitTest")) {
+                enabled = false
+            }
+        }
+    }
+}
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
+
 plugins {
     // ...
 

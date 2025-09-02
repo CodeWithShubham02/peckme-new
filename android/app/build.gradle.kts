@@ -3,14 +3,13 @@ plugins {
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin") // Flutter plugin must come after Android and Kotlin
     id("com.google.gms.google-services") // Firebase
+    id("org.jetbrains.kotlin.plugin.compose") // ✅ this is required
 }
 
 repositories {
     google()
     mavenCentral()
-    flatDir {
-        dirs("libs") // For AAR/JAR files
-    }
+  flatDir { dirs("libs") }
 }
 
 android {
@@ -45,19 +44,45 @@ android {
         abortOnError = false // ✅ Safely disable lint build failure
         disable.add("MissingTranslation") // Optional
     }
+//    repositories {
+//        flatDir { dirs("libs") }
+//    }
+    buildFeatures {
+        compose = true
+    }
+    configurations.all {
+        resolutionStrategy {
+            force("com.squareup.okhttp3:okhttp:3.12.13")
+        }
+    }
+
 }
 
 dependencies {
     // Firebase BoM
     implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
+    implementation(files("libs/icici.aar"))
+    implementation(files("libs/itext5-itextpdf-5.5.12.jar"))
 
-    // Local JAR/AARs from libs folder
-//    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar", "*.aar"))))
+    // Jetpack Compose runtime + UI
+    implementation("androidx.core:core-ktx:1.16.0")
+    implementation("androidx.activity:activity-compose:1.9.0")
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+// Or the latest stable version
+
+    // Jetpack Compose BOM keeps versions aligned
+    implementation(platform("androidx.compose:compose-bom:2024.06.00"))
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.material:material")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("com.squareup.okhttp3:okhttp:3.12.13") // stable 3.x version
+    debugImplementation("androidx.compose.ui:ui-tooling")
+
+//    implementation(files("libs/icici.aar"))
 //
-//    // Explicit file references (only if needed, can remove if already covered by fileTree above)
-//    implementation(files("libs/itext5-itextpdf-5.5.12.jar"))
-//    implementation(files("libs/icici.aar")) // ✅ Make sure this file actually exists
-
+//    // common deps AAR चाहते हों तो
+//    implementation("androidx.appcompat:appcompat:1.6.1")
+//    implementation("com.google.android.material:material:1.9.0")
     // Firebase products
     implementation("com.google.firebase:firebase-analytics")
 
