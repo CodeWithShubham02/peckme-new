@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:android_intent_plus/android_intent.dart';
+import 'package:android_intent_plus/flag.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,6 +21,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../handler/NetworkMonitor.dart';
+import '../services/icici.dart';
 import '../utils/app_constant.dart';
 import 'auth/login.dart';
 
@@ -49,6 +52,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String image = '';
   String address = '';
 
+  void openIciciActivity() async {
+    final intent = AndroidIntent(
+      componentName: 'com.bcpl.icici.IciciActivity', // AAR वाली Activity
+      package: 'com.example.peckme', // ⚠️ यह आपके app का packageName होना चाहिए
+      flags: <int>[Flag.FLAG_ACTIVITY_NEW_TASK],
+    );
+
+    await intent.launch();
+  }
   void loadUserData() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -403,8 +415,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       padding: EdgeInsets.all(16),
                       child: InkWell(
                         onTap: (){
-                          Get.snackbar("Working mode...", "coming soon..",
-                            backgroundColor: Colors.white,);
+                          //openIciciActivity();
+                          // final icici = IciciLauncher(
+                          //   authId: "AUTH123",
+                          //   athenaLeadId: "LEAD456",
+                          // );
+                          // icici.openIciciApp(
+                          //   clientId: "38",        // or "28" or "11"
+                          //   sessionValue: "SESSION_123",
+                          //   sessionValue2: "SESSION_456",
+                          // );
                         },
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,

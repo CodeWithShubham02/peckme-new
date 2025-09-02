@@ -79,7 +79,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
     try{
       //it should be same on the flutter side and native side method name
       // String message=await platform.invokeMethod("callNativeMethod");
-      final result = await platform.invokeMethod('callNativeMethod', {
+      final result = await platform.invokeMethod<String>('callNativeMethod', {
         "client_id": clientId, // You can change this dynamically
         "lead_id": leadId, // You can change this dynamically
         "sessionId": sessionId, // You can change this dynamically
@@ -667,16 +667,8 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                     lead.clientId=="89"?
                     ElevatedButton(
                       onPressed: (){
-                        _launchInBrowser('https://fms.bizipac.com/apinew/secureapi/icici_pre_paid_card_gen.php?user_id=$user_id&branch_id=$branchId#!/');
-
-                        // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(
-                        //     builder: (_) => IciciWebviewWidget(
-                        //       url: "https://fms.bizipac.com/apinew/secureapi/icici_pre_paid_card_gen.php?user_id=$user_id&branch_id=$branchId#!/",
-                        //     ),
-                        //   ),
-                        // );
+                        //eske liye id par url hai
+                        Get.snackbar("Mesage", "ICICIPREPAID APP");
                         },
                       style: ElevatedButton.styleFrom(
                         backgroundColor:  AppConstant.appBattonBack,
@@ -735,7 +727,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                       child: const  Center(child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('OAPNxt App', style: TextStyle(color: AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal)),
+                          Text('Open Client App', style: TextStyle(color: AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal)),
                           SizedBox(width: 5,),
                           Icon(Icons.app_shortcut,color:  AppConstant.appIconColor,)
                         ],
@@ -782,7 +774,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                       child: const  Center(child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('Opennxt Assisted', style: TextStyle(color: AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal)),
+                          Text('Open Client App', style: TextStyle(color: AppConstant.appTextColor,fontSize: 15,fontWeight:FontWeight.normal)),
                           SizedBox(width: 5,),
                           Icon(Icons.food_bank_rounded,color:  AppConstant.appIconColor,)
                         ],
