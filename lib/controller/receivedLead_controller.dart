@@ -20,7 +20,7 @@ class ReceivedLeadController{
     final String apiUrl =
         'https://fms.bizipac.com/apinew/ws_new/new_lead.php?uid=$uid&start=$start&end=$end&branch_id=$branchId&app_version=$app_version&app_type=$appType';
 
-    const String HASH_KEY = "QWRTEfnfdys635";
+    const String HASH_KEY = "----------------";
 
     final response = await http.get(Uri.parse(apiUrl));
 
@@ -75,4 +75,5 @@ class ReceivedLeadController{
       throw Exception("Failed to load leads");
     }
   }
+
 }
