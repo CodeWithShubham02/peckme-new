@@ -1,4 +1,4 @@
 "AKIAS36GUUCJB2TFSZQJ"
 "gl5zNQSCHQZ+VABp1quIygcXbAkTQzvBK1JeYF3Q"
 
-define('HASH_KEY', 'QWRTEfnfdys635');
+define('HASH_KEY', 'QWRTEfnfdys');
