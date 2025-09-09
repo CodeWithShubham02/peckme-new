@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:aws_s3_api/s3-2006-03-01.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path/path.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
@@ -16,9 +17,19 @@ import 'package:pdf/widgets.dart' as pw; // for PDF widgets
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<String?> convertImageToPdfAndSave(File imageFile, String docname, String clientName, String leadId,String uid) async {
+
+  final compressedBytes = await FlutterImageCompress.compressWithList(
+    await imageFile.readAsBytes(),
+    quality: 75, // try 30-50 for smaller size
+    minWidth: 800,
+    minHeight: 1000,
+  );
+
+  final pdfImage = pw.MemoryImage(compressedBytes);
+  //final pdfImage = pw.MemoryImage(compressedBytes);
   final pdf = pw.Document();
-  final imageBytes = await imageFile.readAsBytes();
-  final pdfImage = pw.MemoryImage(imageBytes);
+  //final imageBytes = await imageFile.readAsBytes();
+
 
 
   // 🔹 Get current location
@@ -38,7 +49,7 @@ Future<String?> convertImageToPdfAndSave(File imageFile, String docname, String 
             pw.Positioned.fill(
               child: pw.Image(
                 pdfImage,
-                fit: pw.BoxFit.contain,
+                fit: pw.BoxFit.cover,
                 //fit:pw.BoxFit.fitHeight,
                 width: PdfPageFormat.a4.width,
                 height: PdfPageFormat.a4.height,
@@ -46,35 +57,35 @@ Future<String?> convertImageToPdfAndSave(File imageFile, String docname, String 
             ),
             // Lat/Long Overlay (bottom left corner)
             pw.Positioned(
-              bottom: 20,
+              top: 20,
               left: 20,
               child: pw.Opacity(
-                opacity: 0.5, // 🔹 adjust 0.0 (fully transparent) → 1.0 (fully opaque)
+                opacity: 0.8, // 🔹 adjust 0.0 (fully transparent) → 1.0 (fully opaque)
                 child: pw.Container(
                   padding: const pw.EdgeInsets.all(6),
                   color: PdfColors.black, // base color (will respect opacity above)
                   child: pw.Column(
-                    mainAxisAlignment: pw.MainAxisAlignment.center,
+                    mainAxisAlignment: pw.MainAxisAlignment.start,
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Text(
                         'TO BE USED FOR : $clientName',
                         style: pw.TextStyle(
-                          fontSize: 14,
+                          fontSize: 12,
                           color: PdfColors.white,
                         ),
                       ),
                       pw.Text(
                         'Location : $latLongText',
                         style: pw.TextStyle(
-                          fontSize: 14,
+                          fontSize: 12,
                           color: PdfColors.white,
                         ),
                       ),
                       pw.Text(
                         'DATE & TIME : ${DateTime.now()}',
                         style: pw.TextStyle(
-                          fontSize: 14,
+                          fontSize: 12,
                           color: PdfColors.white,
                         ),
                       ),
@@ -94,13 +105,15 @@ Future<String?> convertImageToPdfAndSave(File imageFile, String docname, String 
   int number = min + Random().nextInt(max - min + 1); // always 6-digit
   final Uint8List pdfBytes = await pdf.save();
 
+  print("📄 PDF Size: ${(pdfBytes.length / 1024).toStringAsFixed(2)} KB");
 
 // 🔹 Calculate PDF size
   int pdfSizeInBytes = pdfBytes.length;
   double pdfSizeInKB = pdfSizeInBytes / 1024;
 
 
-  print("📄 PDF Size: ${pdfSizeInKB.toStringAsFixed(2)} KB");
+  print("📄 PDF Size MB : ${pdfSizeInBytes.toStringAsFixed(2)} KB");
+  print("📄 PDF Size Kb : ${pdfSizeInKB.toStringAsFixed(2)} KB");
 
   final String docName=docname;
   String newStr4 = docName.replaceAll(" ", "_");
@@ -153,8 +166,8 @@ Future<String?> uploadPdfToS3({
   final s3 = S3(
     region: region,
     credentials: AwsClientCredentials(
-      accessKey: "------------------",
-      secretKey: "-------------------",
+      accessKey: "---------------------------",
+      secretKey: "---------------------------",
     ),
   );
 
