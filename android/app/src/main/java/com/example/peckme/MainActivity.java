@@ -40,14 +40,21 @@ public class MainActivity extends FlutterActivity {
                         String agentName = call.argument("agentName");
                         String client_lead_id = call.argument("client_lead_id");
 
+                        System.out.println("------------------------");
+                        System.out.println("AuthID  :"+auth_id);
+                        System.out.println("BanId  :"+banID);
+                        System.out.println("session  :"+sessionId);
+                        System.out.println("athena  :"+athena_lead_id);
+                        System.out.println("-----------------------");
+
                         try {
                             switch (client_id) {
                                 case "38": {
                                     String msg = startICICIApp(
                                             "com.servo.icici.oapnxt",
                                             "com.servo.icici.oapnxt.OPENOAPNXT",
-                                            "Hkz4ZcaYQeL/H341/8fmcf0gcrzOzziLPrJnV/L23yHhoEzxCojofUUFuqtW32mgadhGIOZM4GZiRXfkdm5nmA==",
-                                            "BAN488780",
+                                            sessionId,
+                                            auth_id,
                                             athena_lead_id
                                     );
                                     result.success(msg);
@@ -58,7 +65,7 @@ public class MainActivity extends FlutterActivity {
                                             "com.servo.icici.oapnxt",
                                             "com.servo.icici.oapnxt.OPENOAPNXT",
                                             sessionId,
-                                            agentName,
+                                            auth_id,
                                             athena_lead_id
                                     );
                                     result.success(msg);
@@ -121,9 +128,15 @@ public class MainActivity extends FlutterActivity {
             String athena_lead_id
     ) {
         try {
+
+            System.out.println("------------------------");
+            System.out.println("BanId  :"+agentName);
+            System.out.println("session  :"+sessionValue);
+            System.out.println("athena  :"+athena_lead_id);
+            System.out.println("-----------------------");
+
             PackageManager pm = getPackageManager();
             pm.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES);
-
             Intent intent = new Intent();
             intent.setPackage(packageName);
             intent.setAction(action);
@@ -136,11 +149,10 @@ public class MainActivity extends FlutterActivity {
             intent.putExtras(bundle);
 
             startActivityForResult(intent, packageName.equals("com.servo.icici.oapnxt") ? 2 : 6);
-
             return "Opened ICICI app: " + packageName;
 
         } catch (PackageManager.NameNotFoundException e) {
-            return "APP_NOT_FOUND is not installed. Please install it first.";
+            return "App not install (Please install it first)";
         } catch (ActivityNotFoundException ex) {
             return "ACTIVITY_NOT_FOUND: No matching activity found for " + packageName;
         } catch (Exception ex) {

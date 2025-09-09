@@ -35,8 +35,15 @@ android {
     }
 
     buildTypes {
-        release {
-            signingConfig = signingConfigs.getByName("debug") // Replace with actual signing config for production
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("debug") // 👈 important
+            isMinifyEnabled = false
+            isShrinkResources = false
+        }
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 
