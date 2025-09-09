@@ -22,6 +22,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../handler/NetworkMonitor.dart';
 import '../services/icici.dart';
+import '../services/session_id_services.dart';
 import '../utils/app_constant.dart';
 import 'auth/login.dart';
 
@@ -80,6 +81,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   DateTime _currentTime = DateTime.now();
   // A Timer variable to control the periodic updates.
   late Timer _timer;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -106,6 +108,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       }
     });
   }
+
   Future<void> _checkConnection() async {
     final result = await _connectivity.checkConnectivity();
     setState(() {
@@ -184,7 +187,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void dispose() {
     _timer.cancel();
-
     super.dispose();
   }
 
@@ -199,7 +201,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
           iconTheme: IconThemeData(color: Colors.black),
         backgroundColor:AppConstant.appInsideColor,
-        title: Text("Peck Me",style: TextStyle(color: Colors.black),),
+        title: Text("Peak Me ",style: TextStyle(color: Colors.black),),
         actions: [
           IconButton(onPressed: (){
             Get.to(()=>ProfileScreen(
@@ -212,8 +214,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               content: Text("are you sure you want to logout of your account?"),
               actions: [
                 IconButton(onPressed: () async{
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.clear();
                  Navigator.pop(context);
                 }, icon: Text('No')),
                 IconButton(onPressed: () async{
@@ -223,13 +223,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 },icon: Text('Yes'),),
               ],
               elevation: 10,
-              backgroundColor: Colors.white70,
+              backgroundColor: Colors.white,
             ),
             );
           }, icon: Icon(Icons.logout,color: Colors.black))
         ],
       ),
-      drawer: AdminDrawerWidget(),
+      // drawer: AdminDrawerWidget(),
       body: SingleChildScrollView(
         child: Container(
           color: Colors.white24,
@@ -415,16 +415,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       padding: EdgeInsets.all(16),
                       child: InkWell(
                         onTap: (){
-                          //openIciciActivity();
-                          // final icici = IciciLauncher(
-                          //   authId: "AUTH123",
-                          //   athenaLeadId: "LEAD456",
-                          // );
-                          // icici.openIciciApp(
-                          //   clientId: "38",        // or "28" or "11"
-                          //   sessionValue: "SESSION_123",
-                          //   sessionValue2: "SESSION_456",
-                          // );
+                          Get.snackbar(
+                            "Message",
+                            "Working mode.....!",
+                            icon:  Image.asset(
+                              "assets/logo/cmp_logo.png",
+                              height: 30,
+                              width: 30,
+                            ),
+                            shouldIconPulse: true,     // Small animation on the icon
+                            backgroundColor:AppConstant.appSnackBarBackground,
+                            colorText: AppConstant.appTextColor,
+                            snackPosition: SnackPosition.BOTTOM, // or TOP
+                            borderRadius: 15,
+                            margin: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            duration: const Duration(seconds: 3),
+                            isDismissible: true,
+                            forwardAnimationCurve: Curves.easeOutBack,
+                          );
                         },
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -524,13 +533,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   ],
                 ),
-                SizedBox(height: 10,),
-
+                SizedBox(height: 150,),
                 Container(
                   child: Column(
-
                       children: [
-                        SizedBox(height: 150,),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [

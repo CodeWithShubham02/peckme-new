@@ -78,7 +78,32 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
       await FlutterPhoneDirectCaller.callNumber(number);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No number found")),
+        SnackBar(
+          content: Row(
+            children: [
+              // Left side logo / icon
+              Image.asset(
+                "assets/logo/cmp_logo.png",   // अपने asset का path डालें
+                height: 24,
+                width: 24,
+              ),
+              const SizedBox(width: 10), // spacing
+
+              // Text
+              const Expanded(
+                child: Text(
+                  "No number found",
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
       );
     }
   }
@@ -141,7 +166,7 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
 
                       total = leadsList.length.toString();
                       return Card(
-                        color: Colors.white70,
+                        color: Colors.white,
                         elevation: 2,
                         margin: EdgeInsets.all(6),
                         shape: RoundedRectangleBorder(
@@ -314,7 +339,7 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
                                   ));
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppConstant.appBattonBack,
+                                  backgroundColor: AppConstant.appBatton1,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),

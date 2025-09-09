@@ -6,7 +6,9 @@ import 'package:aws_s3_api/s3-2006-03-01.dart';
 import 'package:get/get.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:peckme/services/complete_lead_services.dart';
 import 'package:peckme/view/child_executive_screen.dart';
+import 'package:peckme/view/dashboard_screen.dart';
 import 'package:peckme/view/postponed_lead_screen.dart';
 import 'package:peckme/view/refix_lead_screen.dart';
 import 'package:peckme/view/widget/doc_scren.dart';
@@ -19,8 +21,8 @@ import '../controller/lead_detail_controller.dart';
 import '../model/lead_detail_model.dart';
 import '../model/new_lead_model.dart';
 import '../services/ExotelService.dart';
-import '../services/SDKLauncher.dart';
 import '../services/getCurrentLocation.dart';
+import '../services/session_id_services.dart';
 import '../utils/app_constant.dart';
 
 class LeadDetailScreen extends StatefulWidget {
@@ -39,15 +41,27 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
   final platform=const MethodChannel("com.example.peckme/channel1");
   String user_id = '';
   String branchId='';
+  String authId='';
 
   void loadUserData() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       user_id = prefs.getString('uid') ?? '';
       branchId = prefs.getString('branchId') ?? '';
-
+      authId = prefs.getString('authId') ?? '';
 
     });
+  }
+  void _launchInBrowser(String url) async {
+    Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(
+        uri,
+        mode: LaunchMode.inAppBrowserView,
+      );
+    } else {
+      throw 'Could not launch $url';
+    }
   }
   Future<void> _callLeads(BuildContext context,String leadId) async {
     String? number = await ExotelService.getVirtualNumber(leadId);
@@ -95,43 +109,35 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
         "userName": userName,
         "athena_lead_id": athena_lead_id,
         "agentName": agentName,
-
       });
       print("Result from native: $result");
-      Get.snackbar("Message from native", '$result',
-        backgroundColor:AppConstant.appSnackBarBackground, // Background color of the snackbar
-        colorText: Colors.black, // Color of the title and message text
-        snackPosition: SnackPosition.TOP, // Position of the snackbar (TOP or BOTTOM)
-        margin: const EdgeInsets.all(10), // Margin around the snackbar
-        borderRadius: 10, // Border radius of the snackbar
-        animationDuration: const Duration(milliseconds: 500), // Animation duration
-        duration: const Duration(seconds: 3), // Duration the snackbar is displayed
-        icon: const Icon(Icons.error, color: Colors.black), // Optional icon
-        shouldIconPulse: true, // Whether the icon should pulse
-        isDismissible: true, // Whether the snackbar can be dismissed by swiping
-        dismissDirection: DismissDirection.horizontal,);
+      Get.snackbar(
+        "Message",
+        "$result",
+        icon:  Image.asset(
+          "assets/logo/cmp_logo.png",
+          height: 30,
+          width: 30,
+        ),
+        shouldIconPulse: true,     // Small animation on the icon
+        backgroundColor:AppConstant.appSnackBarBackground,
+        colorText: AppConstant.appTextColor,
+        snackPosition: SnackPosition.BOTTOM, // or TOP
+        borderRadius: 15,
+        margin: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        duration: const Duration(seconds: 3),
+        isDismissible: true,
+        forwardAnimationCurve: Curves.easeOutBack,
+      );
+
+
     }on PlatformException catch(e){
       print("Exception while calling Native Method  : $e");
     }
   }
-  // void openNXTServices() {
-  //   launchOtherApp('https://oapnext.icicibank.com:8443/OAPNxtService/zct/SessionService/escpGetSessionId'); // Example deep link for Facebook Lite
-  //   // Or, if you know the package ID for Android:
-  //   // launchOtherApp('market://details?id=com.facebook.lite'); // Opens Play Store page
-  // }
-  
   // Function to launch another app
-  void _launchInBrowser(String url) async {
-    Uri uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(
-        uri,
-        mode: LaunchMode.inAppBrowserView,
-      );
-    } else {
-      throw 'Could not launch $url';
-    }
-  }
+
 
   String location_lat = '';
   String location_long = '';
@@ -150,7 +156,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
     }
   }
 
-
+  List<String> collectedDocs = [];
   @override
   void initState() {
     // TODO: implement initState
@@ -158,7 +164,17 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
     _futureLead = LeadDetailsController.fetchLeadById(widget.lead.leadId);
     _getLocation();
     loadUserData();
+    _loadCollectedDocs();
 
+  }
+  Future<void> _loadCollectedDocs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedDocs = prefs.getStringList('collectedDocs');
+    if (savedDocs != null) {
+      setState(() {
+        collectedDocs = savedDocs;
+      });
+    }
   }
   @override
   Widget build(BuildContext context) {
@@ -197,8 +213,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
         if (snapshot.hasData && snapshot.data!.data.isNotEmpty) {
           final lead = snapshot.data!.data[0]; // Get the first item
           final String? callDate = lead.callDate;
-
-          print("Shubham id :$callDate");
+          print("Auth/BanId : $authId");
           return SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(6.0),
@@ -623,32 +638,56 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                         String uid = '';
                         String branchId = '';
                         String authId = '';
-                        String userToken='';
                         final SharedPreferences prefs = await SharedPreferences.getInstance();
                         setState(() {
                           name = prefs.getString('name') ?? '';
                           uid = prefs.getString('uid') ?? '';
                           branchId = prefs.getString('branchId') ?? '';
-                          userToken = prefs.getString('userToken') ?? '';
                           authId = prefs.getString('authId') ?? '';
                         });
-                        _callNativeMethod(
-                          clientId: lead.clientId,
-                          leadId: lead.leadId,
-                          sessionId: userToken,
-                          amzAppID: lead.athenaLeadId,
-                          customerName: lead.customerName,
-                          banID:authId,
-                          userName:authId,
-                          athena_lead_id:lead.athenaLeadId,
-                          agentName:name,
-                          user_id: uid,
-                          branch_id: branchId,
-                          auth_id: authId,
-                          client_lead_id:lead.athenaLeadId,
-                          gpslat:location_lat,
-                          gpslong:location_long,
-                        );
+                        String? sessionid;
+                        sessionid = await ApiService.getSessionId(authId);
+
+                        if(authId.isNotEmpty && (sessionid?.isNotEmpty ?? false)){
+                          _callNativeMethod(
+                            clientId: lead.clientId,
+                            leadId: lead.leadId,
+                            sessionId: sessionid!,
+                            amzAppID: lead.athenaLeadId,
+                            customerName: lead.customerName,
+                            banID:authId,
+                            userName:authId,
+                            athena_lead_id:lead.athenaLeadId,
+                            agentName:name,
+                            user_id: uid,
+                            branch_id: branchId,
+                            auth_id: authId,
+                            client_lead_id:lead.athenaLeadId,
+                            gpslat:location_lat,
+                            gpslong:location_long,
+                          );
+                        }else{
+
+                          Get.snackbar(
+                            "Message",
+                            "Your auth_id or sessionId is not create!",
+                            icon:  Image.asset(
+                              "assets/logo/cmp_logo.png",
+                              height: 30,
+                              width: 30,
+                            ),
+                            shouldIconPulse: true,     // Small animation on the icon
+                            backgroundColor:AppConstant.appSnackBarBackground,
+                            colorText: AppConstant.appTextColor,
+                            snackPosition: SnackPosition.BOTTOM, // or TOP
+                            borderRadius: 15,
+                            margin: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            duration: const Duration(seconds: 3),
+                            isDismissible: true,
+                            forwardAnimationCurve: Curves.easeOutBack,
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor:  AppConstant.appBattonBack,
@@ -667,9 +706,10 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                     lead.clientId=="89"?
                     ElevatedButton(
                       onPressed: (){
-                        //eske liye id par url hai
-                        Get.snackbar("Mesage", "ICICIPREPAID APP");
-                        },
+
+                       // _launchInBrowser('https://fms.bizipac.com/apinew/secureapi/icici_pre_paid_card_gen.php?user_id=$user_id&branch_id=$branchId#!/');
+                        _launchInBrowser('https://fms.bizipac.com/apinew/secureapi/icici_pre_paid_card_gen.php?user_id=$user_id&branch_id=$branchId&bizipac_lead_id=${lead.leadId}&client_lead_id=${lead.clientId}&latitude_val=19.3767643&longitude_val=19.3434545#!/');
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor:  AppConstant.appBattonBack,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
@@ -701,23 +741,47 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                           userToken = prefs.getString('userToken') ?? '';
                           authId = prefs.getString('authId') ?? '';
                         });
-                        _callNativeMethod(
-                          clientId: lead.clientId,
-                          leadId: lead.leadId,
-                          sessionId: userToken,
-                          amzAppID: lead.athenaLeadId,
-                          customerName: lead.customerName,
-                          banID:authId,
-                          userName:authId,
-                          athena_lead_id:lead.athenaLeadId,
-                          agentName:name,
-                          user_id: uid,
-                          branch_id: branchId,
-                          auth_id: authId,
-                          client_lead_id:lead.athenaLeadId,
-                          gpslat:location_lat,
-                          gpslong:location_long,
-                        );
+                        String? sessionid;
+                        sessionid = await ApiService.getSessionId(authId);
+                        if(authId.isNotEmpty && (sessionid?.isNotEmpty ?? false)){
+                          _callNativeMethod(
+                            clientId: lead.clientId,
+                            leadId: lead.leadId,
+                            sessionId: sessionid!,
+                            amzAppID: lead.athenaLeadId,
+                            customerName: lead.customerName,
+                            banID:authId,
+                            userName:authId,
+                            athena_lead_id:lead.athenaLeadId,
+                            agentName:name,
+                            user_id: uid,
+                            branch_id: branchId,
+                            auth_id: authId,
+                            client_lead_id:lead.athenaLeadId,
+                            gpslat:location_lat,
+                            gpslong:location_long,
+                          );
+                        }else{
+                          Get.snackbar(
+                            "Message",
+                            "Your auth_id or sessionId is not create!",
+                            icon:  Image.asset(
+                              "assets/logo/cmp_logo.png",
+                              height: 30,
+                              width: 30,
+                            ),
+                            shouldIconPulse: true,     // Small animation on the icon
+                            backgroundColor:AppConstant.appSnackBarBackground,
+                            colorText: AppConstant.appTextColor,
+                            snackPosition: SnackPosition.BOTTOM, // or TOP
+                            borderRadius: 15,
+                            margin: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            duration: const Duration(seconds: 3),
+                            isDismissible: true,
+                            forwardAnimationCurve: Curves.easeOutBack,
+                          );
+                        }
                         // openNXTServices();
                       },
                       style: ElevatedButton.styleFrom(
@@ -749,23 +813,47 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                           userToken = prefs.getString('userToken') ?? '';
                           authId = prefs.getString('authId') ?? '';
                         });
-                        _callNativeMethod(
-                          clientId: lead.clientId,
-                          leadId: lead.leadId,
-                          sessionId: userToken,
-                          amzAppID: lead.athenaLeadId,
-                          customerName: lead.customerName,
-                          banID:authId,
-                          userName:authId,
-                          athena_lead_id:lead.athenaLeadId,
-                          agentName:name,
-                          user_id: uid,
-                          branch_id: branchId,
-                          auth_id: authId,
-                          client_lead_id:lead.athenaLeadId,
-                          gpslat:location_lat,
-                          gpslong:location_long,
-                        );
+                        String? sessionid;
+                        sessionid = await ApiService.getSessionId(authId);
+                        if(authId.isNotEmpty && (sessionid?.isNotEmpty ?? false)){
+                          _callNativeMethod(
+                            clientId: lead.clientId,
+                            leadId: lead.leadId,
+                            sessionId: sessionid!,
+                            amzAppID: lead.athenaLeadId,
+                            customerName: lead.customerName,
+                            banID:authId,
+                            userName:authId,
+                            athena_lead_id:lead.athenaLeadId,
+                            agentName:name,
+                            user_id: uid,
+                            branch_id: branchId,
+                            auth_id: authId,
+                            client_lead_id:lead.athenaLeadId,
+                            gpslat:location_lat,
+                            gpslong:location_long,
+                          );
+                        }else{
+                          Get.snackbar(
+                            "Message",
+                            "Your auth_id or sessionId is not create!",
+                            icon:  Image.asset(
+                              "assets/logo/cmp_logo.png",
+                              height: 30,
+                              width: 30,
+                            ),
+                            shouldIconPulse: true,     // Small animation on the icon
+                            backgroundColor:AppConstant.appSnackBarBackground,
+                            colorText: AppConstant.appTextColor,
+                            snackPosition: SnackPosition.BOTTOM, // or TOP
+                            borderRadius: 15,
+                            margin: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            duration: const Duration(seconds: 3),
+                            isDismissible: true,
+                            forwardAnimationCurve: Curves.easeOutBack,
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor:  AppConstant.appBattonBack,
@@ -795,23 +883,47 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                           userToken = prefs.getString('userToken') ?? '';
                           authId = prefs.getString('authId') ?? '';
                         });
-                        _callNativeMethod(
-                          clientId: lead.clientId,
-                          leadId: lead.leadId,
-                          sessionId: userToken,
-                          amzAppID: lead.athenaLeadId,
-                          customerName: lead.customerName,
-                          banID:authId,
-                          userName:authId,
-                          athena_lead_id:lead.athenaLeadId,
-                          agentName:name,
-                          user_id: uid,
-                          branch_id: branchId,
-                          auth_id: authId,
-                          client_lead_id:lead.athenaLeadId,
-                          gpslat:location_lat,
-                          gpslong:location_long,
-                        );
+                        String? sessionid;
+                        sessionid = await ApiService.getSessionId(authId);
+                        if(authId.isNotEmpty && (sessionid?.isNotEmpty ?? false)){
+                          _callNativeMethod(
+                            clientId: lead.clientId,
+                            leadId: lead.leadId,
+                            sessionId: sessionid!,
+                            amzAppID: lead.athenaLeadId,
+                            customerName: lead.customerName,
+                            banID:authId,
+                            userName:authId,
+                            athena_lead_id:lead.athenaLeadId,
+                            agentName:name,
+                            user_id: uid,
+                            branch_id: branchId,
+                            auth_id: authId,
+                            client_lead_id:lead.athenaLeadId,
+                            gpslat:location_lat,
+                            gpslong:location_long,
+                          );
+                        }else{
+                          Get.snackbar(
+                            "Message",
+                            "Your auth_id or sessionId is not create!",
+                            icon:  Image.asset(
+                              "assets/logo/cmp_logo.png",
+                              height: 30,
+                              width: 30,
+                            ),
+                            shouldIconPulse: true,     // Small animation on the icon
+                            backgroundColor:AppConstant.appSnackBarBackground,
+                            colorText: AppConstant.appTextColor,
+                            snackPosition: SnackPosition.BOTTOM, // or TOP
+                            borderRadius: 15,
+                            margin: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            duration: const Duration(seconds: 3),
+                            isDismissible: true,
+                            forwardAnimationCurve: Curves.easeOutBack,
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor:  AppConstant.appBattonBack,
@@ -1121,6 +1233,9 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                         leadId:lead.leadId,
                         clientId:lead.clientId,
                       ));
+                      setState(() {
+
+                      });
                       if (result != null && result is List<String>) {
                         // ✅ Show result data in SnackBar or setState
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -1158,8 +1273,51 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                         fontSize: 15,
                         fontWeight:FontWeight.bold
                     ),):SizedBox.shrink(),
+                  // lead.client_mobile_app == "2" && lead.fiData == 1
+                  //     ? collectedDocs.isEmpty
+                  //     ? Center(child: Text("No documents collected yet"))
+                  //     : Padding(
+                  //   padding: const EdgeInsets.all(16.0),
+                  //   child: Column(
+                  //     crossAxisAlignment: CrossAxisAlignment.start,
+                  //     children: [
+                  //       Text(
+                  //         "Document :",
+                  //         style: TextStyle(
+                  //           fontSize: 16,
+                  //           fontWeight: FontWeight.bold,
+                  //         ),
+                  //       ),
+                  //       const SizedBox(height: 10),
+                  //       ...collectedDocs.map((doc) {
+                  //         return Row(
+                  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  //           children: [
+                  //             Text(
+                  //               doc.toUpperCase(),
+                  //               style: TextStyle(fontSize: 16),
+                  //             ),
+                  //             IconButton(
+                  //               icon: Icon(Icons.delete, color: AppConstant.appTextColor),
+                  //               onPressed: () async{
+                  //                 setState(() {
+                  //                   collectedDocs.remove(doc);
+                  //                 });
+                  //                 final prefs = await SharedPreferences.getInstance();
+                  //                 await prefs.setStringList('collectedDocs', collectedDocs);
+                  //
+                  //               },
+                  //             ),
+                  //           ],
+                  //         );
+                  //       }).toList(),
+                  //     ],
+                  //   ),
+                  // )
+                  //     : SizedBox.shrink(),
+
                   ElevatedButton(
-                    onPressed: (){
+                      onPressed: () async{
                       _showConfirmDialog(context,lead.leadId,user_id);
                     },
                     style: ElevatedButton.styleFrom(
@@ -1193,8 +1351,8 @@ void _showConfirmDialog(BuildContext context, String leadId, String user_id) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-       title: Text("$leadId $user_id"),
-      content: const Text("Are you sure you want to submit this lead?"),
+       title: Text("Complete Lead"),
+      content: const Text("Are you sure you want to complete this lead?"),
       actions: [
         TextButton(
           onPressed: () {
@@ -1203,12 +1361,47 @@ void _showConfirmDialog(BuildContext context, String leadId, String user_id) {
           child: const Text("No"),
         ),
         ElevatedButton(
-          onPressed: () {
-            Navigator.of(context).pop(true); // ✅ Yes
-            // 👉 यहाँ API call या submit logic लिख सकते हो
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Lead Submitted!")),
+          onPressed: () async{
+            final result = await CompleteLeadServices().completeLead(
+              loginId: user_id,
+              leadId: leadId,
             );
+            if (result.success == 1) {
+              Get.to(()=>DashboardScreen());
+              Get.snackbar(
+                "Final",
+                "Lead submitted!",
+                icon: Image.asset(
+                  "assets/logo/cmp_logo.png",
+                  height: 30,
+                  width: 30,
+                ),
+                shouldIconPulse: true,
+                backgroundColor: AppConstant.appSnackBarBackground,
+                colorText: AppConstant.appTextColor,
+                snackPosition: SnackPosition.BOTTOM,
+                borderRadius: 15,
+                margin: const EdgeInsets.all(12),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                duration: const Duration(seconds: 3),
+                isDismissible: true,
+                forwardAnimationCurve: Curves.easeOutBack,
+              );
+            } else {
+              Navigator.of(context).pop(true);
+              // ❌ अगर fail हुआ तो error message दिखा दो
+              Get.snackbar(
+                "Error",
+                result.message.isNotEmpty ? result.message : "Lead not submitted!",
+                backgroundColor: AppConstant.appSnackBarBackground,
+                colorText: AppConstant.appTextColor,
+                snackPosition: SnackPosition.BOTTOM,
+                borderRadius: 15,
+                margin: const EdgeInsets.all(12),
+                duration: const Duration(seconds: 3),
+              );
+            }
+
           },
           child: const Text("Yes"),
         ),

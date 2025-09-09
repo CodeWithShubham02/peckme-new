@@ -2,11 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -27,6 +29,9 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
+  final Connectivity _connectivity = Connectivity();
+  ConnectivityResult _connectionStatus = ConnectivityResult.none;
+  bool _isDialogShowing = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final GetDeviceTokenController token=Get.put(GetDeviceTokenController());
   final AuthService _authService=Get.put(AuthService());
@@ -84,7 +89,74 @@ class _LoginState extends State<Login> {
     super.initState();
 
     _getDeviceInfo();
+    _checkConnection();
+    // Listen continuously
+    _connectivity.onConnectivityChanged.listen((List<ConnectivityResult> results) {
+      final result = results.isNotEmpty ? results.first : ConnectivityResult.none;
 
+      setState(() {
+        _connectionStatus = result;
+      });
+
+      if (result == ConnectivityResult.none) {
+        _showNoInternetDialog();
+      } else {
+        _closeDialogIfOpen();
+      }
+    });
+
+  }
+  Future<void> _checkConnection() async {
+    final result = await _connectivity.checkConnectivity();
+    setState(() {
+      _connectionStatus = result as ConnectivityResult;
+    });
+
+    if (result == ConnectivityResult.none) {
+      _showNoInternetDialog();
+    }
+  }
+  void _showNoInternetDialog() {
+    if (!_isDialogShowing && mounted) {
+      _isDialogShowing = true;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text("No Internet"),
+            content: const Text("Your internet is off. Please check WiFi or Mobile Data."),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  _isDialogShowing = false;
+                  Navigator.of(context).pop();
+
+                  // ✅ Close the app
+                  if (Platform.isAndroid) {
+                    SystemNavigator.pop(); // Android style close
+                  } else if (Platform.isIOS) {
+                    exit(0); // iOS में यह Apple guideline के खिलाफ है, लेकिन काम करेगा
+                  } else {
+                    exit(0); // fallback
+                  }
+                },
+                child: const Text("Retry & Exit"),
+              ),
+            ],
+          );
+        },
+      ).then((_) {
+        _isDialogShowing = false;
+      });
+    }
+  }
+
+  void _closeDialogIfOpen() {
+    if (_isDialogShowing && Navigator.canPop(context)) {
+      Navigator.of(context).pop(); // close dialog
+      _isDialogShowing = false;
+    }
   }
   String responseMsg = '';
 
@@ -106,37 +178,49 @@ class _LoginState extends State<Login> {
         "dateTime": DateTime.now(),
 
       });
-
-
       setState(() {
         if(result.success==1){
-
-          Get.snackbar("Send OTP", 'please enter the 4 digit otp!!',
-            backgroundColor: AppConstant.appSnackBarBackground, // Background color of the snackbar
-            colorText: Colors.black, // Color of the title and message text
-            snackPosition: SnackPosition.TOP, // Position of the snackbar (TOP or BOTTOM)
-            margin: const EdgeInsets.all(10), // Margin around the snackbar
-            borderRadius: 10, // Border radius of the snackbar
-            animationDuration: const Duration(milliseconds: 500), // Animation duration
-            duration: const Duration(seconds: 3), // Duration the snackbar is displayed
-            icon: const Icon(Icons.message, color: Colors.white), // Optional icon
-            shouldIconPulse: true, // Whether the icon should pulse
-            isDismissible: true, // Whether the snackbar can be dismissed by swiping
-            dismissDirection: DismissDirection.horizontal,);
+          Get.snackbar(
+            "Send OTP!",
+            "please enter the 4 digit otp!!!",
+            icon:  Image.asset(
+              "assets/logo/cmp_logo.png",
+              height: 30,
+              width: 30,
+            ),
+            shouldIconPulse: true,     // Small animation on the icon
+            backgroundColor:AppConstant.appSnackBarBackground,
+            colorText: AppConstant.appTextColor,
+            snackPosition: SnackPosition.BOTTOM, // or TOP
+            borderRadius: 15,
+            margin: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            duration: const Duration(seconds: 3),
+            isDismissible: true,
+            forwardAnimationCurve: Curves.easeOutBack,
+          );
           showCustomBottomSheet(userId,token.userToken.toString(),result.message.toString());
+
         }else{
-          Get.snackbar("Oops!", 'your userId and password does not exist in my database so please connect to the office, Thank You!!',
-            backgroundColor: AppConstant.appSnackBarBackground, // Background color of the snackbar
-            colorText: Colors.black, // Color of the title and message text
-            snackPosition: SnackPosition.TOP, // Position of the snackbar (TOP or BOTTOM)
-            margin: const EdgeInsets.all(10), // Margin around the snackbar
-            borderRadius: 10, // Border radius of the snackbar
-            animationDuration: const Duration(milliseconds: 500), // Animation duration
-            duration: const Duration(seconds: 3), // Duration the snackbar is displayed
-            icon: const Icon(Icons.message, color: Colors.black), // Optional icon
-            shouldIconPulse: true, // Whether the icon should pulse
-            isDismissible: true, // Whether the snackbar can be dismissed by swiping
-            dismissDirection: DismissDirection.horizontal,);
+          Get.snackbar(
+            "Oops!",
+            "your userId and password does not exist in my database so please connect to the office, Thank You!!",
+            icon:  Image.asset(
+              "assets/logo/cmp_logo.png",
+              height: 30,
+              width: 30,
+            ),
+            shouldIconPulse: true,     // Small animation on the icon
+            backgroundColor:AppConstant.appSnackBarBackground,
+            colorText: AppConstant.appTextColor,
+            snackPosition: SnackPosition.BOTTOM, // or TOP
+            borderRadius: 15,
+            margin: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            duration: const Duration(seconds: 3),
+            isDismissible: true,
+            forwardAnimationCurve: Curves.easeOutBack,
+          );
         }
         });
     } else {
@@ -149,7 +233,6 @@ class _LoginState extends State<Login> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       body: SingleChildScrollView(
         child: Form(
           key: _formKey,
@@ -173,7 +256,7 @@ class _LoginState extends State<Login> {
                                   'assets/logo/logo.png', fit: BoxFit.cover,),
                               ),
                               SizedBox(height: 10),
-                              Text(_deviceInfo.toString()),
+                              //Text(_deviceInfo.toString()),
 
                               Divider(thickness: 2, height: 40),
                               Row(
@@ -247,18 +330,7 @@ class _LoginState extends State<Login> {
                                   if(_formKey.currentState!.validate()) {
                                     requestOtp();
                                   }else{
-                                    Get.snackbar("Error", 'please enter the all field..',
-                                      backgroundColor:AppConstant.appSnackBarBackground, // Background color of the snackbar
-                                      colorText: Colors.black, // Color of the title and message text
-                                      snackPosition: SnackPosition.TOP, // Position of the snackbar (TOP or BOTTOM)
-                                      margin: const EdgeInsets.all(10), // Margin around the snackbar
-                                      borderRadius: 10, // Border radius of the snackbar
-                                      animationDuration: const Duration(milliseconds: 500), // Animation duration
-                                      duration: const Duration(seconds: 3), // Duration the snackbar is displayed
-                                      icon: const Icon(Icons.error, color: Colors.black), // Optional icon
-                                      shouldIconPulse: true, // Whether the icon should pulse
-                                      isDismissible: true, // Whether the snackbar can be dismissed by swiping
-                                      dismissDirection: DismissDirection.horizontal,);
+
                                   }
                                 },
                                 child: Container(
@@ -269,16 +341,46 @@ class _LoginState extends State<Login> {
                                       borderRadius: BorderRadius.circular(10)
                                   ),
 
-                                  child: Center(child: Text('Send Otp',style: TextStyle(color: Colors.white,fontSize: 20,fontFamily: 'sens-serif'),)),
+                                  child: Center(child: Text('Login',style: TextStyle(color: Colors.white,fontSize: 15,fontFamily: 'sens-serif'),)),
                                 ),
                               ),
 
                             ],
                           ),
-                          Text(
-                            'AppConstant.appSnackBarBackground',
-                            style: TextStyle(color: Colors.grey),
-                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Flexible(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Center(
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          "Copyrights © 2025 All Rights Reserved by - ",maxLines:2,
+                                          style: TextStyle(
+                                            fontSize: 7,
+                                          ),
+                                        ),
+                                        Text(
+                                          "Bizipac Couriers Pvt. Ltd.",maxLines:2,
+                                          style: TextStyle(
+                                              fontSize: 7,
+                                              color: Colors.red,
+                                              fontWeight: FontWeight.bold
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                            ],
+                          )
                         ],
                       ),
                     ),
@@ -349,8 +451,8 @@ class _LoginState extends State<Login> {
                         borderRadius: BorderRadius.circular(10.0)),
                     child: TextButton(
                       child: Text(
-                        'Submit',
-                        style: TextStyle(color: Colors.white,),
+                        'Login',
+                        style: TextStyle(color: Colors.white,fontSize: 15),
                       ),
                       onPressed: () async {
                         String otp=userOtp;
@@ -366,20 +468,50 @@ class _LoginState extends State<Login> {
                               context: context// Get from device_info
                             );
                             print(message.toString());
-                         Get.snackbar("Login success!", 'you are login successfully.!',
-                           backgroundColor:AppConstant.appSnackBarBackground, // Background color of the snackbar
-                           colorText: Colors.black, // Color of the title and message text
-                           snackPosition: SnackPosition.BOTTOM, // Position of the snackbar (TOP or BOTTOM)
-                           margin: const EdgeInsets.all(10), // Margin around the snackbar
-                           borderRadius: 10, // Border radius of the snackbar
-                           animationDuration: const Duration(milliseconds: 500), // Animation duration
-                           duration: const Duration(seconds: 3), // Duration the snackbar is displayed
-                           icon: const Icon(Icons.account_circle_outlined, color: Colors.black), // Optional icon
-                           shouldIconPulse: true, // Whether the icon should pulse
-                           isDismissible: true, // Whether the snackbar can be dismissed by swiping
-                           dismissDirection: DismissDirection.horizontal,
+                            if (result['success'] == true) {
+                              // ✅ Login success
+                              Get.snackbar(
+                                "Login success!!",
+                                "You are logged in successfully ✅!",
+                                icon: Image.asset(
+                                  "assets/logo/cmp_logo.png",
+                                  height: 30,
+                                  width: 30,
+                                ),
+                                shouldIconPulse: true,
+                                backgroundColor: AppConstant.appSnackBarBackground,
+                                colorText: AppConstant.appTextColor,
+                                snackPosition: SnackPosition.BOTTOM,
+                                borderRadius: 15,
+                                margin: const EdgeInsets.all(12),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                duration: const Duration(seconds: 3),
+                                isDismissible: true,
+                                forwardAnimationCurve: Curves.easeOutBack,
+                              );
 
-                         );
+                            } else {
+                              Get.snackbar(
+                                "Login Failed",
+                               "something want wrong please contact head office!",
+                                icon: const Icon(
+                                  Icons.error_outline,
+                                  color: Colors.black,
+                                  size: 28,
+                                ),
+                                shouldIconPulse: true,
+                                backgroundColor: AppConstant.appSnackBarBackground,
+                                colorText: AppConstant.appTextColor,
+                                snackPosition: SnackPosition.BOTTOM,
+                                borderRadius: 15,
+                                margin: const EdgeInsets.all(12),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                duration: const Duration(seconds: 4),
+                                isDismissible: true,
+                                forwardAnimationCurve: Curves.easeOutBack,
+                              );
+                              Get.to(()=>Login());
+                            }
 
 
 
@@ -397,6 +529,25 @@ class _LoginState extends State<Login> {
                             isDismissible: true, // Whether the snackbar can be dismissed by swiping
                             dismissDirection: DismissDirection.horizontal,
 
+                          );
+                          Get.snackbar(
+                            "Error !!",
+                            "Your OTP does not match please check the otp ❌ !!",
+                            icon: Image.asset(
+                              "assets/logo/cmp_logo.png",
+                              height: 30,
+                              width: 30,
+                            ),
+                            shouldIconPulse: true,
+                            backgroundColor: AppConstant.appSnackBarBackground,
+                            colorText: AppConstant.appTextColor,
+                            snackPosition: SnackPosition.BOTTOM,
+                            borderRadius: 15,
+                            margin: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            duration: const Duration(seconds: 3),
+                            isDismissible: true,
+                            forwardAnimationCurve: Curves.easeOutBack,
                           );
                         }
                       },

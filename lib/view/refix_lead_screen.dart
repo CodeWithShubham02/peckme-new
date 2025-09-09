@@ -103,157 +103,356 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text('Select that date and time  you want to Refix Appointment : *',style: TextStyle(color: Colors.red,fontSize: 14,fontWeight: FontWeight.bold,fontFamily: 'RaleWay'),),
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              'Select the date and time you want to Refix Appointment : *',
+              style: GoogleFonts.poppins(   // 👈 changed font family
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Colors.redAccent,   // 👈 changed color (you can also use AppConstant.appTextColor)
+              ),
             ),
+          ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: ElevatedButton(
-                  onPressed: () async{
-                    dateTime();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              child: SizedBox(
+                width: double.infinity, // 👈 Full width
+                child: ElevatedButton(
+                    onPressed: () async{
+                      dateTime();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14), // 👈 better height
+                      elevation: 2,
+                    ),
+                    child: Container(
+                  width: 150,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Select Date',style: GoogleFonts.poppins( // 👈 Changed font family
+                        color: Colors.black,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),),
+                      SizedBox(width: 10,),
+                      Icon(Icons.date_range_outlined,color: AppConstant.appTextColor,),
+                    ],
                   ),
-                  child: Container(
-                width: 150,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Text('Select Date',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold,fontFamily: 'Roleway'),),
-                    SizedBox(width: 10,),
-                    Icon(Icons.date_range_outlined,color: AppConstant.appInsideColor,),
-                  ],
-                ),
-              )),
+                )),
+              ),
             ),
-
-            currentDate.isEmpty?SizedBox():Padding(
+            currentDate.isEmpty
+                ? const SizedBox()
+                : Padding(
               padding: const EdgeInsets.all(8.0),
-              child: TextField(
-                readOnly: true,
-                decoration: InputDecoration(
-                  hintText: currentDate,
-                  hintStyle: TextStyle(color: Colors.black,fontWeight: FontWeight.bold),
-                  border: OutlineInputBorder()
+              child: Container(
+                width: double.infinity, // 👈 full width
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100, // 👈 subtle background
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.grey.shade400,
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      currentDate,
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    Icon(
+                      Icons.calendar_today_outlined,
+                      color: Colors.deepPurple,
+                      size: 20,
+                    ),
+                  ],
                 ),
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text('Choose Time Slot :',style: TextStyle(color: Colors.black,fontSize: 14,fontWeight: FontWeight.bold,fontFamily: 'RaleWay'),),
+              child: Text(
+                'Choose Time Slot :',
+                style: GoogleFonts.poppins(
+                  color: Colors.black87,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
             timeslotList.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
-                                      value: selectedTimeslot,
-                                      items: timeslotList.map((slot) {
-                        return DropdownMenuItem<String>(
-                          value: slot.timeslot,
-                          child: Text(slot.timeslot),
-                        );
-                                      }).toList(),
-                                      onChanged: (value) {
-                        setState(() {
-                          selectedTimeslot = value;
-                        });
-                                      },
-                                      decoration: const InputDecoration(
-                        labelText: "Time slot",
-                        labelStyle: TextStyle(fontSize: 14),
-                        border: OutlineInputBorder(),
-                                      ),
-                                    ),
+              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: DropdownButtonFormField<String>(
+                  value: selectedTimeslot,
+                  items: timeslotList.map((slot) {
+                    return DropdownMenuItem<String>(
+                      value: slot.timeslot,
+                      child: Text(
+                        slot.timeslot,
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
                       ),
-                    ],
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      selectedTimeslot = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    labelText: "Select Time Slot",
+                    labelStyle: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppConstant.appTextColor,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Colors.grey.shade400,
+                        width: 1,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
                   ),
                 ),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text('Select that location at where you want to Refix Appointment : *',style: TextStyle(color: Colors.black,fontSize: 14,fontWeight: FontWeight.bold,fontFamily: 'RaleWay'),),
+              child: Text(
+                'Select the location where you want to Refix Appointment : *',
+                style: GoogleFonts.poppins(
+                  color: Colors.black87,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
+
             Column(
               children: [
-                RadioListTile<String>(
-                  title: Text('Office'),
-                  value: 'Office',
-                  groupValue: _location,
-                  onChanged: (value) {
-                    setState(() {
-                      _location = value!;
-                    });
-                  },
+                Card(
+                  elevation: 2,
+                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: RadioListTile<String>(
+                    title: Text(
+                      'Office',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    activeColor: Colors.deepPurple, // 👈 custom color
+                    value: 'Office',
+                    groupValue: _location,
+                    onChanged: (value) {
+                      setState(() {
+                        _location = value!;
+                      });
+                    },
+                  ),
                 ),
-                RadioListTile<String>(
-                  title: Text('Residence'),
-                  value: 'Residence',
-                  groupValue: _location,
-                  onChanged: (value) {
-                    setState(() {
-                      _location = value!;
-                    });
-                  },
+                Card(
+                  elevation: 2,
+                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: RadioListTile<String>(
+                    title: Text(
+                      'Residence',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    activeColor: Colors.deepPurple, // 👈 custom color
+                    value: 'Residence',
+                    groupValue: _location,
+                    onChanged: (value) {
+                      setState(() {
+                        _location = value!;
+                      });
+                    },
+                  ),
                 ),
               ],
             ),
+
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text('Select reason for Refix Appointment : *',style: TextStyle(color: Colors.black,fontSize: 14,fontWeight: FontWeight.bold,fontFamily: 'RaleWay'),),
+              child: Text(
+                'Select reason for Refix Appointment : *',
+                style: GoogleFonts.poppins(
+                  color: Colors.black87,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
-            reasons.isEmpty?CircularProgressIndicator()
+
+            reasons.isEmpty
+                ? const Center(child: CircularProgressIndicator())
                 : Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: [
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-
-                      hint: Text('Select Reason',style: TextStyle(fontSize: 14,fontWeight: FontWeight.normal),),
-                      value: selectedReason,
-                      items: reasons.map((item) {
-                        return DropdownMenuItem<String>(
-                          value: item.reason,
-                          child: Text(item.reason,style: TextStyle(fontSize: 11.5,color: Colors.black,fontWeight: FontWeight.bold),),
-
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          selectedReason = value;
-                        });
-                      },
-                      decoration:  InputDecoration(
-
-
-                        border: OutlineInputBorder(
-                        ),
+              padding: const EdgeInsets.all(8.0),
+              child: DropdownButtonFormField<String>(
+                value: selectedReason,
+                hint: Text(
+                  'Select Reason',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                items: reasons.map((item) {
+                  return DropdownMenuItem<String>(
+                    value: item.reason,
+                    child: Text(
+                      item.reason,
+                      style: GoogleFonts.poppins(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
                       ),
                     ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedReason = value;
+                  });
+                },
+                decoration: InputDecoration(
+                  labelText: "Reason",
+                  labelStyle: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.deepPurple,
                   ),
-                                ],
-                              ),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Colors.grey.shade400,
+                      width: 1,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Colors.grey.shade400,
+                      width: 1,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.deepPurple,
+                      width: 1.5,
+                    ),
+                  ),
                 ),
+              ),
+            ),
+
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Text('Enter remarks for Refix Appointment : ',style: TextStyle(color: Colors.black,fontSize: 14,fontWeight: FontWeight.bold,fontFamily: 'RaleWay'),),
+              child: Text(
+                'Enter remarks for Refix Appointment :',
+                style: GoogleFonts.poppins(
+                  color: Colors.black87,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
+
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: TextFormField(
                 controller: remark,
+                maxLines: 3,
                 decoration: InputDecoration(
-                  hint: Text("Enter here remark?"),
-                  border: OutlineInputBorder()
+                  hintText: "Type your remark here...",
+                  hintStyle: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.grey.shade500,
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Colors.grey.shade400,
+                      width: 1,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Colors.grey.shade400,
+                      width: 1,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.deepPurple,
+                      width: 1.5,
+                    ),
+                  ),
                 ),
               ),
             ),
+
 
           ],
         ),
@@ -283,6 +482,9 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                   remark: remark.toString(), // could be controller.text
                   // You can fetch GPS if needed
                 );
+                print("----------------");
+                print(response);
+                print("----------------");
 
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(response.message)),
@@ -293,18 +495,19 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
 
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor:AppConstant.appBattonBack, // 👈 button color
+                backgroundColor: AppConstant.appBatton1, // 👈 button color
                 foregroundColor: AppConstant.appTextColor,      // 👈 text color
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12), // 👈 rounded corners
                 ),
                 elevation: 4, // 👈 shadow
               ),
-              child: const Text(
+              child:  Text(
                 "Refix Appointment",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.normal,
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w400,
+                  color: AppConstant.appTextColor,
                 ),
               ),
             ),

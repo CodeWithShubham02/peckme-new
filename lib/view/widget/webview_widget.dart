@@ -91,18 +91,25 @@ class _WebViewScreenState extends State<WebViewScreen> {
               if(widget.fidatal==1){
                 Text("Document upload");
               }else{
-                Get.snackbar("Remember this", 'Kindly complete FI Properly. Follow the instruction.',
-                  backgroundColor:AppConstant.appSnackBarBackground, // Background color of the snackbar
-                  colorText: Colors.black, // Color of the title and message text
-                  snackPosition: SnackPosition.TOP, // Position of the snackbar (TOP or BOTTOM)
-                  margin: const EdgeInsets.all(10), // Margin around the snackbar
-                  borderRadius: 10, // Border radius of the snackbar
-                  animationDuration: const Duration(milliseconds: 500), // Animation duration
-                  duration: const Duration(seconds: 3), // Duration the snackbar is displayed
-                  icon: const Icon(Icons.error, color: Colors.black), // Optional icon
-                  shouldIconPulse: true, // Whether the icon should pulse
-                  isDismissible: true, // Whether the snackbar can be dismissed by swiping
-                  dismissDirection: DismissDirection.horizontal,);
+                Get.snackbar(
+                  "Remember this!",
+                  "Kindly complete FI Properly. Follow the instruction.!",
+                  icon:  Image.asset(
+                    "assets/logo/cmp_logo.png",
+                    height: 30,
+                    width: 30,
+                  ),
+                  shouldIconPulse: true,     // Small animation on the icon
+                  backgroundColor:AppConstant.appSnackBarBackground,
+                  colorText: AppConstant.appTextColor,
+                  snackPosition: SnackPosition.BOTTOM, // or TOP
+                  borderRadius: 15,
+                  margin: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  duration: const Duration(seconds: 3),
+                  isDismissible: true,
+                  forwardAnimationCurve: Curves.easeOutBack,
+                );
               }
             },
             child: Container(

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:http/http.dart' as http;
@@ -724,13 +725,22 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     try {
       final image = await ImagePicker().pickImage(source: source);
       if (image == null) return null;
+
+      // if (!collectedDocs.contains(docname.trim().toLowerCase())) {
+      //   setState(() {
+      //     collectedDocs.add(docname.trim().toLowerCase());
+      //   });
+      // }
       if (!collectedDocs.contains(docname.trim().toLowerCase())) {
         setState(() {
           collectedDocs.add(docname.trim().toLowerCase());
         });
+        await _saveOrUpdateDoc(docname);
       }
+
       File? img = File(image.path);
       img = await _cropImage(imageFile: img);
+
       final url = await convertImageToPdfAndSave(
         img!,
         docname,
@@ -750,6 +760,31 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
       return null;
     }
   }
+  Future<void> _saveOrUpdateDoc(String docname) async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String> savedDocs = prefs.getStringList('collectedDocs') ?? [];
+
+    String doc = docname.trim().toLowerCase();
+
+    // Check agar already exist hai
+    int index = savedDocs.indexOf(doc);
+    if (index == -1) {
+      // Agar nahi hai to add karo
+      savedDocs.add(doc);
+    } else {
+      // Agar already hai to usi index pe update kar do
+      savedDocs[index] = doc;
+    }
+
+    // Save back
+    await prefs.setStringList('collectedDocs', savedDocs);
+
+    // Also update UI list
+    setState(() {
+      collectedDocs = savedDocs;
+    });
+  }
+
 
 
   Future<File?> _cropImage({required File imageFile}) async{
@@ -6546,9 +6581,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
             child: ElevatedButton(
               onPressed: () async {
                Get.back(result: collectedDocs);
+
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppConstant.appBattonBack, // 👈 button color
+                backgroundColor: AppConstant.appBatton1, // 👈 button color
                 foregroundColor: AppConstant.appTextColor,  // 👈 text color
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12), // 👈 rounded corners
