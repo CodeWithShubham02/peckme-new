@@ -74,6 +74,7 @@ dependencies:
   share_plus: ^7.0.0
   printing: ^5.12.0
   flutter_image_compress:
+  crop_your_image: ^1.0.0
 
 
 dev_dependencies:
