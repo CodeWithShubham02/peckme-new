@@ -18,6 +18,8 @@ import '../../model/document_list_model.dart';
 import '../../utils/app_constant.dart';
 import '../../services/image_to_pdf.dart';
 import '../dashboard_screen.dart';
+import 'custom_crop_image_widget.dart';
+import 'custome_crop_screen.dart';
 
 class DocumentScreenTest extends StatefulWidget {
   final String clientName;
@@ -726,11 +728,6 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
       final image = await ImagePicker().pickImage(source: source);
       if (image == null) return null;
 
-      // if (!collectedDocs.contains(docname.trim().toLowerCase())) {
-      //   setState(() {
-      //     collectedDocs.add(docname.trim().toLowerCase());
-      //   });
-      // }
       if (!collectedDocs.contains(docname.trim().toLowerCase())) {
         setState(() {
           collectedDocs.add(docname.trim().toLowerCase());
@@ -739,10 +736,24 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
       }
 
       File? img = File(image.path);
-      img = await _cropImage(imageFile: img);
+
+      // // Wait for cropped image from CustomCropScreen
+      File? cropped = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CustomCropScreen(imageFile: img,),
+        ),
+      );
+
+      if (cropped == null) {
+        print("⚠️ Cropping cancelled");
+        return null;
+      }
+
+      //img = await _cropImage(imageFile: img);
 
       final url = await convertImageToPdfAndSave(
-        img!,
+        cropped!,
         docname,
         widget.clientName,
         widget.leadId,
@@ -794,9 +805,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
           toolbarTitle: 'Crop Image',
           toolbarColor: const Color(0xFF0A73FF),
           toolbarWidgetColor: Colors.white,
-          initAspectRatio: CropAspectRatioPreset.original,
+          initAspectRatio: CropAspectRatioPreset.ratio7x5,
           lockAspectRatio: false,
-          hideBottomControls: true,
+          hideBottomControls: true, // 🔹 Allow default bottom controls
+          cropFrameStrokeWidth: 2,
+          statusBarColor: const Color(0xFF0A73FF),
+          backgroundColor: Colors.black, // Better contrast
         ),
         IOSUiSettings(
           title: 'Crop Image',

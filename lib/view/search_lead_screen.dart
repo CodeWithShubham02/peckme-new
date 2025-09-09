@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../controller/search_lead_controller.dart';
-import '../model/search_lead_model.dart';
+import '../model/new_lead_model.dart';
 import '../utils/app_constant.dart';
 
 class SearchLeadScreen extends StatefulWidget {
@@ -11,15 +11,24 @@ class SearchLeadScreen extends StatefulWidget {
 }
 
 class _SearchLeadScreenState extends State<SearchLeadScreen> {
-  final TextEditingController leadIdController = TextEditingController();
-  SearchLead? searchedLead;
+  final TextEditingController searchController = TextEditingController();
+  String searchType = "lead_id"; // default search type
+  List<Lead> searchedLeads = [];
   bool isLoading = false;
 
   void _searchLead() async {
-    setState(() => isLoading = true);
-    final lead = await LeadService.searchLeadById(leadIdController.text.trim());
     setState(() {
-      searchedLead = lead;
+      isLoading = true;
+      searchedLeads.clear();
+    });
+
+    final leads = await LeadService.searchLead(
+      searchType,
+      searchController.text.trim(),
+    );
+
+    setState(() {
+      searchedLeads = leads;
       isLoading = false;
     });
   }
@@ -27,7 +36,7 @@ class _SearchLeadScreenState extends State<SearchLeadScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar:AppBar(
+      appBar: AppBar(
         backgroundColor: AppConstant.appInsideColor,
         title: Text(
           'Search Lead',
@@ -43,19 +52,48 @@ class _SearchLeadScreenState extends State<SearchLeadScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            // 🔹 Dropdown to choose search type
+            Row(
+              children: [
+                const Text("Search by: "),
+                const SizedBox(width: 10),
+                DropdownButton<String>(
+                  value: searchType,
+                  items: const [
+                    DropdownMenuItem(
+                        value: "lead_id", child: Text("Lead ID",style: TextStyle(fontSize: 14,fontFamily: "impact"),)),
+                    DropdownMenuItem(
+                        value: "mobile", child: Text("Mobile Number",style: TextStyle(fontSize: 14,),)),
+                  ],
+                  onChanged: (value) {
+                    setState(() => searchType = value!);
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // 🔹 TextField
             TextField(
-              controller: leadIdController,
-              decoration: const InputDecoration(
-                labelText: "Enter Lead ID",
-                border: OutlineInputBorder(),
+              controller: searchController,
+              decoration: InputDecoration(
+                labelText: searchType == "lead_id"
+                    ? "Enter Lead ID"
+                    : "Enter Mobile Number",
+                border: const OutlineInputBorder(),
               ),
-              keyboardType: TextInputType.number,
+              keyboardType: searchType == "lead_id"
+                  ? TextInputType.number
+                  : TextInputType.phone,
             ),
             const SizedBox(height: 16),
+
+            // 🔹 Search Button
             ElevatedButton(
               onPressed: _searchLead,
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                 backgroundColor: Colors.green,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(5),
@@ -80,18 +118,34 @@ class _SearchLeadScreenState extends State<SearchLeadScreen> {
               ),
             ),
             const SizedBox(height: 16),
+            Divider(),
+
+            // 🔹 Show Result
             if (isLoading) const CircularProgressIndicator(),
-            if (!isLoading && searchedLead != null)
-              Card(
-                child: ListTile(
-                  title: Text(searchedLead!.customerName),
-                  subtitle: Text("Mobile: ${searchedLead!.mobile}\n"
-                      "Lead ID: ${searchedLead!.leadId}\n"
-                      "Client: ${searchedLead!.clientName}"),
+            if (!isLoading && searchedLeads.isNotEmpty)
+              Expanded(
+                child: ListView.builder(
+                  itemCount: searchedLeads.length,
+                  itemBuilder: (context, index) {
+                    final lead = searchedLeads[index];
+                    return Card(
+                      child: ListTile(
+                        title: Text(lead.customerName),
+                        subtitle: Text(
+                          "Mobile: ${lead.mobile}\n"
+                              "Lead ID: ${lead.leadId}\n"
+                              "Client: ${lead.clientname}",
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
-            if (!isLoading && searchedLead == null)
-              const SizedBox.shrink(),
+            if (!isLoading && searchedLeads.isEmpty)
+              const Text(
+                "No lead found",
+                style: TextStyle(color: Colors.black),
+              ),
           ],
         ),
       ),

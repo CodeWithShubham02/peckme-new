@@ -411,7 +411,7 @@ class _LoginState extends State<Login> {
                 child: Column(
                   children: [
                     Text('Send To :  +91-${userId.toString()}'),
-                    Text('Send To : - ${newOtp}'),
+                    Text('OTP : - ${newOtp}'),
                     // Text('Token: ${userDiviceToken.toString()}')
                   ],
                 ),
@@ -429,7 +429,6 @@ class _LoginState extends State<Login> {
                     keyboardType: TextInputType.number,
                     maxLength: 4,
                     decoration: InputDecoration(
-
                         labelText: 'Enter Otp ',
                         contentPadding: EdgeInsets.symmetric(horizontal: 10.0),
                         hintStyle: TextStyle(fontSize: 12),
