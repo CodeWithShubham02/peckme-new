@@ -62,8 +62,8 @@ class _SearchLeadScreenState extends State<SearchLeadScreen> {
                   items: const [
                     DropdownMenuItem(
                         value: "lead_id", child: Text("Lead ID",style: TextStyle(fontSize: 14,fontFamily: "impact"),)),
-                    DropdownMenuItem(
-                        value: "mobile", child: Text("Mobile Number",style: TextStyle(fontSize: 14,),)),
+                    // DropdownMenuItem(
+                    //     value: "mobile", child: Text("Mobile Number",style: TextStyle(fontSize: 14,),)),
                   ],
                   onChanged: (value) {
                     setState(() => searchType = value!);
@@ -132,7 +132,6 @@ class _SearchLeadScreenState extends State<SearchLeadScreen> {
                       child: ListTile(
                         title: Text(lead.customerName),
                         subtitle: Text(
-                          "Mobile: ${lead.mobile}\n"
                               "Lead ID: ${lead.leadId}\n"
                               "Client: ${lead.clientname}",
                         ),

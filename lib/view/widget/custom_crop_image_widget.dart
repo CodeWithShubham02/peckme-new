@@ -2,6 +2,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:crop_your_image/crop_your_image.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:path_provider/path_provider.dart';
 
 class CustomCropWidget extends StatelessWidget {
@@ -38,13 +40,13 @@ class CustomCropWidget extends StatelessWidget {
             controller: _controller,
             image: imageFile.readAsBytesSync(),
             withCircleUi: false,
+            cornerDotBuilder: (size, edgeAlignment) => const DotControl(color: Colors.white),
+            aspectRatio: 3 / 4,
             onCropped: (Uint8List bytes) async {
               final croppedFile = await _saveCroppedData(bytes);
-              onCropped(croppedFile);
-            },
+              onCropped(croppedFile);},
           ),
         ),
-
         // 🔹 Bottom Toolbar
         Container(
           color: Colors.black,
@@ -75,7 +77,7 @@ class CustomCropWidget extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text("Crop",style: TextStyle(color: Colors.white),),
+                child: const Text("Ok",style: TextStyle(color: Colors.white),),
               ),
             ],
           ),

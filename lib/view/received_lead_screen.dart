@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:aws_s3_api/s3-2006-03-01.dart' hide Permission;
 import 'package:flutter/material.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
+import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:get/get.dart';
@@ -26,16 +27,24 @@ class ReceivedLeadScreen extends StatefulWidget {
 }
 
 class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
-  ReceivedLeadController receivedLeadController = ReceivedLeadController();
+  final ReceivedLeadController receivedLeadController = ReceivedLeadController();
+
+  // Future holding current list source (either full list or filtered result)
   late Future<List<Lead>> leads;
 
-  late String total = '';
-
+  // For user/session values
   String uid = '';
   String branchId = '';
   String appVersion = '40';
   String appType = '';
 
+  // Search state
+  String _searchQuery = '';
+
+  // friendly visible total (kept to mimic your previous UI)
+  String total = '';
+
+  // load stored user info
   Future<void> loadUserData() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -45,7 +54,105 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
     uid = prefs.getString('uid') ?? '';
     branchId = prefs.getString('branchId') ?? '';
   }
+  String _formatDate(String? dateString) {
+    if (dateString == null || dateString.isEmpty) return '';
+    try {
+      final date = DateTime.parse(dateString); // API से जो format आता है वो parse होगा
+      return DateFormat('dd-MM-yyyy').format(date);
+    } catch (e) {
+      return dateString; // अगर parse fail हो जाए तो original string return
+    }
+  }
 
+  // common function to fetch current leads from API (same params you already used)
+  Future<List<Lead>> _fetchLeadsFromApi() {
+    return receivedLeadController.fetchLeads(
+      uid: uid,
+      start: 0,
+      end: 10,
+      branchId: branchId,
+      app_version: appVersion,
+      appType: appType,
+    );
+  }
+
+  // search in the fetched list by leadId (substring match)
+  Future<List<Lead>> _searchLeadsById(String query) async {
+    final all = await _fetchLeadsFromApi();
+    final q = query.trim();
+    if (q.isEmpty) return all;
+    final filtered = all.where((l) {
+      final leadId = l.leadId?.toString() ?? '';
+      final mobile = l.pincode?.toString() ?? '';
+
+      // match agar leadId OR mobile me query contain karta hai
+      return leadId.contains(q) || mobile.contains(q);
+    }).toList();
+    return filtered;
+  }
+
+  // opens dialog to input leadId
+  void _openSearchDialog() {
+    final TextEditingController controller = TextEditingController(text: _searchQuery);
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Search',style: TextStyle(fontSize: 15),),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.text,
+            decoration: const InputDecoration(
+              hintText: 'Enter Lead_id/Pin code ',
+              hintStyle: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+
+            onSubmitted: (_) => _performSearchFromDialog(controller),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // cancel
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => _performSearchFromDialog(controller),
+              child: const Text('Search'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // helper used by dialog
+  void _performSearchFromDialog(TextEditingController controller) {
+    final q = controller.text.trim();
+    Navigator.of(context).pop(); // close dialog
+    if (q.isEmpty) {
+      // if empty, restore full list
+      setState(() {
+        _searchQuery = '';
+        leads = _fetchLeadsFromApi();
+      });
+    } else {
+      setState(() {
+        _searchQuery = q;
+        leads = _searchLeadsById(q);
+      });
+    }
+  }
+
+  // clear search and restore all leads
+  void _clearSearch() {
+    setState(() {
+      _searchQuery = '';
+      leads = _fetchLeadsFromApi();
+    });
+  }
 
   //this code use to open google map from <==> to
   Future<void> openMap({
@@ -64,7 +171,8 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
       throw 'Could not launch Maps';
     }
   }
-  Future<void> _callLeads(BuildContext context,String leadId) async {
+
+  Future<void> _callLeads(BuildContext context, String leadId) async {
     String? number = await ExotelService.getVirtualNumber(leadId);
     // check permission
     var status = await Permission.phone.status;
@@ -81,15 +189,12 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
         SnackBar(
           content: Row(
             children: [
-              // Left side logo / icon
               Image.asset(
-                "assets/logo/cmp_logo.png",   // अपने asset का path डालें
+                "assets/logo/cmp_logo.png",
                 height: 24,
                 width: 24,
               ),
-              const SizedBox(width: 10), // spacing
-
-              // Text
+              const SizedBox(width: 10),
               const Expanded(
                 child: Text(
                   "No number found",
@@ -110,274 +215,312 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
 
-    //loadUserData();
+    // load user data and then fetch initial leads
     loadUserData().then((_) {
       setState(() {
-        leads = receivedLeadController.fetchLeads(
-          uid: uid,
-          start: 0,
-          end: 10,
-          branchId: branchId,
-          app_version: '40',
-          appType: appType,
-        );
+        leads = _fetchLeadsFromApi();
       });
     });
   }
+  String _sortOrder = "Oldest First";
 
   @override
   Widget build(BuildContext context) {
-    print("Shubham UID :${total.toString()}");
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: AppConstant.appInsideColor,
         title: Text(
-          'Lead Received ${total.toString()}'.toUpperCase(),
+          _searchQuery.isEmpty
+              ? 'Lead Received'.toUpperCase()
+              : 'Search: ${_searchQuery}'.toUpperCase(),
           style: const TextStyle(
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: FontWeight.normal,
-            color:  AppConstant.appTextColor,
+            color: AppConstant.appTextColor,
           ),
         ),
         iconTheme: IconThemeData(color: AppConstant.appIconColor),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: _openSearchDialog,
+            tooltip: 'Search by lead id',
+          ),
+          if (_searchQuery.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: _clearSearch,
+              tooltip: 'Clear search',
+            ),
+        ],
       ),
-      body: leads == null
-          ? const Center(child: CircularProgressIndicator())
-          : FutureBuilder<List<Lead>>(
-              future: leads,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No leads found.'));
-                } else {
-                  List<Lead> leadsList = snapshot.data!;
+      body: FutureBuilder<List<Lead>>(
+        future: leads,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            // update visible total
+            total = '0';
+            return const Center(child: Text('No leads found.'));
+          } else {
+            final leadsList = snapshot.data!;
+            // update visible total only when changed (avoids re-build loops)
+            // 🔹 sort by date (oldest first)
+            leadsList.sort((a, b) {
+              final dateA = DateTime.tryParse(a.leadDate ?? '') ?? DateTime(1900);
+              final dateB = DateTime.tryParse(b.leadDate ?? '') ?? DateTime(1900);
 
-                  return ListView.builder(
-                    itemCount: leadsList.length,
-                    itemBuilder: (context, index) {
-                      final lead = leadsList[index];
+              if (_sortOrder == "Oldest First") {
+                return dateA.compareTo(dateB); // oldest → newest
+              } else {
+                return dateB.compareTo(dateA); // newest → oldest
+              }
+            });
+            if (total != leadsList.length.toString()) {
+              // use setState safely inside builder - only when changed
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  setState(() {
+                    total = leadsList.length.toString();
+                  });
+                }
+              });
+            }
 
-                      total = leadsList.length.toString();
-                      return Card(
-                        color: Colors.white,
-                        elevation: 2,
-                        margin: EdgeInsets.all(6),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+            return Column(
+              children: [
+                // 🔹 Filter bar
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  color: Colors.grey.shade200,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Total Leads count
+                      Text(
+                        "Total Leads: ${leadsList.length}",
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      lead.customerName.toUpperCase() ?? '',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  CircleAvatar(
-                                    backgroundColor: AppConstant.appInsideColor,
-                                    child: IconButton(
-                                      onPressed: () async{
-                                        final response = lead.leadId;
-                                        _callLeads(context,response);
-                                      },
-                                      icon: Icon(
-                                        Icons.call,
-                                        color: AppConstant.appIconColor,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                      ),
+
+                      // 🔹 Dropdown filter
+                      DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _sortOrder,
+                          dropdownColor: Colors.white,
+                          items: ["Oldest First", "Newest First"].map((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(
+                                value,
+                                style: const TextStyle(fontSize: 14),
                               ),
-                              Divider(),
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundColor: AppConstant.appInsideColor,
-                                    child: Icon(
-                                      Icons.house_outlined,
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _sortOrder = value!;
+                              // refresh with sorting
+                              leads = _searchQuery.isEmpty
+                                  ? _fetchLeadsFromApi()
+                                  : _searchLeadsById(_searchQuery);
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // 🔹 Leads list
+                Expanded(child: ListView.builder(
+                  itemCount: leadsList.length,
+                  itemBuilder: (context, index) {
+                    final lead = leadsList[index];
+
+                    return Card(
+                      color: Colors.white,
+                      elevation: 2,
+                      margin: const EdgeInsets.all(6),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    (lead.customerName ?? '').toUpperCase(),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,fontSize: 12
+                                    ),
+                                  ),
+                                ),
+                                CircleAvatar(
+                                  backgroundColor: AppConstant.appInsideColor,
+                                  child: IconButton(
+                                    onPressed: () async {
+                                      final response = lead.leadId ?? '';
+                                      _callLeads(context, response);
+                                    },
+                                    icon: Icon(
+                                      Icons.call,
                                       color: AppConstant.appIconColor,
                                     ),
                                   ),
-                                  SizedBox(width: 10),
-                                  Expanded(
-                                    // Fixes overflow
-                                    child: Text(
-                                      lead.clientname,
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 2,
-                                    ),
+                                ),
+                              ],
+                            ),
+                            const Divider(),
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: AppConstant.appInsideColor,
+                                  child: Icon(
+                                    Icons.house_outlined,
+                                    color: AppConstant.appIconColor,
                                   ),
-                                  Text(
-                                    "N/A",
-                                    style: const TextStyle(color: Colors.grey),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    lead.clientname ?? '',
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2,style: TextStyle(fontSize: 12),
                                   ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundColor: AppConstant.appInsideColor,
-                                    child: Icon(
-                                      Icons.date_range,
-                                      color: AppConstant.appIconColor,
-                                    ),
+                                ),
+                                const Text(
+                                  "N/A",
+                                  style: TextStyle(color: Colors.grey,fontSize: 10),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: AppConstant.appInsideColor,
+                                  child: Icon(
+                                    Icons.date_range,
+                                    color: AppConstant.appIconColor,
                                   ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      lead.leadDate,
-                                      style: const TextStyle(fontSize: 14),
-                                    ),
+                                ),
+                                const SizedBox(width: 8),
+
+                      Expanded(
+                      child: Text(
+                          _formatDate(lead.leadDate),
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    ),
+                                Expanded(
+                                  child: Text(
+                                    lead.apptime ?? '',
+                                    style: const TextStyle(
+                                        color: Colors.black, fontSize: 10),
                                   ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundColor: AppConstant.appInsideColor,
+                                  child: InkWell(
+                                    onTap: () async {
+                                      try {
+                                        final locations =
+                                        await locationFromAddress(lead.resAddress ?? '');
+                                        final locations2 = await locationFromAddress(lead.resAddress ?? '');
+                                        if (locations.isNotEmpty && locations2.isNotEmpty) {
+                                          final latitude = locations[0].latitude;
+                                          final longitude = locations[0].longitude;
+                                          final latitude2 = locations2[0].latitude;
+                                          final longitude2 = locations2[0].longitude;
 
-                                  Expanded(
-                                    child: Text(
-                                      lead.apptime,
-                                      style: const TextStyle(color: Colors.grey,fontSize: 13),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundColor: AppConstant.appInsideColor,
-                                    child: InkWell(
-                                      onTap: () async {
-                                        try {
-                                          // // Get coordinates from both addresses
-                                          List<Location>
-                                          locations = await locationFromAddress(lead.resAddress);
-                                          List<Location> locations2 =
-                                              await locationFromAddress(
-                                                lead.clientname
-                                              );
-                                          // print("----------------");
-                                          // print(locations);
-                                          // print(locations2);
-                                          // print("===========");
-
-                                          // if (locations.isNotEmpty &&
-                                          //     locations2.isNotEmpty) {
-                                          double latitude =
-                                              locations[0].latitude;
-                                          double longitude =
-                                              locations[0].longitude;
-
-                                          double latitude2 =
-                                              locations2[0].latitude; // FIXED
-                                          double longitude2 =
-                                              locations2[0].longitude; // FIXED
-
-                                          print("-------------------------");
-                                          print(
-                                            'From: Latitude: $latitude, Longitude: $longitude',
-                                          );
-                                          print("-------------------------");
-                                          print(
-                                            'To: Latitude: $latitude2, Longitude: $longitude2',
-                                          );
-
-                                          // Open Google Maps directions
                                           await openMap(
                                             fromLat: latitude,
                                             fromLng: longitude,
                                             toLat: latitude2,
                                             toLng: longitude2,
                                           );
-                                          // } else {
-                                          //   print(
-                                          //     'No location found for one or both addresses.',
-                                          //   );
-                                          // }
-                                        } catch (e) {
-                                          print("Error: $e");
+                                        } else {
+                                          print('No location found for one or both addresses.');
                                         }
-                                      },
-                                      child: Icon(
-                                        Icons.location_on,
-                                        color: AppConstant.appIconColor,
-                                      ),
+                                      } catch (e) {
+                                        print("Error: $e");
+                                      }
+                                    },
+                                    child: Icon(
+                                      Icons.location_on,
+                                      color: AppConstant.appIconColor,
                                     ),
-                                  ),
-                                  SizedBox(width: 10),
-                                  Expanded(
-                                    // Fixes overflow
-                                    child: Text(
-                                      lead.resAddress,
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 8),
-                              ElevatedButton(
-                                onPressed: () {
-                                  // Get.snackbar("Name", lead.customerName);
-
-                                  Get.to(() => LeadDetailScreen(
-                                      lead: lead,
-
-                                  ));
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppConstant.appBatton1,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                child: const Center(
+                                const SizedBox(width: 10),
+                                Expanded(
                                   child: Text(
-                                    'More Details',
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 15,
-                                    ),
+                                    lead.resAddress ?? '',
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 10,style: TextStyle(fontSize: 12),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            ElevatedButton(
+                              onPressed: () {
+                                Get.to(() => LeadDetailScreen(lead: lead));
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppConstant.appBatton1,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'More Details',
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 14,
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      );
-                    },
-                  );
-                }
-              },
-            ),
+                      ),
+                    );
+                  },
+                ))
+              ],
+            );
+
+          }
+        },
+      ),
+
+
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppConstant.appInsideColor,
         onPressed: () {
-          receivedLeadController.fetchLeads(
-            uid: uid,
-            start: 0,
-            end: 10,
-            branchId: branchId,
-            app_version: '40',
-            appType: appType,
-          );
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => ReceivedLeadScreen()),
-          );
+          setState(() {
+            // refresh current list according to whether search is active
+            leads = _searchQuery.isEmpty ? _fetchLeadsFromApi() : _searchLeadsById(_searchQuery);
+          });
         },
         child: const Icon(Icons.refresh, color: AppConstant.appIconColor),
       ),

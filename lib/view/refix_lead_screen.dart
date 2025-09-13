@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_time_patterns.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -415,6 +416,13 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
               child: TextFormField(
                 controller: remark,
                 maxLines: 3,
+                keyboardType: TextInputType.name, // 🔹 name वाला keyboard letters पर focus करता है
+                textInputAction: TextInputAction.newline,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(
+                    RegExp(r"[a-zA-Z\s]"), // ✅ सिर्फ alphabets (A-Z, a-z) और space allow
+                  ),
+                ],
                 decoration: InputDecoration(
                   hintText: "Type your remark here...",
                   hintStyle: GoogleFonts.poppins(

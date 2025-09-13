@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -10,10 +11,13 @@ import 'package:http/http.dart' as http;
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as docs;
+import 'package:path_provider/path_provider.dart';
+import 'package:pdfx/pdfx.dart';
 import 'package:peckme/model/DocumentResponse.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../controller/document_controller.dart';
 import '../../controller/document_list_controller.dart';
+import '../../model/PdfImageUrlModel.dart';
 import '../../model/document_list_model.dart';
 import '../../utils/app_constant.dart';
 import '../../services/image_to_pdf.dart';
@@ -33,10 +37,11 @@ class DocumentScreenTest extends StatefulWidget {
 
 class _DocumentScreenTestState extends State<DocumentScreenTest> {
   late Future<DocumentResponse?> futureDocuments;
-  late Future<Document?> _futureDocumentsList;
+  //late Future<Document?> _futureDocumentsList;
 
   final DocumentService _documentService = DocumentService();
   String uid = '';
+  String name = '';
 
 
 
@@ -44,6 +49,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       uid = prefs.getString('uid') ?? '';
+      name = prefs.getString('name') ?? '';
     });
   }
 
@@ -69,27 +75,46 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   bool isLoadingpoliticalConnections=false;
 
   File? feSelfie;
+  String? feSelfieUrl;
   File? companuBoard;
+  String? companuBoardUrl;
   File? billDesk;
+  String? billDeskUrl;
   File? frontDoor;
+  String? frontDoorUrl;
   File? locationSnap;
+  String? locationSnapUrl;
   File? namePstatic;
+  String? namePstaticUrl;
   File? premisesInterior;
+  String? premisesInteriorUrl;
   File? stock;
+  String? stockUrl;
   File? photo;
+  String? photoUrl;
   File? fESelfieWithPerson;
+  String? fESelfieWithPersonUrl;
   File? imageOfPersonMet;
+  String? imageOfPersonMetUrl;
   File? billDeskImageofShop;
+  String? billDeskImageofShopUrl;
   File? imageofShopFromOutside;
+  String? imageofShopFromOutsideUrl;
   File? qRCode;
+  String? qRCodeUrl;
   File? tentCard;
+  String? tentCardUrl;
   File? politicalConnections;
+  String? politicalConnectionsUrl;
   Future pickImageCompanyBoard(ImageSource source, String docname) async {
     setState(() => isLoadingcompanuBoard = true);
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingcompanuBoard = false;
-      if (img != null) companuBoard = img;
+      if (img != null) {
+        companuBoard = img.croppedImage;
+        companuBoardUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageFeSelfie(ImageSource source, String docname) async {
@@ -97,7 +122,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingfeSelfie = false;
-      if (img != null) feSelfie = img;
+      if (img != null) {
+        feSelfie = img.croppedImage;
+        feSelfieUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageBillDesk(ImageSource source, String docname) async {
@@ -105,7 +133,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingbillDesk = false;
-      if (img != null) billDesk = img;
+      if (img != null) {
+        billDesk = img.croppedImage;
+        billDeskUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageFrontDoor(ImageSource source, String docname) async {
@@ -113,7 +144,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingfrontDoor = false;
-      if (img != null) frontDoor = img;
+      if (img != null){
+        frontDoor = img.croppedImage;
+        frontDoorUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageLocationSnap(ImageSource source, String docname) async {
@@ -121,7 +155,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadinglocationSnap = false;
-      if (img != null) locationSnap = img;
+      if (img != null) {
+        locationSnap = img.croppedImage;
+        locationSnapUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageNamePstatic(ImageSource source, String docname) async {
@@ -129,7 +166,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingnamePstatic = false;
-      if (img != null) namePstatic = img;
+      if (img != null){
+        namePstatic = img.croppedImage;
+        namePstaticUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImagePremisesInterior(ImageSource source, String docname) async {
@@ -137,7 +177,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingpremisesInterior = false;
-      if (img != null) premisesInterior = img;
+      if (img != null){
+        premisesInterior = img.croppedImage;
+        premisesInteriorUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageStock(ImageSource source, String docname) async {
@@ -145,7 +188,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingstock = false;
-      if (img != null) stock = img;
+      if (img != null){
+        stock = img.croppedImage;
+        stockUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImagePhoto1(ImageSource source, String docname) async {
@@ -153,7 +199,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingPhoto = false;
-      if (img != null) photo = img;
+      if (img != null) {
+        photo = img.croppedImage;
+        photoUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageFESelfieWithPerson1(ImageSource source, String docname) async {
@@ -161,7 +210,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingfESelfieWithPerson = false;
-      if (img != null) fESelfieWithPerson = img;
+      if (img != null) {
+        fESelfieWithPerson = img.croppedImage;
+        fESelfieWithPersonUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageImageOfPersonMet(ImageSource source, String docname) async {
@@ -169,7 +221,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingimageOfPersonMet = false;
-      if (img != null) imageOfPersonMet = img;
+      if (img != null) {
+        imageOfPersonMet = img.croppedImage;
+        imageOfPersonMetUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageBillDeskImageofShop(ImageSource source, String docname) async {
@@ -177,7 +232,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingbillDeskImageofShop = false;
-      if (img != null) billDeskImageofShop = img;
+      if (img != null){
+        billDeskImageofShop = img.croppedImage;
+        billDeskImageofShopUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageImageofShopFromOutside(ImageSource source, String docname) async {
@@ -185,7 +243,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingimageofShopFromOutside = false;
-      if (img != null) imageofShopFromOutside = img;
+      if (img != null) {
+        imageofShopFromOutside = img.croppedImage;
+        imageofShopFromOutsideUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageQRCode(ImageSource source, String docname) async {
@@ -193,7 +254,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingqRCode = false;
-      if (img != null) qRCode = img;
+      if (img != null) {
+        qRCode = img.croppedImage;
+        qRCodeUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageTentCard(ImageSource source, String docname) async {
@@ -201,7 +265,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingtentCard = false;
-      if (img != null) tentCard = img;
+      if (img != null) {
+        tentCard = img.croppedImage;
+        tentCardUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImagePoliticalConnections(ImageSource source, String docname) async {
@@ -209,7 +276,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingpoliticalConnections = false;
-      if (img != null) politicalConnections = img;
+      if (img != null) {
+        politicalConnections = img.croppedImage;
+        politicalConnectionsUrl=img.pdfUrl;
+      }
     });
   }
 
@@ -219,13 +289,18 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   bool isLoadingpancard=false;
 
   File? iDProofofPersonMet;
+  String? iDProofofPersonMetUrl;
   File? pancard;
+  String? pancardUrl;
   Future pickImageIDProofofPersonMet(ImageSource source, String docname) async {
     setState(() => isLoadingiDProofofPersonMet = true);
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingiDProofofPersonMet = false;
-      if (img != null) iDProofofPersonMet = img;
+      if (img != null) {
+        iDProofofPersonMet = img.croppedImage;
+        iDProofofPersonMetUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImagePancard(ImageSource source, String docname) async {
@@ -233,7 +308,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingpancard = false;
-      if (img != null) pancard = img;
+      if (img != null) {
+        pancard = img.croppedImage;
+        pancardUrl=img.pdfUrl;
+      }
     });
   }
   //category=="ID PROOF" END CODE
@@ -260,31 +338,54 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   bool isLoadingShopEstablishmentCertificate=false;
 
   File? annexure;
+  String? annexureUrl;
   File? others;
+  String? othersUrl;
   File? oneMonthBankStatement;
+  String? oneMonthBankStatementUrl;
   File? cancelledCheque;
+  String? cancelledChequeUrl;
   File? companyID;
+  String? companyIDUrl;
   File? completelyFilledJob;
+  String? completelyFilledJobUrl;
   File? dueDiligenceForm;
+  String? dueDiligenceFormUrl;
   File? form26AS;
+  String? form26ASUrl;
   File? form60;
+  String? form60Url;
   File? gazetteCertificate;
+  String? gazetteCertificateUrl;
   File? gSTAnnexA;
+  String? gSTAnnexAUrl;
   File? gSTAnnexB;
+  String? gSTAnnexBUrl;
   File? loanAgreement;
+  String? loanAgreementUrl;
   File? marriageCertificate;
+  String? marriageCertificateUrl;
   File? nachOnly;
+  String? nachOnlyUrl;
   File? oVDDeclaration;
+  String? oVDDeclarationUrl;
   File? pODImage;
+  String? pODImageUrl;
   File? cheques;
+  String? chequesUrl;
   File? authSignForm;
+  String? authSignFormUrl;
   File? shopEstablishmentCertificate;
+  String? shopEstablishmentCertificateUrl;
   Future pickImageAnnexure(ImageSource source, String docname) async {
     setState(() => isLoadingAnnexure = true);
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingAnnexure = false;
-      if (img != null) annexure = img;
+      if (img != null) {
+        annexure = img.croppedImage;
+        annexureUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageOthers(ImageSource source, String docname) async {
@@ -292,7 +393,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingOthers = false;
-      if (img != null) others = img;
+      if (img != null){
+        others = img.croppedImage;
+        othersUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImage1monthBankStatement(ImageSource source, String docname) async {
@@ -300,7 +404,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoading1monthBankStatement = false;
-      if (img != null) oneMonthBankStatement = img;
+      if (img != null) {
+        oneMonthBankStatement = img.croppedImage;
+        oneMonthBankStatementUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageCancelledCheque(ImageSource source, String docname) async {
@@ -308,7 +415,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingCancelledCheque = false;
-      if (img != null) cancelledCheque = img;
+      if (img != null){
+        cancelledCheque = img.croppedImage;
+        cancelledChequeUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageCompanyID(ImageSource source, String docname) async {
@@ -316,7 +426,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingCompanyID = false;
-      if (img != null) companyID = img;
+      if (img != null){
+        companyID = img.croppedImage;
+        companyIDUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageCompletelyFilledJob(ImageSource source, String docname) async {
@@ -324,7 +437,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingCompletelyFilledJob = false;
-      if (img != null) completelyFilledJob = img;
+      if (img != null){
+        completelyFilledJob = img.croppedImage;
+        completelyFilledJobUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageDueDiligenceForm(ImageSource source, String docname) async {
@@ -332,7 +448,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingDueDiligenceForm = false;
-      if (img != null) dueDiligenceForm = img;
+      if (img != null){
+        dueDiligenceForm = img.croppedImage;
+        dueDiligenceFormUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageForm26AS(ImageSource source, String docname) async {
@@ -340,7 +459,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingForm26AS = false;
-      if (img != null) form26AS = img;
+      if (img != null){
+        form26AS = img.croppedImage;
+        form26ASUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageForm60(ImageSource source, String docname) async {
@@ -348,7 +470,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingForm60 = false;
-      if (img != null) form60 = img;
+      if (img != null){
+        form60 = img.croppedImage;
+        form60Url=img.pdfUrl;
+      }
     });
   }
   Future pickImageGazetteCertificate(ImageSource source, String docname) async {
@@ -356,7 +481,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingGazetteCertificate = false;
-      if (img != null) gazetteCertificate = img;
+      if (img != null){
+        gazetteCertificate = img.croppedImage;
+        gazetteCertificateUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageGSTAnnexA(ImageSource source, String docname) async {
@@ -364,7 +492,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingGSTAnnexA = false;
-      if (img != null) gSTAnnexA = img;
+      if (img != null){
+        gSTAnnexA = img.croppedImage;
+        gSTAnnexAUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageGSTAnnexB(ImageSource source, String docname) async {
@@ -372,7 +503,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingGSTAnnexB = false;
-      if (img != null) gSTAnnexB = img;
+      if (img != null){
+        gSTAnnexB = img.croppedImage;
+        gSTAnnexBUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageLoanAgreement(ImageSource source, String docname) async {
@@ -380,7 +514,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingLoanAgreement = false;
-      if (img != null) loanAgreement = img;
+      if (img != null) {
+        loanAgreement = img.croppedImage;
+        loanAgreementUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageMarriageCertificate(ImageSource source, String docname) async {
@@ -388,7 +525,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingMarriageCertificate = false;
-      if (img != null) marriageCertificate = img;
+      if (img != null) {
+        marriageCertificate = img.croppedImage;
+        marriageCertificateUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageNachOnly(ImageSource source, String docname) async {
@@ -396,7 +536,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingNachOnly = false;
-      if (img != null) nachOnly = img;
+      if (img != null){
+        nachOnly = img.croppedImage;
+        nachOnlyUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageOVDDeclaration(ImageSource source, String docname) async {
@@ -404,7 +547,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingOVDDeclaration = false;
-      if (img != null) oVDDeclaration = img;
+      if (img != null){
+        oVDDeclaration = img.croppedImage;
+        oVDDeclarationUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImagePODImage(ImageSource source, String docname) async {
@@ -412,7 +558,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingPODImage = false;
-      if (img != null) pODImage = img;
+      if (img != null){
+        pODImage = img.croppedImage;
+        pODImageUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageCheques(ImageSource source, String docname) async {
@@ -420,7 +569,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingCheques = false;
-      if (img != null) cheques = img;
+      if (img != null){
+        cheques = img.croppedImage;
+        chequesUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageAuthSignForm(ImageSource source, String docname) async {
@@ -428,7 +580,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingAuthSignForm = false;
-      if (img != null) authSignForm = img;
+      if (img != null){
+        authSignForm = img.croppedImage;
+        authSignFormUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageShopEstablishmentCertificate(ImageSource source, String docname) async {
@@ -436,7 +591,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingShopEstablishmentCertificate = false;
-      if (img != null) shopEstablishmentCertificate = img;
+      if (img != null) {
+        shopEstablishmentCertificate = img.croppedImage;
+        shopEstablishmentCertificateUrl=img.pdfUrl;
+      }
     });
   }
   //category=="OTHERS" END CODE
@@ -459,27 +617,46 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   bool isLoadingVoterCard=false;
 
   File? aadhaarBack;
+  String? aadhaarBackUrl;
   File? aadhaarFront;
+  String? aadhaarFrontUrl;
   File? allotmentLetter;
+  String? allotmentLetterUrl;
   File? drivingLicense;
+  String? drivingLicenseUrl;
   File? electricityBill;
+  String? electricityBillUrl;
   File? gasBill;
+  String? gasBillUrl;
   File? landLineBill;
+  String? landLineBillUrl;
   File? maintainanceReceipt;
+  String? maintainanceReceiptUrl;
   File? mobileBill;
+  String? mobileBillUrl;
   File? municipalityWaterBill;
+  String? municipalityWaterBillUrl;
   File? passport;
+  String? passportUrl;
   File? postOfficeSB;
+  String? postOfficeSBUrl;
   File? registeredRent;
+  String? registeredRentUrl;
   File? registeredSales;
+  String? registeredSalesUrl;
   File? rentAgreement;
+  String? rentAgreementUrl;
   File? voterCard;
+  String? voterCardUrl;
   Future pickImageAadhaarBack(ImageSource source, String docname) async {
     setState(() => isLoadingAadhaarBack = true);
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingAadhaarBack = false;
-      if (img != null) aadhaarBack = img;
+      if (img != null){
+        aadhaarBack = img.croppedImage;
+        aadhaarBackUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageAadhaarFront(ImageSource source, String docname) async {
@@ -487,7 +664,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingAadhaarFront = false;
-      if (img != null) aadhaarFront = img;
+      if (img != null) {
+        aadhaarFront = img.croppedImage;
+        aadhaarFrontUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageAllotmentLetter(ImageSource source, String docname) async {
@@ -495,7 +675,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingAllotmentLetter = false;
-      if (img != null) allotmentLetter = img;
+      if (img != null) {
+        allotmentLetter = img.croppedImage;
+        allotmentLetterUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageDrivingLicense(ImageSource source, String docname) async {
@@ -503,7 +686,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingDrivingLicense = false;
-      if (img != null) drivingLicense = img;
+      if (img != null) {
+        drivingLicense = img.croppedImage;
+        drivingLicenseUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageElectricityBill(ImageSource source, String docname) async {
@@ -511,7 +697,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingElectricityBill = false;
-      if (img != null) electricityBill = img;
+      if (img != null){
+        electricityBill = img.croppedImage;
+        electricityBillUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageGasBill(ImageSource source, String docname) async {
@@ -519,7 +708,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingGasBill = false;
-      if (img != null) gasBill = img;
+      if (img != null){
+        gasBill = img.croppedImage;
+        gasBillUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageLandLineBill(ImageSource source, String docname) async {
@@ -527,7 +719,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingLandLineBill = false;
-      if (img != null) landLineBill = img;
+      if (img != null) {
+        landLineBill = img.croppedImage;
+        landLineBillUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageMaintainanceReceipt(ImageSource source, String docname) async {
@@ -535,7 +730,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingMaintainanceReceipt = false;
-      if (img != null) maintainanceReceipt = img;
+      if (img != null){
+        maintainanceReceipt = img.croppedImage;
+        maintainanceReceiptUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageMobileBill(ImageSource source, String docname) async {
@@ -543,7 +741,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingMobileBill = false;
-      if (img != null) mobileBill = img;
+      if (img != null) {
+        mobileBill = img.croppedImage;
+        mobileBillUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageMunicipalityWaterBill(ImageSource source, String docname) async {
@@ -551,7 +752,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingMunicipalityWaterBill = false;
-      if (img != null) municipalityWaterBill = img;
+      if (img != null){
+        municipalityWaterBill = img.croppedImage;
+        municipalityWaterBillUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImagePassport(ImageSource source, String docname) async {
@@ -559,7 +763,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingPassport = false;
-      if (img != null) passport = img;
+      if (img != null) {
+        passport = img.croppedImage;
+        passportUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImagePostOfficeSB(ImageSource source, String docname) async {
@@ -567,7 +774,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingPostOfficeSB = false;
-      if (img != null) postOfficeSB = img;
+      if (img != null){
+        postOfficeSB = img.croppedImage;
+        postOfficeSBUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageRegisteredRent(ImageSource source, String docname) async {
@@ -575,7 +785,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingRegisteredRent = false;
-      if (img != null) registeredRent = img;
+      if (img != null){
+        registeredRent = img.croppedImage;
+        registeredRentUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageRegisteredSales(ImageSource source, String docname) async {
@@ -583,7 +796,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingRegisteredSales = false;
-      if (img != null) registeredSales = img;
+      if (img != null) {
+        registeredSales = img.croppedImage;
+        registeredSalesUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageRentAgreement(ImageSource source, String docname) async {
@@ -591,7 +807,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingRentAgreement = false;
-      if (img != null) rentAgreement = img;
+      if (img != null){
+        rentAgreement = img.croppedImage;
+        rentAgreementUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageVoterCard(ImageSource source, String docname) async {
@@ -599,7 +818,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingVoterCard = false;
-      if (img != null) voterCard = img;
+      if (img != null) {
+        voterCard = img.croppedImage;
+        voterCardUrl=img.pdfUrl;
+      }
     });
   }
   //category=="ADD PROOF" END CODE
@@ -612,16 +834,24 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   bool isLoadingSalarySlip=false;
 
   File? creditCardCopy;
+  String? creditCardCopyUrl;
   File? iTRComputation;
+  String? iTRComputationUrl;
   File? latestCreditCard;
+  String? latestCreditCardUrl;
   File? latestSalarySlip;
+  String? latestSalarySlipUrl;
   File? salarySlip;
+  String? salarySlipUrl;
   Future pickImageCreditCardCopy(ImageSource source, String docname) async {
     setState(() => isLoadingCreditCardCopy = true);
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingCreditCardCopy = false;
-      if (img != null) creditCardCopy = img;
+      if (img != null) {
+        creditCardCopy = img.croppedImage;
+        creditCardCopyUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageITRComputation(ImageSource source, String docname) async {
@@ -629,7 +859,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingITRComputation = false;
-      if (img != null) iTRComputation = img;
+      if (img != null){
+        iTRComputation = img.croppedImage;
+        iTRComputationUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageLatestCreditCard(ImageSource source, String docname) async {
@@ -637,7 +870,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingLatestCreditCard = false;
-      if (img != null) latestCreditCard = img;
+      if (img != null) {
+        latestCreditCard = img.croppedImage;
+        latestCreditCardUrl=img.pdfUrl;
+
+      }
     });
   }
   Future pickImageLatestSalarySlip(ImageSource source, String docname) async {
@@ -645,7 +882,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingLatestSalarySlip= false;
-      if (img != null) latestSalarySlip = img;
+      if (img != null) {
+        latestSalarySlip = img.croppedImage;
+        latestSalarySlipUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageSalarySlip(ImageSource source, String docname) async {
@@ -653,7 +893,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingSalarySlip= false;
-      if (img != null) salarySlip = img;
+      if (img != null){
+        salarySlip = img.croppedImage;
+        salarySlipUrl=img.pdfUrl;
+      }
     });
   }
   //END CODE CATEGORY=="INCOME PROOF"
@@ -662,14 +905,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   bool isLoadingBankPassbook=false;
 
   File? threeMonthsBankStatement;
+  String? threeMonthsBankStatementUrl;
   File? bankPassbook;
+  String? bankPassbookUrl;
 
   Future pickImage3MonthsBankStatement(ImageSource source, String docname) async {
     setState(() => isLoading3MonthsBankStatement = true);
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoading3MonthsBankStatement = false;
-      if (img != null) threeMonthsBankStatement = img;
+      if (img != null) {
+        threeMonthsBankStatement = img.croppedImage;
+        threeMonthsBankStatementUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageBankPassbook(ImageSource source, String docname) async {
@@ -677,7 +925,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingBankPassbook = false;
-      if (img != null) bankPassbook = img;
+      if (img != null){
+        bankPassbook = img.croppedImage;
+        bankPassbookUrl=img.pdfUrl;
+      }
     });
   }
 
@@ -688,15 +939,21 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   bool isLoadingPassportAddProof=false;
 
   File? drivingLicenseAddProof;
+  String? drivingLicenseAddProofUrl;
   File? nREGACard;
+  String? nREGACardUrl;
   File? passportAddProof;
+  String? passportAddProofUrl;
 
   Future pickImageDrivingLicenseAddProof(ImageSource source, String docname) async {
     setState(() => isLoadingDrivingLicenseAddProof = true);
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingDrivingLicenseAddProof = false;
-      if (img != null) drivingLicenseAddProof = img;
+      if (img != null){
+        drivingLicenseAddProof = img.croppedImage;
+        drivingLicenseAddProofUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImageNREGACard(ImageSource source, String docname) async {
@@ -704,7 +961,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingNREGACard = false;
-      if (img != null) nREGACard = img;
+      if (img != null) {
+        nREGACard = img.croppedImage;
+        nREGACardUrl=img.pdfUrl;
+      }
     });
   }
   Future pickImagePassportAddProof(ImageSource source, String docname) async {
@@ -712,15 +972,181 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     final img = await _pickAndUploadImage(source, docname);
     setState(() {
       isLoadingPassportAddProof = false;
-      if (img != null) passportAddProof = img;
+      if (img != null){
+        passportAddProof = img.croppedImage;
+        passportAddProofUrl=img.pdfUrl;
+      }
     });
   }
 
   //END CODE CATEGORY=="ID AND ADD PROOF"
 
+  File? selectedImage;
+  String? selectedImageUrl;
+  void _showAddDialog({required String docName, required String docId}) {
+    showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        bool isUploading = false; // ✅ local state for loading
 
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: const Text(
+                "Click Other Image",
+                style: TextStyle(fontSize: 15),
+              ),
+              content: Container(
+                height: MediaQuery.of(context).size.height / 10,
+                width: 500,
+                color: Colors.white60,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Stack(
+                      children: [
+                        Container(
+                          height: 75,
+                          width: 75,
+                          decoration: BoxDecoration(
+                            color: AppConstant.appSecondaryColor,
+                            border: Border.all(
+                              color: Colors.black,
+                              width: 1.0,
+                            ),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: Center(
+                            child: isUploading
+                                ? const CircularProgressIndicator() // ✅ loader
+                                : selectedImage == null
+                                ? InkWell(
+                              onTap: () async {
+                                setStateDialog(() {
+                                  isUploading = true;
+                                });
+                                final img = await _pickAndUploadImage(ImageSource.camera, docId);
 
-  Future<File?> _pickAndUploadImage(
+                                if (img != null) {
+                                  setStateDialog(() {
+                                    selectedImage = img.croppedImage;
+                                    selectedImageUrl=img.pdfUrl;
+                                  });
+                                }
+
+                                setStateDialog(() {
+                                  isUploading = false;
+                                });
+                              },
+                              child: const Text(
+                                "No image selected",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    fontSize: 8, color: Colors.white),
+                              ),
+                            )
+                                : Container(
+                              height: 73,
+                              width: 73,
+                              color: Colors.white,
+                              child: Image.file(
+                                selectedImage!,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: -2,
+                          right: 2,
+                          child: InkWell(
+                            onTap: () async {
+                              try {
+                                if (selectedImage != null && selectedImageUrl != null) {
+                                  // 🔹 पहले Database से delete
+                                  bool success = await deleteDocumentFromDB(uid,photoUrl!);
+
+                                  if (success) {
+                                    // 🔹 Local file भी delete
+                                    await selectedImage!.delete();
+                                    setState(() {
+                                      selectedImage = null;
+                                      selectedImageUrl = null;
+                                    });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text("✅ Deleted successfully")),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text("❌ Failed to delete from DB")),
+                                    );
+                                  }
+                                }
+                              } catch (e) {
+                                print("Error deleting file: $e");
+                              }
+                            },
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                color: Colors.black,
+                                shape: BoxShape.circle,
+                              ),
+                              padding: const EdgeInsets.all(3),
+                              child: const Icon(
+                                Icons.delete_forever_outlined,
+                                size: 18,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Flexible(
+                      child: Padding(
+                        padding: const EdgeInsets.all(5.0),
+                        child: Text(
+                          docName,
+                          textAlign: TextAlign.left,
+                          softWrap: true,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 3,
+                          style: const TextStyle(
+                              color: Colors.black, fontSize: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(ctx); // ❌ Cancel button
+                  },
+                  child: const Text("Cancel"),
+                ),
+
+                // ✅ Ok button only show when image selected
+                if (selectedImage != null)
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(ctx, selectedImage);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("✅ Image upload successfully")),
+                      );
+                    },
+                    child: const Text("Upload"),
+                  ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+  Future<UploadResult?> _pickAndUploadImage(
       ImageSource source,
       String docname,
       ) async {
@@ -751,6 +1177,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
       }
 
       //img = await _cropImage(imageFile: img);
+      print(cropped);
 
       final url = await convertImageToPdfAndSave(
         cropped!,
@@ -759,18 +1186,45 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
         widget.leadId,
         uid,
       );
+      print("🖼️ PDF URL : $url");
+      //delete url in mysql database
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("✅ $url !!"),
+          content: Text("✅URL: $url"),
           duration: Duration(seconds: 5),
         ),
       );
-      return img;
+      print("-----------");
+      print(cropped);
+      return UploadResult(croppedImage: cropped, pdfUrl: url!);
     } catch (e) {
       print("❌ Error: $e");
       return null;
     }
   }
+  Future<bool> deleteDocumentFromDB(String uid,String docUrl) async {
+    try {
+      final response = await http.post(
+        Uri.parse("https://fms.bizipac.com/apinew/ws_new/delete_document.php?"),
+        body: {
+          "loginid":uid,
+          "document_file": docUrl
+        },
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        print("---------");
+        print(data);
+        print("---------");
+        return data["success"] == 1;
+      }
+    } catch (e) {
+      print("❌ Error calling delete API: $e");
+    }
+    return false;
+  }
+
+
   Future<void> _saveOrUpdateDoc(String docname) async {
     final prefs = await SharedPreferences.getInstance();
     List<String> savedDocs = prefs.getStringList('collectedDocs') ?? [];
@@ -830,7 +1284,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
     loadUserData();
     futureDocuments = DocumentController.fetchDocument();
-    _futureDocumentsList = _documentService.fetchDocuments();
+   // _futureDocumentsList = _documentService.fetchDocuments();
   }
   @override
   void dispose() {
@@ -977,7 +1431,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       : companuBoard == null
                                                       ? InkWell(
                                                     onTap: ()async{
-                                                     await pickImageCompanyBoard(ImageSource.camera,doc.docName);
+                                                     await pickImageCompanyBoard(ImageSource.camera,doc.docId);
                                                      // pickImageCompanyBoard(ImageSource.camera);
                                                     },
                                                     child: const Text(
@@ -1065,7 +1519,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       : feSelfie == null
                                                       ? InkWell(
                                                     onTap: () async{
-                                                      await pickImageFeSelfie(ImageSource.camera,doc.docName);
+                                                      await pickImageFeSelfie(ImageSource.camera,doc.docId);
                                                     },
                                                     child: const Text(
                                                       "No image selected",
@@ -1152,7 +1606,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       :billDesk == null
                                                       ? InkWell(
                                                     onTap: () async{
-                                                    await pickImageBillDesk(ImageSource.camera,doc.docName);
+                                                    await pickImageBillDesk(ImageSource.camera,doc.docId);
                                                     },
                                                     child: const Text(
                                                       "No image selected",
@@ -1239,7 +1693,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       ? InkWell(
                                                     onTap: () async {
                                                       //pickImageFESelfieWithPerson(ImageSource.camera, doc.docName);
-                                                      await pickImageFESelfieWithPerson1(ImageSource.camera, "FE Selfie With Person Met With Sound Box (Inside Shop)");
+                                                      await pickImageFESelfieWithPerson1(ImageSource.camera, doc.docId);
                                                     },
                                                     child: const Text(
                                                       "No image selected",
@@ -1329,7 +1783,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       :frontDoor == null
                                                       ? InkWell(
                                                     onTap: ()async{
-                                                    await pickImageFrontDoor(ImageSource.camera,doc.docName);
+                                                    await pickImageFrontDoor(ImageSource.camera,doc.docId);
                                                     },
                                                     child: const Text(
                                                       "No image selected",
@@ -1416,7 +1870,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       : imageOfPersonMet == null
                                                       ? InkWell(
                                                     onTap: ()async{
-                                                     await pickImageImageOfPersonMet(ImageSource.camera,doc.docName);
+                                                     await pickImageImageOfPersonMet(ImageSource.camera,doc.docId);
                                                     },
                                                     child: const Text(
                                                       "No image selected",
@@ -1503,7 +1957,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       : billDeskImageofShop == null
                                                       ? InkWell(
                                                     onTap: ()async{
-                                                      await pickImageBillDeskImageofShop(ImageSource.camera,doc.docName);
+                                                      await pickImageBillDeskImageofShop(ImageSource.camera,doc.docId);
                                                     },
                                                     child: const Text(
                                                       "No image selected",
@@ -1590,7 +2044,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       : imageofShopFromOutside == null
                                                       ? InkWell(
                                                     onTap: ()async{
-                                                     await pickImageImageofShopFromOutside(ImageSource.camera,doc.docName);
+                                                     await pickImageImageofShopFromOutside(ImageSource.camera,doc.docId);
                                                     },
                                                     child: const Text(
                                                       "No image selected",
@@ -1677,7 +2131,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       : locationSnap == null
                                                       ? InkWell(
                                                     onTap: () async{
-                                                     await pickImageLocationSnap(ImageSource.camera,doc.docName);
+                                                     await pickImageLocationSnap(ImageSource.camera,doc.docId);
                                                     },
                                                     child: const Text(
                                                       "No image selected",
@@ -1764,7 +2218,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       :namePstatic == null
                                                       ? InkWell(
                                                     onTap: ()async{
-                                                     await pickImageNamePstatic(ImageSource.camera,doc.docName);
+                                                     await pickImageNamePstatic(ImageSource.camera,doc.docId);
                                                     },
                                                     child: const Text(
                                                       "No image selected",
@@ -1823,98 +2277,132 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                         ],
                                       ),
                                     ):SizedBox.shrink(),
-                                    doc.docName=="Photo"?Container(
-                                      height: MediaQuery.of(context).size.height/10,
-                                      width: 500,
-                                      color:Colors.white60,
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.start,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          doc.docName=="Photo"?Stack(
-                                            children: [
-                                              Container(
-                                                height: 75,
-                                                width: 75,
-                                                decoration: BoxDecoration(
-                                                  color: AppConstant.appSecondaryColor,
-                                                  border: Border.all(
-                                                    color: Colors.black,
-                                                    width: 1.0,
-                                                  ),
-                                                  borderRadius: BorderRadius.circular(5),
-                                                ),
-                                                child: Center(
-                                                  child: isLoadingPhoto
-                                                      ? const CircularProgressIndicator(  // 🔹 Loader
-                                                  )
-                                                      : photo == null
-                                                      ? InkWell(
-                                                    onTap: () async{
-                                                      //pickImagePhoto(ImageSource.camera, doc.docName);
-                                                      await pickImagePhoto1(ImageSource.camera, doc.docName);
 
-                                                    },
-                                                    child: const Text(
-                                                      "No image selected",
-                                                      textAlign: TextAlign.center,
-                                                      style: TextStyle(fontSize: 8, color: Colors.white),
+                                    doc.docName == "Photo"
+                                        ? Column(
+                                      children: [
+                                        Container(
+                                          height: MediaQuery.of(context).size.height / 10,
+                                          width: 500,
+                                          color: Colors.white60,
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.start,
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Stack(
+                                                children: [
+                                                  Container(
+                                                    height: 75,
+                                                    width: 75,
+                                                    decoration: BoxDecoration(
+                                                      color: AppConstant.appSecondaryColor,
+                                                      border: Border.all(
+                                                        color: Colors.black,
+                                                        width: 1.0,
+                                                      ),
+                                                      borderRadius: BorderRadius.circular(5),
                                                     ),
-                                                  )
-                                                      : Container(
-                                                    height: 73,
-                                                    width: 73,
-                                                    color: Colors.white,
-                                                    child: Image.file(
-                                                      photo!,
-                                                      fit: BoxFit.cover,
+                                                    child: Center(
+                                                      child: isLoadingPhoto
+                                                          ? const CircularProgressIndicator()
+                                                          : photo == null
+                                                          ? InkWell(
+                                                        onTap: () async {
+                                                          await pickImagePhoto1(
+                                                              ImageSource.camera, doc.docId);
+                                                        },
+                                                        child: const Text(
+                                                          "No image selected",
+                                                          textAlign: TextAlign.center,
+                                                          style: TextStyle(
+                                                              fontSize: 8, color: Colors.white),
+                                                        ),
+                                                      )
+                                                          : Container(
+                                                        height: 73,
+                                                        width: 73,
+                                                        color: Colors.white,
+                                                        child: Image.file(
+                                                          photo!,
+                                                          fit: BoxFit.cover,
+                                                        ),
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
+                                                  Positioned(
+                                                    top: -2,
+                                                    right: 2,
+                                                    child: InkWell(
+                                                      onTap: () async {
+                                                        try {
+                                                          if (photo != null && photoUrl != null) {
+                                                            // 🔹 पहले Database से delete
+                                                            bool success = await deleteDocumentFromDB(uid,photoUrl!);
+
+                                                            if (success) {
+                                                              // 🔹 Local file भी delete
+                                                              await photo!.delete();
+                                                              setState(() {
+                                                                photo = null;
+                                                                photoUrl = null;
+                                                              });
+                                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                                const SnackBar(content: Text("✅ Deleted successfully")),
+                                                              );
+                                                            } else {
+                                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                                const SnackBar(content: Text("❌ Failed to delete from DB")),
+                                                              );
+                                                            }
+                                                          }
+                                                        } catch (e) {
+                                                          print("Error deleting file: $e");
+                                                        }
+                                                      },
+                                                      child: Container(
+                                                        decoration: const BoxDecoration(
+                                                          color: Colors.black,
+                                                          shape: BoxShape.circle,
+                                                        ),
+                                                        padding: const EdgeInsets.all(3),
+                                                        child: const Icon(
+                                                          Icons.delete_forever_outlined,
+                                                          size: 18,
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                              Positioned(
-                                                top:-2, // Adjust these values to position the icon correctly
-                                                right: 2,
-                                                child: InkWell( // Consider using InkWell for better tap feedback
-                                                  onTap: () async {
-                                                    try {
-                                                      if (photo != null) {
-                                                        await photo!.delete();
-                                                        setState(() {
-                                                          photo = null;
-                                                        });
-                                                        print("File deleted successfully!");
-                                                      }
-                                                    } catch (e) {
-                                                      print("Error deleting file: $e");
-                                                    }
-                                                  },
-                                                  child: Container(
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.black, // Optional: background color for the icon
-                                                      shape: BoxShape.circle,
-                                                    ),
-                                                    padding: EdgeInsets.all(3), // Adjust padding as needed
-                                                    child: Icon(
-                                                      Icons.delete_forever_outlined,
-                                                      size: 18,
-                                                      color: Colors.white,
-                                                    ),
+                                              Flexible(
+                                                child: Padding(
+                                                  padding: const EdgeInsets.all(5.0),
+                                                  child: Text(
+                                                    doc.docName,
+                                                    textAlign: TextAlign.left,
+                                                    softWrap: true,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    maxLines: 3,
+                                                    style:
+                                                    const TextStyle(color: Colors.black, fontSize: 12),
                                                   ),
                                                 ),
                                               ),
                                             ],
-                                          ):SizedBox.shrink(),
-                                          doc.docName=="Photo"?Flexible(
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(5.0),
-                                              child: Text(doc.docName,
-                                                textAlign:TextAlign.left,softWrap:true,overflow:TextOverflow.ellipsis,maxLines:3,style: TextStyle(color: Colors.black,fontSize: 12),),
-                                            ),
-                                          ):SizedBox(),
-                                        ],
-                                      ),
-                                    ):SizedBox.shrink(),
+                                          ),
+                                        ),
+
+                                        // 🔹 Add Icon below the box
+                                        IconButton(
+                                          icon: const Icon(Icons.add_circle, color: Colors.blue, size: 28),
+                                          onPressed: () {
+                                            _showAddDialog(docName:doc.docName,docId:doc.docId);
+                                          },
+                                        ),
+                                      ],
+                                    )
+                                        : const SizedBox.shrink(),
                                     doc.docName=="Premises Interior"?Container(
                                       height: MediaQuery.of(context).size.height/10,
                                       width: 500,
@@ -1943,7 +2431,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       : premisesInterior == null
                                                       ? InkWell(
                                                     onTap: ()async{
-                                                    await  pickImagePremisesInterior(ImageSource.camera,doc.docName);
+                                                    await  pickImagePremisesInterior(ImageSource.camera,doc.docId);
                                                     },
                                                     child: const Text(
                                                       "No image selected",
@@ -2030,7 +2518,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       : qRCode == null
                                                       ? InkWell(
                                                     onTap: ()async{
-                                                     await pickImageQRCode(ImageSource.camera,doc.docName);
+                                                     await pickImageQRCode(ImageSource.camera,doc.docId);
                                                     },
                                                     child: const Text(
                                                       "No image selected",
@@ -2117,7 +2605,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       : stock == null
                                                       ? InkWell(
                                                     onTap: ()async{
-                                                    await pickImageStock(ImageSource.camera,doc.docName);
+                                                    await pickImageStock(ImageSource.camera,doc.docId);
                                                     },
                                                     child: const Text(
                                                       "No image selected",
@@ -2204,7 +2692,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       : tentCard == null
                                                       ? InkWell(
                                                     onTap: ()async{
-                                                     await pickImageTentCard(ImageSource.camera,doc.docName);
+                                                     await pickImageTentCard(ImageSource.camera,doc.docId);
                                                     },
                                                     child: const Text(
                                                       "No image selected",
@@ -2291,7 +2779,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       : politicalConnections == null
                                                       ? InkWell(
                                                     onTap: ()async{
-                                                    await  pickImagePoliticalConnections(ImageSource.camera,doc.docName);
+                                                    await  pickImagePoliticalConnections(ImageSource.camera,doc.docId);
                                                     },
                                                     child: const Text(
                                                       "No image selected",

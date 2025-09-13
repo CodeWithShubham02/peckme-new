@@ -11,6 +11,7 @@ import 'package:get/get_core/src/get_main.dart';
 import 'package:peckme/view/profile_screen.dart';
 import 'package:peckme/view/received_lead_screen.dart';
 import 'package:peckme/view/search_lead_screen.dart';
+import 'package:peckme/view/today_completed_lead_screen.dart';
 import 'package:peckme/view/today_transferd_lead_screen.dart';
 import 'package:peckme/view/transfer_lead_screen.dart';
 import 'package:peckme/view/widget/drawer_widget.dart';
@@ -20,6 +21,7 @@ import 'package:peckme/view/widget/webview_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../controller/lead_status_services.dart';
 import '../handler/NetworkMonitor.dart';
 import '../services/icici.dart';
 import '../services/session_id_services.dart';
@@ -266,7 +268,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Icon(Icons.dashboard, size: 30, color: Colors.black87),
                             SizedBox(height: 12),
                             Text(
-                              "Received All Lead",
+                              "Pending Lead's",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
@@ -302,7 +304,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Icon(Icons.transfer_within_a_station_outlined, size: 30, color: Colors.black87),
                             SizedBox(height: 12),
                             Text(
-                              "Transfer Lead",
+                              "Transfer Lead's ",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
@@ -336,15 +338,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       padding: EdgeInsets.all(16),
                       child: InkWell(
                         onTap: (){
-                          Get.to(()=>SearchLeadScreen());
+                          //Get.to(()=>SearchLeadScreen());
+                          Get.snackbar("Working in progress", "");
                         },
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.search, size: 30, color: Colors.black87),
+                            Icon(Icons.wallet, size: 30, color: Colors.black87),
                             SizedBox(height: 12),
                             Text(
-                              "Search Lead",
+                              "Self Lead's Alloter",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
@@ -381,7 +384,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Icon(Icons.card_travel_outlined, size: 22, color: Colors.black87),
                             SizedBox(height: 10),
                             Text(
-                              "Onfield Prepaid \n Card",
+                              "Submission's ",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
@@ -415,25 +418,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       padding: EdgeInsets.all(16),
                       child: InkWell(
                         onTap: (){
-                          Get.snackbar(
-                            "Message",
-                            "Working mode.....!",
-                            icon:  Image.asset(
-                              "assets/logo/cmp_logo.png",
-                              height: 30,
-                              width: 30,
+                          final service = LeadService(baseUrl: "https://fms.bizipac.com/apinew/ws_new");
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => LeadStatusScreen(uid: uid, branchId: branchId, service: service),
                             ),
-                            shouldIconPulse: true,     // Small animation on the icon
-                            backgroundColor:AppConstant.appSnackBarBackground,
-                            colorText: AppConstant.appTextColor,
-                            snackPosition: SnackPosition.BOTTOM, // or TOP
-                            borderRadius: 15,
-                            margin: const EdgeInsets.all(12),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            duration: const Duration(seconds: 3),
-                            isDismissible: true,
-                            forwardAnimationCurve: Curves.easeOutBack,
                           );
+
                         },
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -441,7 +434,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Icon(Icons.file_copy_outlined, size: 22, color: Colors.black87),
                             SizedBox(height: 10),
                             Text(
-                              "Today's Collected Lead",
+                              "Today's Completed Lead's ",
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
@@ -530,10 +523,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                     ),
-
+                    Container(
+                      height: 100,
+                      width: 150,
+                      decoration: BoxDecoration(
+                        color: AppConstant.appBattonBack,
+                        borderRadius: BorderRadius.circular(5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.shade300,
+                            blurRadius: 5,
+                            offset: Offset(0, 4),
+                          )
+                        ],
+                      ),
+                      padding: EdgeInsets.all(16),
+                      child: InkWell(
+                        onTap: (){
+                          //Get.to(()=>ProfileScreen());
+                        },
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.wallet, size: 30, color: Colors.black87),
+                            SizedBox(height: 12),
+                            Text(
+                              "Self Lead Alloter",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
                 SizedBox(height: 150,),
+
                 Container(
                   child: Column(
                       children: [

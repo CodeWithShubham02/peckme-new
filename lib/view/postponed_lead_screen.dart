@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -122,9 +124,48 @@ class _PostponeLeadScreenState extends State<PostponeLeadScreen> {
               padding: const EdgeInsets.all(8.0),
               child: TextFormField(
                 controller: remark,
+                maxLines: 3,
+                keyboardType: TextInputType.name, // 🔹 name वाला keyboard letters पर focus करता है
+                textInputAction: TextInputAction.newline,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(
+                    RegExp(r"[a-zA-Z\s]"), // ✅ सिर्फ alphabets (A-Z, a-z) और space allow
+                  ),
+                ],
                 decoration: InputDecoration(
-                    hint: Text("Enter here remark?"),
-                    border: OutlineInputBorder()
+                  hintText: "Type your remark here...",
+                  hintStyle: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.grey.shade500,
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Colors.grey.shade400,
+                      width: 1,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: Colors.grey.shade400,
+                      width: 1,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.deepPurple,
+                      width: 1.5,
+                    ),
+                  ),
                 ),
               ),
             ),

@@ -633,62 +633,39 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                   lead.client_mobile_app=="1"?
                     lead.clientId=="11"?
                     ElevatedButton(
-                      onPressed: ()  async {
+                      onPressed: () async {
                         String name = '';
                         String uid = '';
                         String branchId = '';
                         String authId = '';
                         final SharedPreferences prefs = await SharedPreferences.getInstance();
+
                         setState(() {
                           name = prefs.getString('name') ?? '';
                           uid = prefs.getString('uid') ?? '';
                           branchId = prefs.getString('branchId') ?? '';
                           authId = prefs.getString('authId') ?? '';
                         });
-                        String? sessionid;
-                        sessionid = await ApiService.getSessionId(authId);
 
-                        if(authId.isNotEmpty && (sessionid?.isNotEmpty ?? false)){
-                          _callNativeMethod(
-                            clientId: lead.clientId,
-                            leadId: lead.leadId,
-                            sessionId: sessionid!,
-                            amzAppID: lead.athenaLeadId,
-                            customerName: lead.customerName,
-                            banID:authId,
-                            userName:authId,
-                            athena_lead_id:lead.athenaLeadId,
-                            agentName:name,
-                            user_id: uid,
-                            branch_id: branchId,
-                            auth_id: authId,
-                            client_lead_id:lead.athenaLeadId,
-                            gpslat:location_lat,
-                            gpslong:location_long,
-                          );
-                        }else{
-
-                          Get.snackbar(
-                            "Message",
-                            "Your auth_id or sessionId is not create!",
-                            icon:  Image.asset(
-                              "assets/logo/cmp_logo.png",
-                              height: 30,
-                              width: 30,
-                            ),
-                            shouldIconPulse: true,     // Small animation on the icon
-                            backgroundColor:AppConstant.appSnackBarBackground,
-                            colorText: AppConstant.appTextColor,
-                            snackPosition: SnackPosition.BOTTOM, // or TOP
-                            borderRadius: 15,
-                            margin: const EdgeInsets.all(12),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            duration: const Duration(seconds: 3),
-                            isDismissible: true,
-                            forwardAnimationCurve: Curves.easeOutBack,
-                          );
-                        }
+                        _callNativeMethod(
+                          clientId: lead.clientId,
+                          leadId: lead.leadId,
+                          sessionId: "", // safe now
+                          amzAppID: lead.athenaLeadId,
+                          customerName: lead.customerName,
+                          banID: authId,
+                          userName: authId,
+                          athena_lead_id: lead.athenaLeadId,
+                          agentName: name,
+                          user_id: uid,
+                          branch_id: branchId,
+                          auth_id: authId,
+                          client_lead_id: lead.athenaLeadId,
+                          gpslat: location_lat,
+                          gpslong: location_long,
+                        );
                       },
+
                       style: ElevatedButton.styleFrom(
                         backgroundColor:  AppConstant.appBattonBack,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
@@ -1367,7 +1344,7 @@ void _showConfirmDialog(BuildContext context, String leadId, String user_id) {
               leadId: leadId,
             );
             if (result.success == 1) {
-              Get.to(()=>DashboardScreen());
+              Get.offAll(()=>DashboardScreen());
               Get.snackbar(
                 "Final",
                 "Lead submitted!",
