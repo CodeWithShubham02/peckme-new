@@ -71,35 +71,43 @@ public class MainActivity extends FlutterActivity {
                                     result.success(msg);
                                     break;
                                 }
-                                case "11": { // ICICI SDK
+                                case "11":  // ICICI SDK
                                     try {
                                         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.getDefault());
                                         String currentDate = sdf.format(new Date());
+                                        int parsedUserId = 0;
+                                        try {
+                                            parsedUserId = Integer.parseInt(user_id);
+                                        } catch (NumberFormatException e) {
+                                            parsedUserId = 0;
+                                        }
+                                        String agentVeerID = String.format("BIZ%05d", parsedUserId);
 
-                                        String agentVeerID = String.format("BIZ%05d", Integer.parseInt(user_id));
+                                        Class<?> iciciClass = Class.forName("com.bcpl.icici.IciciActivity"); // ⚠️ confirm correct name
+                                        Intent intent = new Intent(getApplicationContext(), iciciClass);
+                                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-                                        Intent intent = new Intent(this, Class.forName("com.bcpl.icici.IciciActivity"));
                                         intent.putExtra("appId", athena_lead_id);
                                         intent.putExtra("firstCallDate", currentDate);
                                         intent.putExtra("appointmentDate", currentDate);
                                         intent.putExtra("lastActionDate", currentDate);
                                         intent.putExtra("customerName", customerName);
-                                        intent.putExtra("userName", banID);
+                                        intent.putExtra("userName", auth_id);
                                         intent.putExtra("AgentId", agentVeerID);
                                         intent.putExtra("AgentName", agentName);
                                         intent.putExtra("LeadId", lead_id);
-
                                         if (intent.resolveActivity(getPackageManager()) != null) {
                                             startActivity(intent);
                                             result.success("ICICI SDK Activity Started");
                                         } else {
                                             result.error("ACTIVITY_NOT_FOUND", "ICICI Activity not installed/found!", null);
                                         }
+                                    } catch (ClassNotFoundException e) {
+                                        result.error("CLASS_NOT_FOUND", "ICICI Activity class not found in SDK!", null);
                                     } catch (Exception e) {
                                         result.error("INTENT_ERROR", e.getMessage(), null);
                                     }
                                     break;
-                                }
                                 case "12":
                                     result.success("Client Id " + client_id + "...");
                                     break;

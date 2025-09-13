@@ -32,6 +32,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        multiDexEnabled=true
     }
 
     buildTypes {
@@ -57,11 +58,7 @@ android {
     buildFeatures {
         compose = true
     }
-    configurations.all {
-        resolutionStrategy {
-            force("com.squareup.okhttp3:okhttp:3.12.13")
-        }
-    }
+
 
 }
 
@@ -75,28 +72,24 @@ dependencies {
     implementation("androidx.core:core-ktx:1.16.0")
     implementation("androidx.activity:activity-compose:1.9.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-// Or the latest stable version
-
     // Jetpack Compose BOM keeps versions aligned
     implementation(platform("androidx.compose:compose-bom:2024.06.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material:material")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("com.squareup.okhttp3:okhttp:3.12.13") // stable 3.x version
+
+    implementation("com.squareup.okhttp3:okhttp:4.9.0") // stable 3.x version
+    implementation("com.squareup.okio:okio:1.17.5")
+
     debugImplementation("androidx.compose.ui:ui-tooling")
-
-//    implementation(files("libs/icici.aar"))
-//
-//    // common deps AAR चाहते हों तो
-//    implementation("androidx.appcompat:appcompat:1.6.1")
-//    implementation("com.google.android.material:material:1.9.0")
-    // Firebase products
     implementation("com.google.firebase:firebase-analytics")
+    implementation("androidx.multidex:multidex:2.0.1")
 
-
-
-
-
+}
+configurations.all {
+    resolutionStrategy {
+        force("com.squareup.okhttp3:okhttp:4.9.0")
+    }
 }
 
 flutter {
