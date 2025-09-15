@@ -82,47 +82,47 @@ class _WebViewScreenState extends State<WebViewScreen> {
         ),
       ),
       body: SafeArea(child: WebViewWidget(controller: _controller)),
-      floatingActionButton:Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          InkWell(
-            onTap: (){
-              if(widget.fidatal==1){
-                Text("Document upload");
-              }else{
-                Get.snackbar(
-                  "Remember this!",
-                  "Kindly complete FI Properly. Follow the instruction.!",
-                  icon:  Image.asset(
-                    "assets/logo/cmp_logo.png",
-                    height: 30,
-                    width: 30,
-                  ),
-                  shouldIconPulse: true,     // Small animation on the icon
-                  backgroundColor:AppConstant.appSnackBarBackground,
-                  colorText: AppConstant.appTextColor,
-                  snackPosition: SnackPosition.BOTTOM, // or TOP
-                  borderRadius: 15,
-                  margin: const EdgeInsets.all(12),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  duration: const Duration(seconds: 3),
-                  isDismissible: true,
-                  forwardAnimationCurve: Curves.easeOutBack,
-                );
-              }
-            },
-            child: Container(
-                height: 40,
-                width: 200,
-                decoration: BoxDecoration(
-                  color: Colors.green[100],
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: Center(child: Text("Document Upload"))),
-          )
-        ],
-      )
+      // floatingActionButton:Row(
+      //   crossAxisAlignment: CrossAxisAlignment.center,
+      //   mainAxisAlignment: MainAxisAlignment.center,
+      //   children: [
+      //     InkWell(
+      //       onTap: (){
+      //         if(widget.fidatal==1){
+      //           Text("Document upload");
+      //         }else{
+      //           Get.snackbar(
+      //             "Remember this!",
+      //             "Kindly complete FI Properly. Follow the instruction.!",
+      //             icon:  Image.asset(
+      //               "assets/logo/cmp_logo.png",
+      //               height: 30,
+      //               width: 30,
+      //             ),
+      //             shouldIconPulse: true,     // Small animation on the icon
+      //             backgroundColor:AppConstant.appSnackBarBackground,
+      //             colorText: AppConstant.appTextColor,
+      //             snackPosition: SnackPosition.BOTTOM, // or TOP
+      //             borderRadius: 15,
+      //             margin: const EdgeInsets.all(12),
+      //             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      //             duration: const Duration(seconds: 3),
+      //             isDismissible: true,
+      //             forwardAnimationCurve: Curves.easeOutBack,
+      //           );
+      //         }
+      //       },
+      //       child: Container(
+      //           height: 40,
+      //           width: 200,
+      //           decoration: BoxDecoration(
+      //             color: Colors.green[100],
+      //             borderRadius: BorderRadius.circular(5),
+      //           ),
+      //           child: Center(child: Text("Document Upload"))),
+      //     )
+      //   ],
+      // )
     );
   }
 }

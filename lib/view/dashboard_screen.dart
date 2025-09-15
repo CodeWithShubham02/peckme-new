@@ -7,33 +7,20 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:peckme/view/profile_screen.dart';
 import 'package:peckme/view/received_lead_screen.dart';
-import 'package:peckme/view/search_lead_screen.dart';
 import 'package:peckme/view/today_completed_lead_screen.dart';
 import 'package:peckme/view/today_transferd_lead_screen.dart';
 import 'package:peckme/view/transfer_lead_screen.dart';
-import 'package:peckme/view/widget/drawer_widget.dart';
-import 'package:peckme/view/widget/icici_webview_widget.dart';
-import 'package:peckme/view/widget/webview_widget.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../controller/lead_status_services.dart';
-import '../handler/NetworkMonitor.dart';
-import '../services/icici.dart';
-import '../services/session_id_services.dart';
 import '../utils/app_constant.dart';
 import 'auth/login.dart';
 
-
-
-
 class DashboardScreen extends StatefulWidget {
-
-   DashboardScreen({super.key, });
+  DashboardScreen({super.key});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -46,11 +33,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   String name = '';
   String mobile = '';
-  String uid='';
+  String uid = '';
   String rolename = '';
   String roleId = '';
   String branchId = '';
-  String branch_name='';
+  String branch_name = '';
   String authId = '';
   String image = '';
   String address = '';
@@ -64,6 +51,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     await intent.launch();
   }
+
   void loadUserData() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -81,6 +69,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   DateTime _currentTime = DateTime.now();
+
   // A Timer variable to control the periodic updates.
   late Timer _timer;
 
@@ -96,8 +85,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
     _checkConnection();
     // Listen continuously
-    _connectivity.onConnectivityChanged.listen((List<ConnectivityResult> results) {
-      final result = results.isNotEmpty ? results.first : ConnectivityResult.none;
+    _connectivity.onConnectivityChanged.listen((
+      List<ConnectivityResult> results,
+    ) {
+      final result = results.isNotEmpty
+          ? results.first
+          : ConnectivityResult.none;
 
       setState(() {
         _connectionStatus = result;
@@ -121,17 +114,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _showNoInternetDialog();
     }
   }
+
   void _launchInBrowser(String url) async {
     Uri uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
-      await launchUrl(
-        uri,
-        mode: LaunchMode.inAppBrowserView,
-      );
+      await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
     } else {
       throw 'Could not launch $url';
     }
   }
+
   void _showNoInternetDialog() {
     if (!_isDialogShowing && mounted) {
       _isDialogShowing = true;
@@ -141,7 +133,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         builder: (context) {
           return AlertDialog(
             title: const Text("No Internet"),
-            content: const Text("Your internet is off. Please check WiFi or Mobile Data."),
+            content: const Text(
+              "Your internet is off. Please check WiFi or Mobile Data.",
+            ),
             actions: [
               TextButton(
                 onPressed: () async {
@@ -152,7 +146,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   if (Platform.isAndroid) {
                     SystemNavigator.pop(); // Android style close
                   } else if (Platform.isIOS) {
-                    exit(0); // iOS में यह Apple guideline के खिलाफ है, लेकिन काम करेगा
+                    exit(
+                      0,
+                    ); // iOS में यह Apple guideline के खिलाफ है, लेकिन काम करेगा
                   } else {
                     exit(0); // fallback
                   }
@@ -174,6 +170,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _isDialogShowing = false;
     }
   }
+
   String getConnectionType() {
     switch (_connectionStatus) {
       case ConnectivityResult.wifi:
@@ -186,12 +183,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return "Unknown";
     }
   }
+
   @override
   void dispose() {
     _timer.cancel();
     super.dispose();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -201,34 +198,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
         '${_currentTime.second.toString().padLeft(2, '0')}';
     return Scaffold(
       appBar: AppBar(
-          iconTheme: IconThemeData(color: Colors.black),
-        backgroundColor:AppConstant.appInsideColor,
-        title: Text("Peak Me ",style: TextStyle(color: Colors.black),),
+        iconTheme: IconThemeData(color: Colors.black),
+        backgroundColor: AppConstant.appInsideColor,
+        title: Text("Peak Me ", style: TextStyle(color: Colors.black)),
         actions: [
-          IconButton(onPressed: (){
-            Get.to(()=>ProfileScreen(
-            ));
-          }, icon: Icon(Icons.person_pin,color: Colors.black,)),
-          IconButton(onPressed: ()async{
-            showDialog(context: context, builder: (_)=>
-            AlertDialog(
-              title: Text("Logout",style: TextStyle(fontSize: 20),),
-              content: Text("are you sure you want to logout of your account?"),
-              actions: [
-                IconButton(onPressed: () async{
-                 Navigator.pop(context);
-                }, icon: Text('No')),
-                IconButton(onPressed: () async{
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.clear();
-                  Get.offAll(() => Login());
-                },icon: Text('Yes'),),
-              ],
-              elevation: 10,
-              backgroundColor: Colors.white,
-            ),
-            );
-          }, icon: Icon(Icons.logout,color: Colors.black))
+          IconButton(
+            onPressed: () {
+              Get.to(() => ProfileScreen());
+            },
+            icon: Icon(Icons.person_pin, color: Colors.black),
+          ),
+          IconButton(
+            onPressed: () async {
+              showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: Text("Logout", style: TextStyle(fontSize: 20)),
+                  content: Text(
+                    "are you sure you want to logout of your account?",
+                  ),
+                  actions: [
+                    IconButton(
+                      onPressed: () async {
+                        Navigator.pop(context);
+                      },
+                      icon: Text('No'),
+                    ),
+                    IconButton(
+                      onPressed: () async {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.clear();
+                        Get.offAll(() => Login());
+                      },
+                      icon: Text('Yes'),
+                    ),
+                  ],
+                  elevation: 10,
+                  backgroundColor: Colors.white,
+                ),
+              );
+            },
+            icon: Icon(Icons.logout, color: Colors.black),
+          ),
         ],
       ),
       // drawer: AdminDrawerWidget(),
@@ -239,7 +250,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             padding: const EdgeInsets.all(8.0),
             child: Column(
               children: [
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -254,18 +264,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             color: Colors.grey.shade300,
                             blurRadius: 5,
                             offset: Offset(0, 4),
-                          )
+                          ),
                         ],
                       ),
                       padding: EdgeInsets.all(16),
                       child: InkWell(
-                        onTap: (){
-                          Get.to(()=>ReceivedLeadScreen());
+                        onTap: () {
+                          Get.to(() => ReceivedLeadScreen());
                         },
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.dashboard, size: 30, color: Colors.black87),
+                            Icon(
+                              Icons.dashboard,
+                              size: 30,
+                              color: Colors.black87,
+                            ),
                             SizedBox(height: 12),
                             Text(
                               "Pending Lead's",
@@ -290,18 +304,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             color: Colors.grey.shade300,
                             blurRadius: 5,
                             offset: Offset(0, 4),
-                          )
+                          ),
                         ],
                       ),
                       padding: EdgeInsets.all(16),
                       child: InkWell(
-                        onTap: (){
-                          Get.to(()=>TransferLeadScreen());
+                        onTap: () {
+                          Get.to(() => TransferLeadScreen());
                         },
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.transfer_within_a_station_outlined, size: 30, color: Colors.black87),
+                            Icon(
+                              Icons.transfer_within_a_station_outlined,
+                              size: 30,
+                              color: Colors.black87,
+                            ),
                             SizedBox(height: 12),
                             Text(
                               "Transfer Lead's ",
@@ -317,7 +335,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 10,),
+                SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -325,19 +343,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color:AppConstant.appBattonBack,
+                        color: AppConstant.appBattonBack,
                         borderRadius: BorderRadius.circular(5),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.grey.shade300,
                             blurRadius: 5,
                             offset: Offset(0, 4),
-                          )
+                          ),
                         ],
                       ),
                       padding: EdgeInsets.all(16),
                       child: InkWell(
-                        onTap: (){
+                        onTap: () {
                           //Get.to(()=>SearchLeadScreen());
                           Get.snackbar("Working in progress", "");
                         },
@@ -369,19 +387,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             color: Colors.grey.shade300,
                             blurRadius: 5,
                             offset: Offset(0, 4),
-                          )
+                          ),
                         ],
                       ),
                       padding: EdgeInsets.all(16),
                       child: InkWell(
-                        onTap: (){
-                          _launchInBrowser('https://fms.bizipac.com/apinew/secureapi/icici_pre_paid_card_gen.php?user_id=$uid&branch_id=$branchId#!/');
-
+                        onTap: () {
+                          _launchInBrowser(
+                            'https://fms.bizipac.com/apinew/secureapi/icici_pre_paid_card_gen.php?user_id=$uid&branch_id=$branchId#!/',
+                          );
                         },
-                          child: Column(
+                        child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.card_travel_outlined, size: 22, color: Colors.black87),
+                            Icon(
+                              Icons.card_travel_outlined,
+                              size: 22,
+                              color: Colors.black87,
+                            ),
                             SizedBox(height: 10),
                             Text(
                               "Submission's ",
@@ -397,7 +420,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 10,),
+                SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -412,26 +435,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             color: Colors.grey.shade300,
                             blurRadius: 5,
                             offset: Offset(0, 4),
-                          )
+                          ),
                         ],
                       ),
                       padding: EdgeInsets.all(16),
                       child: InkWell(
-                        onTap: (){
-                          final service = LeadService(baseUrl: "https://fms.bizipac.com/apinew/ws_new");
+                        onTap: () {
+                          final service = LeadService(
+                            baseUrl: "https://fms.bizipac.com/apinew/ws_new",
+                          );
 
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => LeadStatusScreen(uid: uid, branchId: branchId, service: service),
+                              builder: (_) => LeadStatusScreen(
+                                uid: uid,
+                                branchId: branchId,
+                                service: service,
+                              ),
                             ),
                           );
-
                         },
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.file_copy_outlined, size: 22, color: Colors.black87),
+                            Icon(
+                              Icons.file_copy_outlined,
+                              size: 22,
+                              color: Colors.black87,
+                            ),
                             SizedBox(height: 10),
                             Text(
                               "Today's Completed Lead's ",
@@ -456,18 +488,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             color: Colors.grey.shade300,
                             blurRadius: 5,
                             offset: Offset(1, 4),
-                          )
+                          ),
                         ],
                       ),
                       padding: EdgeInsets.all(16),
                       child: InkWell(
-                        onTap: (){
-                          Get.to(()=>TodayTransferredScreen(uid:uid.toString()));
+                        onTap: () {
+                          Get.to(
+                            () => TodayTransferredScreen(uid: uid.toString()),
+                          );
                         },
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.transfer_within_a_station_outlined, size: 22, color: Colors.black87),
+                            Icon(
+                              Icons.transfer_within_a_station_outlined,
+                              size: 22,
+                              color: Colors.black87,
+                            ),
                             SizedBox(height: 10),
                             Text(
                               "Today's Transfer Lead",
@@ -483,7 +521,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 10,),
+                SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -498,18 +536,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             color: Colors.grey.shade300,
                             blurRadius: 5,
                             offset: Offset(0, 4),
-                          )
+                          ),
                         ],
                       ),
                       padding: EdgeInsets.all(16),
                       child: InkWell(
-                        onTap: (){
-                          Get.to(()=>ProfileScreen());
+                        onTap: () {
+                          Get.to(() => ProfileScreen());
                         },
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.person_3_sharp, size: 30, color: Colors.black87),
+                            Icon(
+                              Icons.person_3_sharp,
+                              size: 30,
+                              color: Colors.black87,
+                            ),
                             SizedBox(height: 12),
                             Text(
                               "Profile",
@@ -523,143 +565,105 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                     ),
-                    Container(
-                      height: 100,
-                      width: 150,
-                      decoration: BoxDecoration(
-                        color: AppConstant.appBattonBack,
-                        borderRadius: BorderRadius.circular(5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.shade300,
-                            blurRadius: 5,
-                            offset: Offset(0, 4),
-                          )
-                        ],
-                      ),
-                      padding: EdgeInsets.all(16),
-                      child: InkWell(
-                        onTap: (){
-                          //Get.to(()=>ProfileScreen());
-                        },
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.wallet, size: 30, color: Colors.black87),
-                            SizedBox(height: 12),
-                            Text(
-                              "Self Lead Alloter",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
                   ],
                 ),
-                SizedBox(height: 150,),
+                SizedBox(height: 150),
 
                 Container(
                   child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text("Current Time : ".toUpperCase(),
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),),
-                            Text(
-                              timeString,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.normal,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            SizedBox(width: 5,),
-                            Icon(
-                              Icons.access_time,
-                              size: 10,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Current Time : ".toUpperCase(),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
                               color: Colors.black87,
                             ),
-                          ],
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-
-                            Text("Version : ",
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),),
-                            Text(
-                              '1.0.01',
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            SizedBox(width: 5,),
-                            Icon(
-                              Icons.verified_outlined,
-                              size: 10,
+                          ),
+                          Text(
+                            timeString,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.normal,
                               color: Colors.black87,
                             ),
-
-                          ],
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Flexible(
-                                child: Center(
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          "Copyrights © 2025 All Rights Reserved by - ",maxLines:2,
-                                          style: TextStyle(
-                                              fontSize: 9,
-                                          ),
-                                        ),
-                                        Text(
-                                          "Bizipac Couriers Pvt. Ltd.",maxLines:2,
-                                          style: TextStyle(
-                                              fontSize: 9,
-                                            color: Colors.red,
-                                            fontWeight: FontWeight.bold
-                                          ),
-                                        ),
-                                      ],
+                          ),
+                          SizedBox(width: 5),
+                          Icon(
+                            Icons.access_time,
+                            size: 10,
+                            color: Colors.black87,
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Version : ",
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          Text(
+                            '1.0.01',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          SizedBox(width: 5),
+                          Icon(
+                            Icons.verified_outlined,
+                            size: 10,
+                            color: Colors.black87,
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: Center(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "Copyrights © 2025 All Rights Reserved by - ",
+                                    maxLines: 2,
+                                    style: TextStyle(fontSize: 9),
+                                  ),
+                                  Text(
+                                    "Bizipac Couriers Pvt. Ltd.",
+                                    maxLines: 2,
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                ),
+                                  ),
+                                ],
+                              ),
                             ),
-
-                          ],
-                        )
-
-                      ],
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                )
-
+                ),
               ],
             ),
           ),
         ),
       ),
-
     );
   }
 }

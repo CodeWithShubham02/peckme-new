@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../controller/lead_status_services.dart';
 import '../model/lead_status_model.dart';
 import '../utils/app_constant.dart';
@@ -38,7 +39,7 @@ class _LeadStatusScreenState extends State<LeadStatusScreen> {
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.normal,
-            color:  AppConstant.appTextColor,
+            color: AppConstant.appTextColor,
           ),
         ),
         iconTheme: IconThemeData(color: AppConstant.appIconColor),
@@ -73,22 +74,29 @@ class _LeadStatusScreenState extends State<LeadStatusScreen> {
               ),
               Expanded(
                 child: ListView.builder(
-                  itemCount: result.data.length,
+                  // ✅ filter only completed leads
+                  itemCount: result.data
+                      .where((lead) => lead.status == "Completed")
+                      .length,
                   itemBuilder: (context, index) {
-                    final lead = result.data[index];
+                    final completedLeads = result.data
+                        .where((lead) => lead.status == "Completed")
+                        .toList();
+                    final lead = completedLeads[index];
+
                     return Card(
                       margin: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       child: ListTile(
                         title: Text(lead.customerName),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text("LeadId: ${lead.leadId}"),
-                            //Text("Mobile: ${lead.mobile}"),
                             Text("Date: ${lead.leadDate}"),
                             Text("Location: ${lead.location}"),
-                            //Text("ClientId: ${lead.clientId}"),
                           ],
                         ),
                         trailing: Chip(
@@ -96,9 +104,7 @@ class _LeadStatusScreenState extends State<LeadStatusScreen> {
                             lead.status,
                             style: const TextStyle(color: Colors.white),
                           ),
-                          backgroundColor: lead.status == "Completed"
-                              ? Colors.green
-                              : Colors.orange,
+                          backgroundColor: Colors.green,
                         ),
                       ),
                     );
