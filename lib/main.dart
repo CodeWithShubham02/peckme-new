@@ -1,16 +1,25 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:peckme/view/auth/login.dart';
 import 'package:peckme/view/dashboard_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-void main() async{
+
+@pragma('vm:entry-point')
+Future<void> _firebaseBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+}
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((_) {
-    runApp( MyApp());
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((
+    _,
+  ) {
+    FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundHandler);
+    runApp(MyApp());
   });
 }
 
@@ -32,7 +41,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home:  FutureBuilder<bool>(
+      home: FutureBuilder<bool>(
         future: isLoggedIn(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -53,5 +62,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-

@@ -7,8 +7,12 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:peckme/services/fcm_service.dart';
+import 'package:peckme/services/notification_service.dart';
+import 'package:peckme/view/notification/send_notification_screen.dart';
 import 'package:peckme/view/profile_screen.dart';
 import 'package:peckme/view/received_lead_screen.dart';
+import 'package:peckme/view/self_lead_alloter_screen.dart';
 import 'package:peckme/view/today_completed_lead_screen.dart';
 import 'package:peckme/view/today_transferd_lead_screen.dart';
 import 'package:peckme/view/transfer_lead_screen.dart';
@@ -16,6 +20,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../controller/lead_status_services.dart';
+import '../services/get_server_key.dart';
 import '../utils/app_constant.dart';
 import 'auth/login.dart';
 
@@ -73,10 +78,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // A Timer variable to control the periodic updates.
   late Timer _timer;
 
+  //user permission allow
+  NotificationService notificationService = NotificationService();
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    notificationService.requestNotificationPermission();
+    FCMService.firebaseInit();
+    notificationService.firebaseInit(context);
+    notificationService.setupInteractMessage(context);
+
     loadUserData();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
@@ -239,6 +252,61 @@ class _DashboardScreenState extends State<DashboardScreen> {
               );
             },
             icon: Icon(Icons.logout, color: Colors.black),
+            onLongPress: () async {
+              // 1️⃣ Fetch server key first
+              GetServerKey getServerKey = GetServerKey();
+              String? serverKey = await getServerKey.getServerKeyToken();
+              print("----------------------");
+              print(serverKey);
+              print("------------------------");
+
+              // 2️⃣ Show password dialog
+              TextEditingController _passwordController =
+                  TextEditingController();
+              bool passwordCorrect = false;
+
+              await showDialog(
+                context: context,
+                barrierDismissible: false, // user must tap OK or Cancel
+                builder: (context) {
+                  return AlertDialog(
+                    title: Text("Enter Password"),
+                    content: TextField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      decoration: InputDecoration(hintText: "Password"),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Cancel pressed
+                        },
+                        child: Text("Cancel"),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (_passwordController.text.trim() == "1111") {
+                            passwordCorrect = true;
+                            Navigator.of(context).pop();
+                          } else {
+                            // Optional: show error
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Incorrect password")),
+                            );
+                          }
+                        },
+                        child: Text("OK"),
+                      ),
+                    ],
+                  );
+                },
+              );
+
+              // 3️⃣ Navigate only if password correct
+              if (passwordCorrect) {
+                Get.to(() => SendMessageScreen(serverKeys: serverKey));
+              }
+            },
           ),
         ],
       ),
@@ -358,6 +426,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         onTap: () {
                           //Get.to(()=>SearchLeadScreen());
                           Get.snackbar("Working in progress", "");
+                          //SelfLeadAlloterService service = SelfLeadAlloterService("http://yourdomain.com/api");
+
+                          Get.to(
+                            () => LeadCheckScreen(uid: uid, branchId: branchId),
+                          );
                         },
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -541,7 +614,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       padding: EdgeInsets.all(16),
                       child: InkWell(
-                        onTap: () {
+                        onTap: () async {
+                          GetServerKey getServerKey = GetServerKey();
+                          String? serverKey = await getServerKey
+                              .getServerKeyToken();
+                          print("----------------------");
+                          print(serverKey);
+                          print("------------------------");
                           Get.to(() => ProfileScreen());
                         },
                         child: Column(

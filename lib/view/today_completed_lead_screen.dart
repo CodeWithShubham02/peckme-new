@@ -67,7 +67,7 @@ class _LeadStatusScreenState extends State<LeadStatusScreen> {
                     children: [
                       Text("Total: ${result.total}"),
                       Text("✅ Completed: ${result.completedTotal}"),
-                      Text("⌛ Pending: ${result.pendingTotal}"),
+                      //Text("⌛ Pending: ${result.pendingTotal}"),
                     ],
                   ),
                 ),
