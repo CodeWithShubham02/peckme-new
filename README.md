@@ -13,16 +13,16 @@ IF YOU ARE SHOW THE ALL LEAD'S TO HIT THIS API
 'https://fms.bizipac.com/apinew/ws_new/new_lead.php?uid=$uid&start=$start&end=$end&branch_id=$branchId&app_version=$app_version&app_type=$appType'
 
 IF YOU ARE SHOW THE LEAD DETAILS BY LEAD TO HIT THIS API
-"https://fms.bizipac.com/ws/new_lead_detail.php?lead_id=$leadId"
+"https://fms.bizipac.com/apinew/ws_new/new_lead_detail.php?lead_id=$leadId"
 
 FETCH THE CHILD EXECUTIVE TO HIT THIS API
 https://fms.bizipac.com/apinew/ws_new/childlist.php?parentid=$parentId //PARENTID IT MEANS USER ID
 
 IF YOU ARE REFIX LEAD'S TO HIT THIS URL
-"https://fms.bizipac.com/ws/refixlead.php?loginid=$loginId&leadid=$leadId&newdate=$newDate&location=$location&reason=$reason&newtime=$newTime&remark=$remark"
+"https://fms.bizipac.com/apinew/ws_new/refixlead.php?loginid=$loginId&leadid=$leadId&newdate=$newDate&location=$location&reason=$reason&newtime=$newTime&remark=$remark"
 
 IF YOU ARE POSTPONED LEAD'S TO HIT THIS API
-final uri = Uri.parse("https://fms.bizipac.com/ws/postponedlead.php");
+final uri = Uri.parse("https://fms.bizipac.com/apinew/ws_new/postponedlead.php");
 final response = await http.post(
 uri,
 body: {
@@ -37,7 +37,7 @@ body: {
 );
 
 IF YOU ARE SINGLE LEAD'S TRANSER TO HIT THIS API
-'https://fms.bizipac.com/ws/todaystransfered.php?uid=$uid'
+'https://fms.bizipac.com/apinew/ws_new/todaystransfered.php?uid=$uid'
 
 IF YOU ARE MULTIPLE LEAD'S TRANSFER TO HIT THIS API
 "https://fms.bizipac.com/apinew/ws_new/multipleLeadTransfer.php?leaddata=$payload""
@@ -62,10 +62,10 @@ THIS API STORE THE DOCUMENT IN MYSQL DATABASE
 ""https://fms.bizipac.com/apinew/ws_new/add_doc_simple.php""
 
 IF YOU ARE FETCH THE TIME_SLOT TO HIT THIS API
-"https://fms.bizipac.com/ws/time_slot.php"
+"https://fms.bizipac.com/apinew/ws_new/time_slot.php"
 
 IF YOU ARE FETCH THE REASON SO CALL THIS API
-"https://fms.bizipac.com/ws/reason.php?leadid=$leadId"
+"https://fms.bizipac.com/apinew/ws_new/reason.php?leadid=$leadId"
 
 
 
