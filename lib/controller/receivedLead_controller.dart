@@ -1,14 +1,11 @@
 import 'dart:convert';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:http/http.dart' as http;
 
 import '../handler/EncryptionHandler.dart';
 import '../model/new_lead_model.dart';
 
-
-
-class ReceivedLeadController{
-
+class ReceivedLeadController {
   Future<List<Lead>> fetchLeads({
     required String uid,
     required int start,
@@ -36,34 +33,7 @@ class ReceivedLeadController{
           if (lead['res_address'] != '') {
             lead['res_address'] = decryptFMS(lead['res_address'], HASH_KEY);
           }
-
         }
-        //this is store data in th firebase firestore
-        //CollectionReference receivedLeadsCollection = FirebaseFirestore.instance.collection('ReceivedLead');
-        // for (var lead in leads) {
-        //   String leadId = lead['lead_id'].toString();
-        //   DocumentReference leadDocRef = receivedLeadsCollection.doc(leadId);
-        //   final DocumentSnapshot doc = await leadDocRef.get();
-        //   if (doc.exists) {
-        //     // Document exists, so we'll skip adding this lead
-        //   } else {
-        //     // Document does not exist, so we can safely add this new lead
-        //     try {
-        //       await leadDocRef.set({
-        //         'uid':uid,
-        //         'customer_name': lead['customer_name'],
-        //         'mobile': lead['mobile'],
-        //         'lead_id': lead['lead_id'],
-        //         'AMZAppId': lead['AMZAppId'],
-        //         'clientname': lead['clientname'],
-        //         'createdAt': DateTime.now(),
-        //       });
-        //       print('New lead added successfully with ID: "$leadId"');
-        //     } catch (e) {
-        //       print('Error adding new lead with ID "$leadId": $e');
-        //     }
-        //   }
-        // }
         print("---------------decrypt data--------------");
         print(decoded['clientname']);
         print(leads.toString());

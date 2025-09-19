@@ -1,27 +1,33 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:peckme/model/self_lead_model.dart';
+
+import '../model/self_lead_model.dart';
 
 class SelfLeadAlloterService {
-  final String baseUrl = "https://fms.bizipac.com/apinew/ws_new/";
+  final String baseUrl = "https://fms.bizipac.com/apinew/ws_new";
 
   /// Step 1: Check lead status
-  Future<SelfLeadAlloterModel?> checkLead(
+  Future<SelfLeadResponse?> checkLead(
     String mobile,
     String branchId,
+    String uid,
   ) async {
     final response = await http.get(
       Uri.parse(
-        '$baseUrl/check_lead_status.php?mobile=$mobile&branch_id=$branchId',
+        'https://fms.bizipac.com/apinew/ws_new/check_self_leads_status.php?mobile=$mobile&branch_id=$branchId&uid=$uid',
       ),
     );
+    print("----------------");
+    print(response.body);
+    print("================");
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      if (data['success'] == 1 && data['data'] != null) {
-        return SelfLeadAlloterModel.fromJson(data['data']);
-      }
+      print("==============");
+      print(data);
+      print("---------------");
+      return SelfLeadResponse.fromJson(data);
     }
     return null;
   }
@@ -33,7 +39,9 @@ class SelfLeadAlloterService {
         '$baseUrl/self_lead_asign.php?mobile=$mobile&uid=$uid&branch_id=$branchId',
       ),
     );
-
+    print("------------");
+    print(response.body);
+    print("=============");
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       return data['success'] == 1;

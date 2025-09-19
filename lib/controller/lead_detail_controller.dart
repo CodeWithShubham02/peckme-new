@@ -2,22 +2,22 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-
 import '../model/lead_detail_model.dart';
 
-class LeadDetailsController{
-
+class LeadDetailsController {
   static Future<LeadResponse?> fetchLeadById(String leadId) async {
-    final url = Uri.parse("https://fms.bizipac.com/ws/new_lead_detail.php?lead_id=$leadId");
+    final url = Uri.parse(
+      "https://fms.bizipac.com//apinew/ws_new/new_lead_detail.php?lead_id=$leadId",
+    );
 
     try {
       final response = await http.get(url);
       print('--------Lead details----------');
-     // final ecryptedResponse = EncryptionHelper.encryptData(response.body);
+      // final ecryptedResponse = EncryptionHelper.encryptData(response.body);
       print('--------Encrypted Response---------');
-     // print(ecryptedResponse);
+      // print(ecryptedResponse);
       if (response.statusCode == 200) {
-       // final decryptedResponse = EncryptionHelper.decryptData(ecryptedResponse);
+        // final decryptedResponse = EncryptionHelper.decryptData(ecryptedResponse);
 
         print('--------Decrypted Response---------');
         print(response.body);
@@ -33,5 +33,4 @@ class LeadDetailsController{
       return null;
     }
   }
-
 }

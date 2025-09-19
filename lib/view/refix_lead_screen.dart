@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/date_time_patterns.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../controller/refix_lead_controller.dart';
@@ -14,18 +13,23 @@ import '../utils/app_constant.dart';
 class RefixLeadScreen extends StatefulWidget {
   final String leadId;
   final String customer_name;
-   RefixLeadScreen({super.key, required this.leadId, required this.customer_name});
+
+  RefixLeadScreen({
+    super.key,
+    required this.leadId,
+    required this.customer_name,
+  });
 
   @override
   State<RefixLeadScreen> createState() => _RefixLeadScreenState();
 }
 
 class _RefixLeadScreenState extends State<RefixLeadScreen> {
-
   //fetch reason start code
   List<ReasonItem> reasons = [];
   String? selectedReason;
-  final TextEditingController remark=TextEditingController();
+  final TextEditingController remark = TextEditingController();
+
   void loadReasons() async {
     try {
       final fetchedReasons = await ReasonService.fetchReasons(widget.leadId);
@@ -34,16 +38,18 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
       });
     } catch (e) {
       print("Error loading reasons: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to load reasons")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to load reasons")));
     }
   }
+
   //end fetch reason code here
 
   //start time slot dropdown
   List<Timeslot> timeslotList = [];
   String? selectedTimeslot;
+
   void loadTimeslots() async {
     try {
       final data = await TimeslotService.fetchTimeSlots();
@@ -52,11 +58,12 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
       });
     } catch (e) {
       print("Error fetching timeslots: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to load timeslots")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Failed to load timeslots")));
     }
   }
+
   //end timeslot dropdown
   String currentDate = "";
 
@@ -71,16 +78,19 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
     if (datePickerd != null) {
       setState(() {
         currentDate =
-        '${datePickerd.day}-${datePickerd.month}-${datePickerd.year}';
+            '${datePickerd.day}-${datePickerd.month}-${datePickerd.year}';
       });
     }
   }
+
   String _location = '';
   String uid = '';
+
   Future<void> loadUserData() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     uid = prefs.getString('uid') ?? '';
   }
+
   @override
   void initState() {
     super.initState();
@@ -88,99 +98,120 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
     loadTimeslots();
     loadUserData();
   }
+
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
-          backgroundColor: AppConstant.appInsideColor,
-          title:  Text(widget.customer_name.toString(),
-            style: TextStyle(color: AppConstant.appTextColor,fontSize: 17),
-          ),
-          iconTheme: IconThemeData(color:AppConstant.appIconColor),
+        backgroundColor: AppConstant.appInsideColor,
+        title: Text(
+          widget.customer_name.toString(),
+          style: TextStyle(color: AppConstant.appTextColor, fontSize: 17),
+        ),
+        iconTheme: IconThemeData(color: AppConstant.appIconColor),
       ),
-      body:SingleChildScrollView(
+      body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              'Select the date and time you want to Refix Appointment : *',
-              style: GoogleFonts.poppins(   // 👈 changed font family
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Colors.redAccent,   // 👈 changed color (you can also use AppConstant.appTextColor)
-              ),
-            ),
-          ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: SizedBox(
-                width: double.infinity, // 👈 Full width
-                child: ElevatedButton(
-                    onPressed: () async{
-                      dateTime();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 14), // 👈 better height
-                      elevation: 2,
-                    ),
-                    child: Container(
-                  width: 150,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Select Date',style: GoogleFonts.poppins( // 👈 Changed font family
-                        color: Colors.black,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),),
-                      SizedBox(width: 10,),
-                      Icon(Icons.date_range_outlined,color: AppConstant.appTextColor,),
-                    ],
-                  ),
-                )),
-              ),
-            ),
-            currentDate.isEmpty
-                ? const SizedBox()
-                : Padding(
               padding: const EdgeInsets.all(8.0),
-              child: Container(
-                width: double.infinity, // 👈 full width
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100, // 👈 subtle background
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: Colors.grey.shade400,
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      currentDate,
-                      style: GoogleFonts.poppins(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    Icon(
-                      Icons.calendar_today_outlined,
-                      color: Colors.deepPurple,
-                      size: 20,
-                    ),
-                  ],
+              child: Text(
+                'Select the date and time you want to Refix Appointment : *',
+                style: GoogleFonts.poppins(
+                  // 👈 changed font family
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Colors
+                      .redAccent, // 👈 changed color (you can also use AppConstant.appTextColor)
                 ),
               ),
             ),
+            // 👇 Button तभी दिखे जब currentDate empty हो
+            currentDate.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          dateTime(); // Date picker open
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          elevation: 2,
+                        ),
+                        child: Container(
+                          width: 150,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Select Date',
+                                style: GoogleFonts.poppins(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              SizedBox(width: 10),
+                              Icon(
+                                Icons.date_range_outlined,
+                                color: AppConstant.appTextColor,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.grey.shade400,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            currentDate,
+                            style: GoogleFonts.poppins(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              // दोबारा date picker open करो
+                              dateTime();
+                            },
+                            icon: Icon(
+                              Icons.calendar_today_outlined,
+                              color: Colors.deepPurple,
+                              size: 20,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
@@ -195,61 +226,64 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
             timeslotList.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8.0,
+                      vertical: 4.0,
                     ),
-                  ],
-                ),
-                child: DropdownButtonFormField<String>(
-                  value: selectedTimeslot,
-                  items: timeslotList.map((slot) {
-                    return DropdownMenuItem<String>(
-                      value: slot.timeslot,
-                      child: Text(
-                        slot.timeslot,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black87,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: DropdownButtonFormField<String>(
+                        value: selectedTimeslot,
+                        items: timeslotList.map((slot) {
+                          return DropdownMenuItem<String>(
+                            value: slot.timeslot,
+                            child: Text(
+                              slot.timeslot,
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            selectedTimeslot = value;
+                          });
+                        },
+                        decoration: InputDecoration(
+                          labelText: "Select Time Slot",
+                          labelStyle: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppConstant.appTextColor,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: Colors.grey.shade400,
+                              width: 1,
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
                         ),
                       ),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      selectedTimeslot = value;
-                    });
-                  },
-                  decoration: InputDecoration(
-                    labelText: "Select Time Slot",
-                    labelStyle: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppConstant.appTextColor,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: Colors.grey.shade400,
-                        width: 1,
-                      ),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 12,
                     ),
                   ),
-                ),
-              ),
-            ),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
@@ -266,7 +300,10 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
               children: [
                 Card(
                   elevation: 2,
-                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -279,7 +316,8 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                         color: Colors.black87,
                       ),
                     ),
-                    activeColor: Colors.deepPurple, // 👈 custom color
+                    activeColor: Colors.deepPurple,
+                    // 👈 custom color
                     value: 'Office',
                     groupValue: _location,
                     onChanged: (value) {
@@ -291,7 +329,10 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                 ),
                 Card(
                   elevation: 2,
-                  margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -304,7 +345,8 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                         color: Colors.black87,
                       ),
                     ),
-                    activeColor: Colors.deepPurple, // 👈 custom color
+                    activeColor: Colors.deepPurple,
+                    // 👈 custom color
                     value: 'Residence',
                     groupValue: _location,
                     onChanged: (value) {
@@ -332,72 +374,72 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
             reasons.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: DropdownButtonFormField<String>(
-                value: selectedReason,
-                hint: Text(
-                  'Select Reason',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                items: reasons.map((item) {
-                  return DropdownMenuItem<String>(
-                    value: item.reason,
-                    child: Text(
-                      item.reason,
-                      style: GoogleFonts.poppins(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
+                    padding: const EdgeInsets.all(8.0),
+                    child: DropdownButtonFormField<String>(
+                      value: selectedReason,
+                      hint: Text(
+                        'Select Reason',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      items: reasons.map((item) {
+                        return DropdownMenuItem<String>(
+                          value: item.reason,
+                          child: Text(
+                            item.reason,
+                            style: GoogleFonts.poppins(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedReason = value;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        labelText: "Reason",
+                        labelStyle: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.deepPurple,
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade100,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Colors.grey.shade400,
+                            width: 1,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Colors.grey.shade400,
+                            width: 1,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Colors.deepPurple,
+                            width: 1.5,
+                          ),
+                        ),
                       ),
                     ),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedReason = value;
-                  });
-                },
-                decoration: InputDecoration(
-                  labelText: "Reason",
-                  labelStyle: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.deepPurple,
                   ),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Colors.grey.shade400,
-                      width: 1,
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Colors.grey.shade400,
-                      width: 1,
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: Colors.deepPurple,
-                      width: 1.5,
-                    ),
-                  ),
-                ),
-              ),
-            ),
 
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -416,11 +458,12 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
               child: TextFormField(
                 controller: remark,
                 maxLines: 3,
-                keyboardType: TextInputType.name, // 🔹 name वाला keyboard letters पर focus करता है
+                keyboardType: TextInputType.name,
+                // 🔹 name वाला keyboard letters पर focus करता है
                 textInputAction: TextInputAction.newline,
                 inputFormatters: [
-                  FilteringTextInputFormatter.allow(
-                    RegExp(r"[a-zA-Z\s]"), // ✅ सिर्फ alphabets (A-Z, a-z) और space allow
+                  FilteringTextInputFormatter.deny(
+                    RegExp(r"[!@#\$%\^&\*\(\)_\+]"),
                   ),
                 ],
                 decoration: InputDecoration(
@@ -460,8 +503,6 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                 ),
               ),
             ),
-
-
           ],
         ),
       ),
@@ -470,20 +511,23 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
           padding: const EdgeInsets.all(16.0),
           child: SizedBox(
             width: double.infinity, // 👈 full width
-            height: 50,             // 👈 fixed height
+            height: 50, // 👈 fixed height
             child: ElevatedButton(
-              onPressed: () async{
-
-                if (_location.isEmpty || selectedReason == null || currentDate.isEmpty) {
+              onPressed: () async {
+                if (_location.isEmpty ||
+                    selectedReason == null ||
+                    currentDate.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text("Please fill all required fields")),
                   );
                   return;
                 }
                 final response = await RefixLeadService.submitRefixLead(
-                  loginId: uid.toString(), // example
+                  loginId: uid.toString(),
+                  // example
                   leadId: widget.leadId,
-                  newDate: currentDate, // must be "dd-MM-yyyy"
+                  newDate: currentDate,
+                  // must be "dd-MM-yyyy"
                   newTime: selectedTimeslot ?? "",
                   location: _location,
                   reason: selectedReason!,
@@ -496,21 +540,20 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
 
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(response.message)),
-                );// All required fields filled
+                ); // All required fields filled
                 if (response.success == 1) {
                   Navigator.pop(context);
                 }
-
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppConstant.appBatton1, // 👈 button color
-                foregroundColor: AppConstant.appTextColor,      // 👈 text color
+                foregroundColor: AppConstant.appTextColor, // 👈 text color
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12), // 👈 rounded corners
                 ),
                 elevation: 4, // 👈 shadow
               ),
-              child:  Text(
+              child: Text(
                 "Refix Appointment",
                 style: GoogleFonts.poppins(
                   fontSize: 15,

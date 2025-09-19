@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:peckme/controller/self_lead_alloter.dart';
 
+import '../handler/EncryptionHandler.dart';
 import '../model/self_lead_model.dart';
+import '../utils/app_constant.dart';
 
 class LeadCheckScreen extends StatefulWidget {
   final String uid;
@@ -16,7 +18,7 @@ class LeadCheckScreen extends StatefulWidget {
 
 class _LeadCheckScreenState extends State<LeadCheckScreen> {
   final TextEditingController _mobileController = TextEditingController();
-  SelfLeadAlloterModel? _lead;
+  SelfLeadResponse? _lead;
   bool _loading = false;
   SelfLeadAlloterService selfLeadAlloterService = SelfLeadAlloterService();
 
@@ -27,7 +29,9 @@ class _LeadCheckScreenState extends State<LeadCheckScreen> {
       final lead = await selfLeadAlloterService.checkLead(
         _mobileController.text.trim(),
         widget.branchId,
+        widget.uid,
       );
+      print(lead);
 
       setState(() {
         _lead = lead;
@@ -38,12 +42,12 @@ class _LeadCheckScreenState extends State<LeadCheckScreen> {
         // ✅ Lead exists
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text("✅ 'Lead exists!'")));
+        ).showSnackBar(SnackBar(content: Text("✅ 'Mobile number exists!'")));
       } else {
         // ❌ Lead not found
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text("❌ Lead not found")));
+        ).showSnackBar(const SnackBar(content: Text("❌ Lead not found ")));
       }
     } catch (e) {
       setState(() => _loading = false);
@@ -59,7 +63,7 @@ class _LeadCheckScreenState extends State<LeadCheckScreen> {
     if (_lead == null) return;
     setState(() => _loading = true);
     final success = await selfLeadAlloterService.assignLead(
-      _lead!.mobile,
+      _lead!.data.first.mobile,
       widget.uid,
       widget.branchId,
     );
@@ -79,7 +83,14 @@ class _LeadCheckScreenState extends State<LeadCheckScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Check & Assign Lead")),
+      appBar: AppBar(
+        backgroundColor: AppConstant.appInsideColor,
+        title: Text(
+          "Self Lead's Alloter",
+          style: TextStyle(color: AppConstant.appTextColor, fontSize: 17),
+        ),
+        iconTheme: IconThemeData(color: AppConstant.appIconColor),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -96,33 +107,144 @@ class _LeadCheckScreenState extends State<LeadCheckScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.search),
-                  onPressed: _loading
-                      ? null
-                      : _checkLead, // ✅ search icon पर click
+                  onPressed: _loading ? null : _checkLead,
                 ),
               ),
               keyboardType: TextInputType.phone,
             ),
             const SizedBox(height: 20),
-            if (_lead != null)
-              Card(
-                child: ListTile(
-                  title: Text(_lead!.customerName),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("Lead ID: ${_lead!.leadId}"),
-                      Text("Mobile: ${_lead!.mobile}"),
-                      Text("Status ID: ${_lead!.statusId}"),
-                      Text("Branch: ${_lead!.branchId}"),
-                    ],
+
+            // ✅ UI condition handling
+            // ✅ UI condition handling
+            if (_lead != null) ...[
+              if (_lead!.data.isNotEmpty)
+                Expanded(
+                  // 👈 scroll support
+                  child: ListView.builder(
+                    itemCount: _lead!.data.length,
+                    itemBuilder: (context, index) {
+                      final leadItem = _lead!.data[index];
+                      return Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          // 🔹 rounded corners
+                          side: const BorderSide(
+                            color: Colors.blueAccent, // 🔹 border color
+                            width: 1.2, // 🔹 border width
+                          ),
+                        ),
+                        elevation: 4, // 🔹 shadow effect
+                        margin: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 4,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12), // 🔹 inner padding
+                          child: ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(
+                              decryptFMS(
+                                leadItem.customerName,
+                                "QWRTEfnfdys635",
+                              ),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                // 🔹 bigger font
+                                fontWeight: FontWeight.bold,
+                                fontFamily: "Roboto",
+                                // 🔹 custom font-family (change if needed)
+                                color: Colors.black87,
+                              ),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 6),
+                                Text(
+                                  "Lead ID: ${leadItem.leadId}",
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                                Text(
+                                  "Mobile: ${leadItem.mobile}",
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                                Text(
+                                  "Status Id: ${leadItem.statusId}",
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                                Text(
+                                  "Branch: ${leadItem.branchId}",
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            trailing: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blueAccent,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 10,
+                                ),
+                                textStyle: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              onPressed: _loading
+                                  ? null
+                                  : () async {
+                                      setState(() => _loading = true);
+                                      final success =
+                                          await selfLeadAlloterService
+                                              .assignLead(
+                                                leadItem.mobile,
+                                                widget.uid,
+                                                widget.branchId,
+                                              );
+                                      setState(() => _loading = false);
+
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            success
+                                                ? "Lead ${leadItem.leadId} assigned ✅"
+                                                : "Failed to assign ❌",
+                                          ),
+                                        ),
+                                      );
+                                    },
+                              child: const Text("Accept"),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                  trailing: ElevatedButton(
-                    onPressed: _loading ? null : _assignLead,
-                    child: const Text("Accept"),
-                  ),
+                )
+              else
+                const Text(
+                  "❌ No leads found",
+                  style: TextStyle(color: Colors.red, fontSize: 16),
                 ),
-              ),
+            ],
           ],
         ),
       ),

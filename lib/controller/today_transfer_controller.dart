@@ -1,11 +1,13 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 
 import '../model/today_transfer_lead_model.dart';
 
 Future<TodayTransferredResponse?> fetchTodayTransferred(String uid) async {
   final url = Uri.parse(
-      'https://fms.bizipac.com/ws/todaystransfered.php?uid=$uid');
+    'https://fms.bizipac.com/apinew/ws_new/todaystransfered.php?uid=$uid',
+  );
 
   try {
     final response = await http.get(url);

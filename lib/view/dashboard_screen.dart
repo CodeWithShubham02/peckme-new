@@ -424,10 +424,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       padding: EdgeInsets.all(16),
                       child: InkWell(
                         onTap: () {
-                          //Get.to(()=>SearchLeadScreen());
-                          Get.snackbar("Working in progress", "");
-                          //SelfLeadAlloterService service = SelfLeadAlloterService("http://yourdomain.com/api");
-
                           Get.to(
                             () => LeadCheckScreen(uid: uid, branchId: branchId),
                           );

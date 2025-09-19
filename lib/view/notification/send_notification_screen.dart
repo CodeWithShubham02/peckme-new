@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
+import '../../services/get_server_key.dart';
 import '../../utils/app_constant.dart';
 
 class SendMessageScreen extends StatefulWidget {
@@ -89,13 +90,14 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
     String title,
     String body,
   ) async {
-    final accessToken = widget.serverKeys;
+    GetServerKey getServerKey = GetServerKey();
+    String? serverKey = await getServerKey.getServerKeyToken();
     final response = await http.post(
       Uri.parse(
         "https://fcm.googleapis.com/v1/projects/bizipac-6bb00/messages:send",
       ),
       headers: {
-        "Authorization": "Bearer $accessToken",
+        "Authorization": "Bearer $serverKey",
         "Content-Type": "application/json",
         "Accept": "application/json",
       },
