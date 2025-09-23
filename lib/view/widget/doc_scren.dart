@@ -1,28 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:http/http.dart' as http;
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart' as docs;
-import 'package:path_provider/path_provider.dart';
-import 'package:pdfx/pdfx.dart';
 import 'package:peckme/model/DocumentResponse.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../controller/document_controller.dart';
 import '../../controller/document_list_controller.dart';
 import '../../model/PdfImageUrlModel.dart';
-import '../../model/document_list_model.dart';
+import '../../model/collected_doc_model.dart';
 import '../../utils/app_constant.dart';
 import '../../services/image_to_pdf.dart';
-import '../dashboard_screen.dart';
-import 'custom_crop_image_widget.dart';
 import 'custome_crop_screen.dart';
 
 class DocumentScreenTest extends StatefulWidget {
@@ -43,9 +33,6 @@ class DocumentScreenTest extends StatefulWidget {
 
 class _DocumentScreenTestState extends State<DocumentScreenTest> {
   late Future<DocumentResponse?> futureDocuments;
-
-  //late Future<Document?> _futureDocumentsList;
-
   final DocumentService _documentService = DocumentService();
   String uid = '';
   String name = '';
@@ -58,8 +45,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  // List<File?> get documentList => [companuBoard, feSelfie,billDesk,frontDoor,locationSnap,namePstatic,premisesInterior,stock,photo,fESelfieWithPerson,qRCode,imageOfPersonMet,billDeskImageofShop,imageofShopFromOutside,tentCard,politicalConnections];
-  List<String> collectedDocs = [];
+  List<CollectedDoc> collectedDocs = [];
 
   //category=="PHOTO" START CODE
   bool isLoadingPhoto = false;
@@ -1076,8 +1062,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
           builder: (context, setStateDialog) {
             return AlertDialog(
               title: const Text(
-                "Click Other Image",
-                style: TextStyle(fontSize: 15),
+                "Upload multiple images",
+                style: TextStyle(
+                  fontSize: 15,
+                  color: AppConstant.darkHeadingColor,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               content: Container(
                 height: MediaQuery
@@ -1096,7 +1086,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                           height: 75,
                           width: 75,
                           decoration: BoxDecoration(
-                            color: AppConstant.appSecondaryColor,
+                            color: AppConstant.darkButton,
                             border: Border.all(color: Colors.black, width: 1.0),
                             borderRadius: BorderRadius.circular(5),
                           ),
@@ -1156,7 +1146,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                   // 🔹 पहले Database से delete
                                   bool success = await deleteDocumentFromDB(
                                     uid,
-                                    photoUrl!,
+                                    selectedImageUrl!,
                                   );
 
                                   if (success) {
@@ -1221,15 +1211,36 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                 ),
               ),
               actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(ctx); // ❌ Cancel button
-                  },
-                  child: const Text("Cancel"),
-                ),
+                // ✅ Dono buttons only show if selectedImage != null
+                if (selectedImage != null) ...[
+                  TextButton(
+                    onPressed: () async {
+                      bool success = await deleteDocumentFromDB(
+                        uid,
+                        selectedImageUrl!,
+                      );
+                      if (success) {
+                        // 🔹 Local file bhi delete
+                        await selectedImage!.delete();
+                        setState(() {
+                          selectedImage = null;
+                          selectedImageUrl = null;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("❌ Cancelled")),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("❌ Failed to delete from DB"),
+                          ),
+                        );
+                      }
+                      Navigator.pop(ctx);
+                    },
+                    child: const Text("Cancel"),
+                  ),
 
-                // ✅ Ok button only show when image selected
-                if (selectedImage != null)
                   ElevatedButton(
                     onPressed: () {
                       Navigator.pop(ctx, selectedImage);
@@ -1238,9 +1249,14 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                           content: Text("✅ Image upload successfully"),
                         ),
                       );
+                      setState(() {
+                        selectedImage = null;
+                        selectedImageUrl = null;
+                      });
                     },
-                    child: const Text("Upload"),
+                    child: const Text("Ok"),
                   ),
+                ],
               ],
             );
           },
@@ -1255,16 +1271,9 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
       final image = await ImagePicker().pickImage(source: source);
       if (image == null) return null;
 
-      if (!collectedDocs.contains(docname.trim().toLowerCase())) {
-        setState(() {
-          collectedDocs.add(docname.trim().toLowerCase());
-        });
-        await _saveOrUpdateDoc(docname);
-      }
-
       File? img = File(image.path);
 
-      // // Wait for cropped image from CustomCropScreen
+      // Custom crop screen
       File? cropped = await Navigator.push(
         context,
         MaterialPageRoute(
@@ -1277,24 +1286,34 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
         return null;
       }
 
-      //img = await _cropImage(imageFile: img);
-      print(cropped);
-
+      // PDF generate karna
       final url = await convertImageToPdfAndSave(
-        cropped!,
+        cropped,
         docname,
         widget.clientName,
         widget.leadId,
         uid,
       );
-      print("🖼️ PDF URL : $url");
-      //delete url in mysql database
+
+      if (url == null) return null;
+
+      // ✅ New CollectedDoc (without name)
+      final doc = CollectedDoc(path: cropped.path, pdfUrl: url);
+
+      setState(() {
+        collectedDocs.add(doc);
+      });
+
+      await _saveOrUpdateDocs(collectedDocs);
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("✅URL: $url"), duration: Duration(seconds: 5)),
+        SnackBar(
+          content: Text("✅ Document saved"),
+          duration: Duration(seconds: 3),
+        ),
       );
-      print("-----------");
-      print(cropped);
-      return UploadResult(croppedImage: cropped, pdfUrl: url!);
+
+      return UploadResult(croppedImage: cropped, pdfUrl: url);
     } catch (e) {
       print("❌ Error: $e");
       return null;
@@ -1320,52 +1339,24 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     return false;
   }
 
-  Future<void> _saveOrUpdateDoc(String docname) async {
+  Future<void> _saveOrUpdateDocs(List<CollectedDoc> docs) async {
     final prefs = await SharedPreferences.getInstance();
-    List<String> savedDocs = prefs.getStringList('collectedDocs') ?? [];
-
-    String doc = docname.trim().toLowerCase();
-
-    // Check agar already exist hai
-    int index = savedDocs.indexOf(doc);
-    if (index == -1) {
-      // Agar nahi hai to add karo
-      savedDocs.add(doc);
-    } else {
-      // Agar already hai to usi index pe update kar do
-      savedDocs[index] = doc;
-    }
-
-    // Save back
-    await prefs.setStringList('collectedDocs', savedDocs);
-
-    // Also update UI list
-    setState(() {
-      collectedDocs = savedDocs;
-    });
+    final jsonList = docs.map((d) => d.toJson()).toList();
+    await prefs.setString("collectedDocs", jsonEncode(jsonList));
   }
 
-  Future<File?> _cropImage({required File imageFile}) async {
-    CroppedFile? cropImage = await ImageCropper().cropImage(
-      sourcePath: imageFile.path,
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'Crop Image',
-          toolbarColor: const Color(0xFF0A73FF),
-          toolbarWidgetColor: Colors.white,
-          initAspectRatio: CropAspectRatioPreset.ratio7x5,
-          lockAspectRatio: false,
-          hideBottomControls: true,
-          // 🔹 Allow default bottom controls
-          cropFrameStrokeWidth: 2,
-          statusBarColor: const Color(0xFF0A73FF),
-          backgroundColor: Colors.black, // Better contrast
-        ),
-        IOSUiSettings(title: 'Crop Image'),
-      ],
-    );
-    if (cropImage == null) return null;
-    return File(cropImage.path);
+  Future<void> _loadCollectedDocs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString("collectedDocs");
+    if (jsonString != null) {
+      final List<dynamic> jsonList = jsonDecode(jsonString);
+      setState(() {
+        collectedDocs = jsonList
+            .map((j) => CollectedDoc.fromJson(j))
+            .cast<CollectedDoc>()
+            .toList();
+      });
+    }
   }
 
   Timer? _timer;
@@ -1378,6 +1369,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
       checkInternetSpeed();
     });
     loadUserData();
+    _loadCollectedDocs();
     futureDocuments = DocumentController.fetchDocument();
     // _futureDocumentsList = _documentService.fetchDocuments();
   }
@@ -1385,6 +1377,135 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   @override
   void dispose() {
     _timer?.cancel();
+    photo = null;
+    selectedImage = null;
+    annexure = null;
+    photoUrl = null;
+    others = null;
+    othersUrl = null;
+    selectedImageUrl = null;
+    annexureUrl = null;
+    feSelfie = null;
+    companuBoard = null;
+    companuBoardUrl = null;
+    billDesk = null;
+    billDeskUrl = null;
+    frontDoor = null;
+    frontDoorUrl = null;
+    locationSnap = null;
+    locationSnapUrl = null;
+    namePstatic = null;
+    namePstaticUrl = null;
+    premisesInterior = null;
+    premisesInteriorUrl = null;
+    stock = null;
+    stockUrl = null;
+    fESelfieWithPerson = null;
+    fESelfieWithPersonUrl = null;
+    imageOfPersonMet = null;
+    imageOfPersonMetUrl = null;
+    billDeskImageofShop = null;
+    billDeskImageofShopUrl = null;
+    imageofShopFromOutside = null;
+    imageofShopFromOutsideUrl = null;
+    qRCode = null;
+    qRCodeUrl = null;
+    tentCard = null;
+    tentCardUrl = null;
+    politicalConnections = null;
+    politicalConnectionsUrl = null;
+    iDProofofPersonMet = null;
+    iDProofofPersonMetUrl = null;
+    pancard = null;
+    pancardUrl = null;
+    oneMonthBankStatement = null;
+    oneMonthBankStatementUrl = null;
+    cancelledCheque = null;
+    cancelledChequeUrl = null;
+    companyID = null;
+    companyIDUrl = null;
+    completelyFilledJob = null;
+    completelyFilledJobUrl = null;
+    dueDiligenceForm = null;
+    dueDiligenceFormUrl = null;
+    form26AS = null;
+    form26ASUrl = null;
+    form60 = null;
+    form60Url = null;
+    gazetteCertificate = null;
+    gazetteCertificateUrl = null;
+    gSTAnnexA = null;
+    gSTAnnexAUrl = null;
+    gSTAnnexB = null;
+    gSTAnnexBUrl = null;
+    loanAgreement = null;
+    loanAgreementUrl = null;
+    marriageCertificate = null;
+    marriageCertificateUrl = null;
+    nachOnly = null;
+    nachOnlyUrl = null;
+    oVDDeclaration = null;
+    oVDDeclarationUrl = null;
+    pODImage = null;
+    pODImageUrl = null;
+    cheques = null;
+    chequesUrl = null;
+    authSignForm = null;
+    authSignFormUrl = null;
+    shopEstablishmentCertificate = null;
+    shopEstablishmentCertificateUrl = null;
+    aadhaarBack = null;
+    aadhaarBackUrl = null;
+    aadhaarFront = null;
+    aadhaarFrontUrl = null;
+    allotmentLetter = null;
+    allotmentLetterUrl = null;
+    drivingLicense = null;
+    drivingLicenseUrl = null;
+    electricityBill = null;
+    electricityBillUrl = null;
+    gasBill = null;
+    gasBillUrl = null;
+    landLineBill = null;
+    landLineBillUrl = null;
+    maintainanceReceipt = null;
+    maintainanceReceiptUrl = null;
+    mobileBill = null;
+    mobileBillUrl = null;
+    municipalityWaterBill = null;
+    municipalityWaterBillUrl = null;
+    passport = null;
+    passportUrl = null;
+    postOfficeSB = null;
+    postOfficeSBUrl = null;
+    registeredRent = null;
+    registeredRentUrl = null;
+    registeredSales = null;
+    registeredSalesUrl = null;
+    rentAgreement = null;
+    rentAgreementUrl = null;
+    voterCard = null;
+    voterCardUrl = null;
+    creditCardCopy = null;
+    creditCardCopyUrl = null;
+    iTRComputation = null;
+    iTRComputationUrl = null;
+    latestCreditCard = null;
+    latestCreditCardUrl = null;
+    latestSalarySlip = null;
+    latestSalarySlipUrl = null;
+    salarySlip = null;
+    salarySlipUrl = null;
+    threeMonthsBankStatement = null;
+    threeMonthsBankStatementUrl = null;
+    bankPassbook = null;
+    bankPassbookUrl = null;
+    drivingLicenseAddProof = null;
+    drivingLicenseAddProofUrl = null;
+    nREGACard = null;
+    nREGACardUrl = null;
+    passportAddProof = null;
+    passportAddProofUrl = null;
     super.dispose();
   }
 
@@ -1427,11 +1548,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.black),
-        backgroundColor: AppConstant.appInsideColor,
+        iconTheme: IconThemeData(color: AppConstant.appBarWhiteColor),
+        backgroundColor: AppConstant.appBarColor,
         title: Text(
-          "Documents Screen",
-          style: const TextStyle(color: AppConstant.appTextColor),
+          "Documents Upload",
+          style: TextStyle(color: AppConstant.appBarWhiteColor, fontSize: 18),
         ),
       ),
       body: FutureBuilder<DocumentResponse?>(
@@ -1540,7 +1661,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .darkButton,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -1713,9 +1834,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -1759,7 +1881,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -1931,9 +2053,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -1977,7 +2100,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -2149,9 +2272,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -2197,7 +2321,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -2371,9 +2495,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -2418,7 +2543,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -2591,9 +2716,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -2639,7 +2765,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -2814,9 +2940,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -2862,7 +2989,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -2889,7 +3016,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                         doc.docId,
                                                       );
                                                     },
-                                                    child: const Text(
+                                                    child: Text(
                                                       "No image selected",
                                                       textAlign: TextAlign
                                                           .center,
@@ -3037,9 +3164,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -3085,7 +3213,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -3260,9 +3388,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -3307,7 +3436,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -3481,9 +3610,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -3528,7 +3658,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -3702,9 +3832,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -3720,7 +3851,6 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                       ),
                                     )
                                         : SizedBox.shrink(),
-
                                     doc.docName == "Photo"
                                         ? Column(
                                       children: [
@@ -3750,7 +3880,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                     width: 75,
                                                     decoration: BoxDecoration(
                                                       color: AppConstant
-                                                          .appSecondaryColor,
+                                                          .iconColor,
                                                       border: Border.all(
                                                         color: Colors
                                                             .black,
@@ -3916,11 +4046,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 color: Colors.white,
                                                 width: 50,
                                                 child: IconButton(
-                                                  icon: const Icon(
+                                                  icon: Icon(
                                                     Icons
                                                         .add_circle,
-                                                    color: Colors
-                                                        .black,
+                                                    color: AppConstant
+                                                        .iconColor,
                                                     size: 28,
                                                   ),
                                                   onPressed: () {
@@ -3970,7 +4100,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -4145,9 +4275,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -4191,7 +4322,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -4362,9 +4493,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -4391,7 +4523,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                           .height /
                                           10,
                                       width: 500,
-                                      color: Colors.white60,
+                                      color: AppConstant
+                                          .whiteBackColor,
                                       child: Row(
                                         mainAxisAlignment:
                                         MainAxisAlignment
@@ -4408,7 +4541,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -4579,9 +4712,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -4625,7 +4759,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -4797,9 +4931,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -4844,7 +4979,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -5019,9 +5154,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -5083,7 +5219,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -5258,9 +5394,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -5309,7 +5446,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -5481,9 +5618,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -5543,7 +5681,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -5602,10 +5740,13 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                   // Consider using InkWell for better tap feedback
                                                   onTap: () async {
                                                     try {
-                                                      if (annexure != null &&
-                                                          annexureUrl != null) {
+                                                      if (annexure !=
+                                                          null &&
+                                                          annexureUrl !=
+                                                              null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           annexureUrl!,
                                                         );
@@ -5618,20 +5759,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             annexure = null;
                                                             annexureUrl = null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -5640,9 +5780,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -5710,9 +5853,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -5761,7 +5905,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -5820,10 +5964,13 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                   // Consider using InkWell for better tap feedback
                                                   onTap: () async {
                                                     try {
-                                                      if (others != null &&
-                                                          othersUrl != null) {
+                                                      if (others !=
+                                                          null &&
+                                                          othersUrl !=
+                                                              null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           othersUrl!,
                                                         );
@@ -5836,20 +5983,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             others = null;
                                                             othersUrl = null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -5858,9 +6004,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -5928,9 +6077,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -5981,7 +6131,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -6045,7 +6195,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           oneMonthBankStatementUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           oneMonthBankStatementUrl!,
                                                         );
@@ -6059,20 +6210,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             oneMonthBankStatementUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -6081,9 +6231,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -6152,9 +6305,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -6204,7 +6358,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -6268,7 +6422,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           cancelledChequeUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           cancelledChequeUrl!,
                                                         );
@@ -6282,20 +6437,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             cancelledChequeUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -6304,9 +6458,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -6375,9 +6532,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -6427,7 +6585,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -6486,11 +6644,13 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                   // Consider using InkWell for better tap feedback
                                                   onTap: () async {
                                                     try {
-                                                      if (companyID != null &&
+                                                      if (companyID !=
+                                                          null &&
                                                           companyIDUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           companyIDUrl!,
                                                         );
@@ -6502,20 +6662,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             companyID = null;
                                                             companyIDUrl = null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -6524,9 +6683,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -6595,9 +6757,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -6648,7 +6811,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -6712,7 +6875,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           completelyFilledJobUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           completelyFilledJobUrl!,
                                                         );
@@ -6726,20 +6890,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             completelyFilledJobUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -6748,9 +6911,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -6819,9 +6985,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -6871,7 +7038,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -6935,7 +7102,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           dueDiligenceFormUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           dueDiligenceFormUrl!,
                                                         );
@@ -6949,20 +7117,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             dueDiligenceFormUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -6971,9 +7138,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -7042,9 +7212,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -7093,7 +7264,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -7152,10 +7323,13 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                   // Consider using InkWell for better tap feedback
                                                   onTap: () async {
                                                     try {
-                                                      if (form26AS != null &&
-                                                          form26ASUrl != null) {
+                                                      if (form26AS !=
+                                                          null &&
+                                                          form26ASUrl !=
+                                                              null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           form26ASUrl!,
                                                         );
@@ -7167,20 +7341,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             form26AS = null;
                                                             form26ASUrl = null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -7189,9 +7362,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -7259,9 +7435,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -7369,10 +7546,13 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                   // Consider using InkWell for better tap feedback
                                                   onTap: () async {
                                                     try {
-                                                      if (form60 != null &&
-                                                          form60Url != null) {
+                                                      if (form60 !=
+                                                          null &&
+                                                          form60Url !=
+                                                              null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           form60Url!,
                                                         );
@@ -7384,20 +7564,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             form60 = null;
                                                             form60Url = null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -7406,9 +7585,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -7476,9 +7658,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -7527,7 +7710,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -7591,7 +7774,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           gazetteCertificateUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           gazetteCertificateUrl!,
                                                         );
@@ -7605,20 +7789,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             gazetteCertificateUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -7627,9 +7810,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -7698,9 +7884,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -7735,7 +7922,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                       color: Colors.white60,
                                       child: Row(
                                         mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
+                                        MainAxisAlignment
+                                            .spaceBetween,
                                         crossAxisAlignment:
                                         CrossAxisAlignment
                                             .start,
@@ -7749,7 +7937,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -7806,11 +7994,13 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                   // Consider using InkWell for better tap feedback
                                                   onTap: () async {
                                                     try {
-                                                      if (gSTAnnexA != null &&
+                                                      if (gSTAnnexA !=
+                                                          null &&
                                                           gSTAnnexAUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           gSTAnnexAUrl!,
                                                         );
@@ -7822,20 +8012,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             gSTAnnexA = null;
                                                             gSTAnnexAUrl = null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -7844,9 +8033,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -7967,7 +8159,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -8024,11 +8216,13 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                   // Consider using InkWell for better tap feedback
                                                   onTap: () async {
                                                     try {
-                                                      if (gSTAnnexB != null &&
+                                                      if (gSTAnnexB !=
+                                                          null &&
                                                           gSTAnnexBUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           gSTAnnexBUrl!,
                                                         );
@@ -8040,20 +8234,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             gSTAnnexB = null;
                                                             gSTAnnexBUrl = null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -8062,9 +8255,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -8133,9 +8329,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -8247,7 +8444,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           loanAgreementUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           loanAgreementUrl!,
                                                         );
@@ -8261,20 +8459,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             loanAgreementUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -8283,9 +8480,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -8354,9 +8554,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -8406,7 +8607,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -8468,7 +8669,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           marriageCertificateUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           marriageCertificateUrl!,
                                                         );
@@ -8482,20 +8684,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             marriageCertificateUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -8504,9 +8705,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -8575,9 +8779,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -8626,7 +8831,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -8683,10 +8888,13 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                   // Consider using InkWell for better tap feedback
                                                   onTap: () async {
                                                     try {
-                                                      if (nachOnly != null &&
-                                                          nachOnlyUrl != null) {
+                                                      if (nachOnly !=
+                                                          null &&
+                                                          nachOnlyUrl !=
+                                                              null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           nachOnlyUrl!,
                                                         );
@@ -8698,20 +8906,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             nachOnly = null;
                                                             nachOnlyUrl = null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -8720,9 +8927,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -8790,9 +9000,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -8842,7 +9053,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -8904,7 +9115,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           oVDDeclarationUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           oVDDeclarationUrl!,
                                                         );
@@ -8918,20 +9130,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             oVDDeclarationUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -8940,9 +9151,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -9011,9 +9225,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -9062,7 +9277,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -9119,10 +9334,13 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                   // Consider using InkWell for better tap feedback
                                                   onTap: () async {
                                                     try {
-                                                      if (pODImage != null &&
-                                                          pODImageUrl != null) {
+                                                      if (pODImage !=
+                                                          null &&
+                                                          pODImageUrl !=
+                                                              null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           pODImageUrl!,
                                                         );
@@ -9134,20 +9352,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             pODImage = null;
                                                             pODImageUrl = null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -9156,9 +9373,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -9226,9 +9446,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -9278,7 +9499,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -9335,10 +9556,13 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                   // Consider using InkWell for better tap feedback
                                                   onTap: () async {
                                                     try {
-                                                      if (cheques != null &&
-                                                          chequesUrl != null) {
+                                                      if (cheques !=
+                                                          null &&
+                                                          chequesUrl !=
+                                                              null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           chequesUrl!,
                                                         );
@@ -9350,20 +9574,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             cheques = null;
                                                             chequesUrl = null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -9372,9 +9595,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -9443,9 +9669,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -9495,7 +9722,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -9557,7 +9784,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           authSignFormUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           authSignFormUrl!,
                                                         );
@@ -9570,20 +9798,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             authSignFormUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -9592,9 +9819,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -9663,9 +9893,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -9716,7 +9947,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -9778,7 +10009,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           shopEstablishmentCertificateUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           shopEstablishmentCertificateUrl!,
                                                         );
@@ -9792,20 +10024,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             shopEstablishmentCertificateUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -9814,9 +10045,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -9885,9 +10119,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -9948,7 +10183,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -10007,11 +10242,13 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                   // Consider using InkWell for better tap feedback
                                                   onTap: () async {
                                                     try {
-                                                      if (aadhaarBack != null &&
+                                                      if (aadhaarBack !=
+                                                          null &&
                                                           aadhaarBackUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           aadhaarBackUrl!,
                                                         );
@@ -10024,20 +10261,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             aadhaarBackUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -10046,9 +10282,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -10117,9 +10356,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -10169,7 +10409,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -10233,7 +10473,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           aadhaarFrontUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           aadhaarFrontUrl!,
                                                         );
@@ -10246,20 +10487,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             aadhaarFrontUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -10268,9 +10508,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -10339,9 +10582,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -10391,7 +10635,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -10455,7 +10699,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           allotmentLetterUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           allotmentLetterUrl!,
                                                         );
@@ -10469,20 +10714,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             allotmentLetterUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -10491,9 +10735,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -10562,9 +10809,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -10615,7 +10863,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -10679,7 +10927,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           drivingLicenseUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           drivingLicenseUrl!,
                                                         );
@@ -10693,20 +10942,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             drivingLicenseUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -10715,9 +10963,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -10786,9 +11037,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -10838,7 +11090,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -10902,7 +11154,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           electricityBillUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           electricityBillUrl!,
                                                         );
@@ -10916,20 +11169,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             electricityBillUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -10938,9 +11190,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -11009,9 +11264,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -11061,7 +11317,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -11120,10 +11376,13 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                   // Consider using InkWell for better tap feedback
                                                   onTap: () async {
                                                     try {
-                                                      if (gasBill != null &&
-                                                          gasBillUrl != null) {
+                                                      if (gasBill !=
+                                                          null &&
+                                                          gasBillUrl !=
+                                                              null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           gasBillUrl!,
                                                         );
@@ -11135,20 +11394,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             gasBill = null;
                                                             gasBillUrl = null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -11157,9 +11415,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -11228,9 +11489,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -11280,7 +11542,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -11344,7 +11606,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           landLineBillUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           landLineBillUrl!,
                                                         );
@@ -11357,20 +11620,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             landLineBillUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -11379,9 +11641,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -11450,9 +11715,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -11502,7 +11768,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -11566,7 +11832,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           maintainanceReceiptUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           maintainanceReceiptUrl!,
                                                         );
@@ -11580,20 +11847,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             maintainanceReceiptUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -11602,9 +11868,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -11673,9 +11942,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -11725,7 +11995,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -11784,11 +12054,13 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                   // Consider using InkWell for better tap feedback
                                                   onTap: () async {
                                                     try {
-                                                      if (mobileBill != null &&
+                                                      if (mobileBill !=
+                                                          null &&
                                                           mobileBillUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           mobileBillUrl!,
                                                         );
@@ -11801,20 +12073,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             mobileBillUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -11823,9 +12094,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -11894,9 +12168,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -11947,7 +12222,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -12011,7 +12286,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           municipalityWaterBillUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           municipalityWaterBillUrl!,
                                                         );
@@ -12025,20 +12301,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             municipalityWaterBillUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -12047,9 +12322,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -12118,9 +12396,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -12169,7 +12448,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -12228,11 +12507,13 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                   // Consider using InkWell for better tap feedback
                                                   onTap: () async {
                                                     try {
-                                                      if (passport != null &&
+                                                      if (passport !=
+                                                          null &&
                                                           passportUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           passportUrl!,
                                                         );
@@ -12242,23 +12523,21 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                               .delete();
                                                           setState(() {
                                                             passport = null;
-                                                            passportUrl =
-                                                            null;
+                                                            passportUrl = null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -12267,9 +12546,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -12337,9 +12619,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -12390,7 +12673,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -12454,7 +12737,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           postOfficeSBUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           postOfficeSBUrl!,
                                                         );
@@ -12467,20 +12751,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             postOfficeSBUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -12489,9 +12772,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -12560,9 +12846,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -12613,7 +12900,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -12677,7 +12964,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           registeredRentUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           registeredRentUrl!,
                                                         );
@@ -12691,20 +12979,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             registeredRentUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -12713,9 +13000,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -12784,9 +13074,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -12836,7 +13127,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -12900,7 +13191,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           registeredSalesUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           registeredSalesUrl!,
                                                         );
@@ -12914,20 +13206,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             registeredSalesUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -12936,9 +13227,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -13007,9 +13301,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -13059,7 +13354,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -13123,7 +13418,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           rentAgreementUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           rentAgreementUrl!,
                                                         );
@@ -13137,20 +13433,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             rentAgreementUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -13159,9 +13454,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -13230,9 +13528,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -13282,7 +13581,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -13341,11 +13640,13 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                   // Consider using InkWell for better tap feedback
                                                   onTap: () async {
                                                     try {
-                                                      if (voterCard != null &&
+                                                      if (voterCard !=
+                                                          null &&
                                                           voterCardUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           voterCardUrl!,
                                                         );
@@ -13355,23 +13656,21 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                               .delete();
                                                           setState(() {
                                                             voterCard = null;
-                                                            voterCardUrl =
-                                                            null;
+                                                            voterCardUrl = null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -13380,9 +13679,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -13451,9 +13753,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -13514,7 +13817,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -13578,7 +13881,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           creditCardCopyUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           creditCardCopyUrl!,
                                                         );
@@ -13592,20 +13896,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             creditCardCopyUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -13614,9 +13917,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -13685,9 +13991,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -13738,7 +14045,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -13885,9 +14192,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -13938,7 +14246,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -14002,7 +14310,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           latestCreditCardUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           latestCreditCardUrl!,
                                                         );
@@ -14016,20 +14325,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             latestCreditCardUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -14038,9 +14346,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -14109,9 +14420,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -14162,7 +14474,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -14226,7 +14538,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           latestSalarySlipUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           latestSalarySlipUrl!,
                                                         );
@@ -14240,20 +14553,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             latestSalarySlipUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -14262,9 +14574,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -14333,9 +14648,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -14385,7 +14701,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -14444,11 +14760,13 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                   // Consider using InkWell for better tap feedback
                                                   onTap: () async {
                                                     try {
-                                                      if (salarySlip != null &&
+                                                      if (salarySlip !=
+                                                          null &&
                                                           salarySlipUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           salarySlipUrl!,
                                                         );
@@ -14461,20 +14779,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             salarySlipUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -14483,9 +14800,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -14554,9 +14874,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -14618,7 +14939,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -14682,7 +15003,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           threeMonthsBankStatementUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           threeMonthsBankStatementUrl!,
                                                         );
@@ -14696,20 +15018,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             threeMonthsBankStatementUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -14718,9 +15039,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -14789,9 +15113,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -14841,7 +15166,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -14905,7 +15230,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           bankPassbookUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           bankPassbookUrl!,
                                                         );
@@ -14918,20 +15244,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             bankPassbookUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -14940,9 +15265,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -15011,9 +15339,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -15075,7 +15404,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -15139,7 +15468,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           drivingLicenseAddProofUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           drivingLicenseAddProofUrl!,
                                                         );
@@ -15153,20 +15483,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             drivingLicenseAddProofUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -15175,9 +15504,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -15246,9 +15578,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -15298,7 +15631,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -15357,11 +15690,13 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                   // Consider using InkWell for better tap feedback
                                                   onTap: () async {
                                                     try {
-                                                      if (nREGACard != null &&
+                                                      if (nREGACard !=
+                                                          null &&
                                                           nREGACardUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           nREGACardUrl!,
                                                         );
@@ -15370,25 +15705,22 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           await nREGACard!
                                                               .delete();
                                                           setState(() {
-                                                            nREGACard =
-                                                            null;
-                                                            nREGACardUrl =
-                                                            null;
+                                                            nREGACard = null;
+                                                            nREGACardUrl = null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -15397,9 +15729,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -15468,9 +15803,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -15519,7 +15855,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                 width: 75,
                                                 decoration: BoxDecoration(
                                                   color: AppConstant
-                                                      .appSecondaryColor,
+                                                      .iconColor,
                                                   border: Border.all(
                                                     color: Colors
                                                         .black,
@@ -15583,7 +15919,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           passportAddProofUrl !=
                                                               null) {
                                                         // 🔹 पहले Database से delete
-                                                        bool success = await deleteDocumentFromDB(
+                                                        bool
+                                                        success = await deleteDocumentFromDB(
                                                           uid,
                                                           passportAddProofUrl!,
                                                         );
@@ -15597,20 +15934,19 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                             passportAddProofUrl =
                                                             null;
                                                           });
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
-                                                                  "✅ Deleted successfully"),
+                                                                "✅ Deleted successfully",
+                                                              ),
                                                             ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger
-                                                              .of(
-                                                              context)
-                                                              .showSnackBar(
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
                                                             const SnackBar(
                                                               content: Text(
                                                                 "❌ Failed to delete from DB",
@@ -15619,9 +15955,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           );
                                                         }
                                                       }
-                                                    } catch (e) {
+                                                    } catch (
+                                                    e
+                                                    ) {
                                                       print(
-                                                          "Error deleting file: $e");
+                                                        "Error deleting file: $e",
+                                                      );
                                                     }
                                                   },
                                                   child: Container(
@@ -15689,9 +16028,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             color: Colors.white,
                                             width: 50,
                                             child: IconButton(
-                                              icon: const Icon(
+                                              icon: Icon(
                                                 Icons.add_circle,
-                                                color: Colors.black,
+                                                color: AppConstant
+                                                    .iconColor,
                                                 size: 28,
                                               ),
                                               onPressed: () {
@@ -15724,39 +16064,139 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
           );
         },
       ),
-      bottomNavigationBar: (collectedDocs == null || collectedDocs.isEmpty)
-          ? const SizedBox.shrink()
-          : SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: SizedBox(
-            width: double.infinity, // 👈 full width
-            height: 50, // 👈 fixed height
-            child: ElevatedButton(
-              onPressed: () async {
-                Get.back(result: collectedDocs);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor:
-                AppConstant.appBatton1, // 👈 button color
-                foregroundColor:
-                AppConstant.appTextColor, // 👈 text color
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    12,
-                  ), // 👈 rounded corners
-                ),
-                elevation: 4, // 👈 shadow
-              ),
-              child: const Text(
-                "Upload Documents",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.normal,
-                ),
+      bottomSheet: collectedDocs.isEmpty
+          ? null
+          : Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 6,
+              offset: Offset(0, -2),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(12),
+        height: 175, // total bottom sheet height
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              height: 100, // horizontal list height
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: collectedDocs.length,
+                itemBuilder: (context, index) {
+                  final doc = collectedDocs[index];
+                  return Stack(
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 8),
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(5),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(5),
+                          child: Image.file(
+                            File(doc.path),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 2,
+                        right: 2,
+                        child: GestureDetector(
+                          onTap: () async {
+                            bool success = await deleteDocumentFromDB(
+                              uid,
+                              doc.pdfUrl,
+                            );
+
+                            if (success) {
+                              final file = File(doc.path);
+                              if (await file.exists())
+                                await file.delete();
+
+                              setState(() {
+                                collectedDocs.removeAt(index);
+                              });
+
+                              final prefs =
+                              await SharedPreferences.getInstance();
+                              final jsonList = collectedDocs
+                                  .map((d) => d.toJson())
+                                  .toList();
+                              await prefs.setString(
+                                "collectedDocs",
+                                jsonEncode(jsonList),
+                              );
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("✅ Deleted successfully"),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "❌ Failed to delete from DB",
+                                  ),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          },
+                          child: const CircleAvatar(
+                            radius: 12,
+                            backgroundColor: Colors.red,
+                            child: Icon(
+                              Icons.close,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
-          ),
+
+            ElevatedButton(
+              onPressed: () async {
+                // 1️⃣ SharedPreferences se collectedDocs clear
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.remove(
+                    "collectedDocs"); // ya prefs.setString("collectedDocs", "[]");
+
+                // 2️⃣ Local list clear (UI refresh ke liye)
+                setState(() {
+                  collectedDocs.clear();
+                });
+
+                // 3️⃣ Close BottomSheet
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppConstant.darkButton,
+                foregroundColor: AppConstant.whiteBackColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 4,
+              ),
+              child: const Text("Upload Document"),
+            ),
+          ],
         ),
       ),
     );

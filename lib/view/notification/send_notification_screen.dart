@@ -139,8 +139,12 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppConstant.appInsideColor,
-        title: Text("Send Message"),
+        backgroundColor: AppConstant.appBarColor,
+        title: Text(
+          "Send Message",
+          style: TextStyle(color: AppConstant.whiteBackColor),
+        ),
+        iconTheme: IconThemeData(color: AppConstant.whiteBackColor),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -176,44 +180,6 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
                       )
                       .toList(),
                   onChanged: (value) => _filterUsersByBranch(value!),
-                ),
-              ),
-
-              // 🔹 User Filter Dropdown
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 8,
-                  horizontal: 12,
-                ),
-                child: DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    labelText: "Select User",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                  ),
-                  value: selectedUser,
-                  items: filteredUsers
-                      .map(
-                        (u) => DropdownMenuItem<String>(
-                          value: (u['UserId'] ?? '').toString(),
-                          child: Text("${u['UserId']} - ${u['branch_name']}"),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      selectedUser = value;
-                      selectedUsers.clear();
-                      selectedUsers = filteredUsers
-                          .where((u) => (u['UserId'] ?? '').toString() == value)
-                          .toList();
-                    });
-                  },
                 ),
               ),
 

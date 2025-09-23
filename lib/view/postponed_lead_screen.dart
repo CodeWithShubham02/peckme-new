@@ -78,12 +78,12 @@ class _PostponeLeadScreenState extends State<PostponeLeadScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppConstant.appInsideColor,
+        backgroundColor: AppConstant.appBarColor,
         title: Text(
           widget.customer_name.toString(),
-          style: TextStyle(color: AppConstant.appTextColor, fontSize: 17),
+          style: TextStyle(color: AppConstant.appBarWhiteColor, fontSize: 17),
         ),
-        iconTheme: IconThemeData(color: AppConstant.appIconColor),
+        iconTheme: IconThemeData(color: AppConstant.appBarWhiteColor),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -99,8 +99,8 @@ class _PostponeLeadScreenState extends State<PostponeLeadScreen> {
               child: Text(
                 'Select reason for Refix Appointment : *',
                 style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 14,
+                  color: AppConstant.darkHeadingColor,
+                  fontSize: 15,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'RaleWay',
                 ),
@@ -119,6 +119,7 @@ class _PostponeLeadScreenState extends State<PostponeLeadScreen> {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.normal,
+                                color: AppConstant.appTextColor,
                               ),
                             ),
                             value: selectedReason,
@@ -141,7 +142,27 @@ class _PostponeLeadScreenState extends State<PostponeLeadScreen> {
                               });
                             },
                             decoration: InputDecoration(
-                              border: OutlineInputBorder(),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: AppConstant.borderColor,
+                                  width: 2,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: AppConstant.borderColor,
+                                  width: 2,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: AppConstant.borderColor,
+                                  width: 2,
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -153,7 +174,7 @@ class _PostponeLeadScreenState extends State<PostponeLeadScreen> {
               child: Text(
                 'Enter remarks for Refix Appointment : ',
                 style: TextStyle(
-                  color: Colors.black,
+                  color: AppConstant.appTextColor,
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'RaleWay',
@@ -178,10 +199,10 @@ class _PostponeLeadScreenState extends State<PostponeLeadScreen> {
                   hintStyle: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: Colors.grey.shade500,
+                    color: AppConstant.appTextColor,
                   ),
                   filled: true,
-                  fillColor: Colors.grey.shade100,
+                  fillColor: AppConstant.whiteBackColor,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 14,
                     vertical: 12,
@@ -189,22 +210,22 @@ class _PostponeLeadScreenState extends State<PostponeLeadScreen> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: Colors.grey.shade400,
-                      width: 1,
+                      color: AppConstant.borderColor,
+                      width: 2,
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: Colors.grey.shade400,
-                      width: 1,
+                      color: AppConstant.borderColor,
+                      width: 2,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: Colors.deepPurple,
-                      width: 1.5,
+                    borderSide: BorderSide(
+                      color: AppConstant.borderColor,
+                      width: 2,
                     ),
                   ),
                 ),
@@ -243,7 +264,7 @@ class _PostponeLeadScreenState extends State<PostponeLeadScreen> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppConstant.appBatton1, // 👈 button color
+                backgroundColor: AppConstant.darkButton, // 👈 button color
                 foregroundColor: AppConstant.appTextColor, // 👈 text color
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12), // 👈 rounded corners
@@ -252,7 +273,11 @@ class _PostponeLeadScreenState extends State<PostponeLeadScreen> {
               ),
               child: const Text(
                 "Postpone Lead",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  color: AppConstant.whiteBackColor,
+                ),
               ),
             ),
           ),

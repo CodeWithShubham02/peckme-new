@@ -1,28 +1,22 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/app_constant.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
-
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  String name = '';
-  String mobile = '';
-  String uid = '';
-  String rolename = '';
+  late String? uid = '';
+
+  //String rolename = '';
   String branchName = '';
   String authId = '';
-  String image = '';
-  String address = '';
+  late String? profile = '';
+
+  //String address = '';
 
   void loadUserData() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -33,186 +27,256 @@ class _ProfileScreenState extends State<ProfileScreen> {
       rolename = prefs.getString('rolename') ?? '';
       branchName = prefs.getString('branch_name') ?? '';
       authId = prefs.getString('authId') ?? '';
-      image = prefs.getString('image') ?? '';
+      profile = prefs.getString('image') ?? '';
       address = prefs.getString('address') ?? '';
     });
   }
 
   @override
   void initState() {
+    // TODO: implement initState
     super.initState();
     loadUserData();
+    print("-----");
+    print(profile);
   }
 
-  Future<void> generatePdf() async {
-    final pdf = pw.Document();
+  String formatRoleName(String text) {
+    text = text.toLowerCase();
 
-    pdf.addPage(
-      pw.Page(
-        build: (pw.Context context) {
-          return pw.Container(
-            padding: const pw.EdgeInsets.all(20),
-            decoration: pw.BoxDecoration(
-              border: pw.Border.all(color: PdfColors.blue, width: 2),
-              borderRadius: pw.BorderRadius.circular(15),
-            ),
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.center,
-              children: [
-                pw.Container(
-                  width: 100,
-                  height: 100,
-                  decoration: pw.BoxDecoration(
-                    shape: pw.BoxShape.circle,
-                    color: PdfColors.blue200,
-                  ),
-                  child: pw.Center(
-                    child: pw.Icon(
-                      pw.IconData(0xe491), // Person icon codepoint
-                      size: 50,
-                      color: PdfColors.black,
-                    ),
-                  ),
-                ),
-                pw.SizedBox(height: 15),
-                pw.Text(name.toUpperCase(),
-                    style: pw.TextStyle(
-                        fontSize: 22, fontWeight: pw.FontWeight.bold)),
-                pw.Divider(),
-                buildPdfRow("User ID", uid),
-                buildPdfRow("Mobile", mobile),
-                buildPdfRow("Address", address),
-                buildPdfRow("Branch", branchName),
-                buildPdfRow("Role", rolename),
-                buildPdfRow("Auth ID", authId),
-              ],
-            ),
-          );
-        },
-      ),
-    );
+    // "fieldexecutive" ko "field executive" me convert
+    text = text.replaceAll("fieldexecutive", "field executive");
 
-    // Save PDF to local storage
-    final downloadsDir = Directory("/storage/emulated/0/Download/idcard");
-
-    if (!(await downloadsDir.exists())) {
-      await downloadsDir.create(recursive: true);
-    }
-
-    final file = File("${downloadsDir.path}/id_card.pdf");
-    await file.writeAsBytes(await pdf.save());
-
-    // final output = await getExternalStorageDirectory();
-    // final file = File("${output!.path}/id_card.pdf");
-    // await file.writeAsBytes(await pdf.save());
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("PDF Saved at ${file.path}"),duration: Duration(seconds: 2),),
-    );
+    // Har word ka pehla letter capital
+    return text
+        .split(' ')
+        .map((word) {
+          if (word.isEmpty) return "";
+          return word[0].toUpperCase() + word.substring(1);
+        })
+        .join(' ');
   }
 
-  pw.Widget buildPdfRow(String title, String value) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 6),
-      child: pw.Row(
-        children: [
-          pw.Text("$title: ",
-              style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-          pw.Expanded(child: pw.Text(value)),
-        ],
-      ),
-    );
-  }
+  late String? name = '';
+
+  late String? mobile = '';
+
+  late String? rolename = '';
+
+  final String company = '';
+
+  final String subCompany =
+      "Cargo & Courier\nFulfillment Services\n(Franchisee of Bizipac Couriers Pvt Ltd)";
+
+  late String? address = '';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey.shade300,
       appBar: AppBar(
-        backgroundColor: AppConstant.appInsideColor,
-        title: const Text(
+        backgroundColor: AppConstant.appBarColor,
+        title: Text(
           'Profile',
-          style: TextStyle(color: AppConstant.appTextColor),
+          style: TextStyle(color: AppConstant.appBarWhiteColor, fontSize: 18),
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: IconButton(
-              icon: const Icon(Icons.download, color: AppConstant.appTextColor),
-              onPressed: generatePdf, // 📌 generate PDF on click
-            ),
-          ),
-        ],
+        iconTheme: IconThemeData(color: AppConstant.appBarWhiteColor),
       ),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        child: Center(
-          child: Card(
-            elevation: 12,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+      body: Center(
+        child: Card(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          elevation: 6,
+          child: Container(
+            width: 300,
+            height: 525,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: AppConstant.borderColor, width: 2),
+              color: Colors.white,
             ),
-            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            child: Container(
-              width: double.infinity,
-              height: double.infinity,
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircleAvatar(
-                    radius: 60,
-                    backgroundColor: AppConstant.appBatton1,
-                    child: const Icon(Icons.person,
-                        size: 70, color: Colors.black),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // 🔶 Top Header (Yellow BG with company info)
+                Container(
+                  width: double.infinity,
+                  color: AppConstant.darkButton,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 6,
+                    horizontal: 4,
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    name.toUpperCase(),
-                    style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5),
+                  child: Column(
+                    children: [
+                      Text(
+                        formatRoleName(rolename!).toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subCompany,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 10),
-                  const Divider(thickness: 1.2),
-                  const SizedBox(height: 10),
-                  buildInfoRow(Icons.badge, "User ID", uid),
-                  buildInfoRow(Icons.phone, "Mobile", mobile),
-                  buildInfoRow(Icons.location_on, "Address", address.toUpperCase()),
-                  buildInfoRow(Icons.apartment, "Branch", branchName.toUpperCase()),
-                  buildInfoRow(Icons.work, "Role", rolename.toUpperCase()),
-                  buildInfoRow(Icons.vpn_key, "Auth ID", authId),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+                ),
 
-  Widget buildInfoRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.blueAccent, size: 22),
-          const SizedBox(width: 10),
-          Text(
-            "$label: ",
-            style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: Colors.black87),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 16),
+                // 👤 Profile Image (square like ID card)
+                SizedBox(height: 15),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    width: 100,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppConstant.borderColor),
+                      image: DecorationImage(
+                        image: NetworkImage('$profile'),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ),
+
+                Container(
+                  padding: const EdgeInsets.all(5),
+                  child: Table(
+                    border: TableBorder.all(
+                      color: AppConstant.borderColor,
+                      width: 1,
+                    ),
+                    // Inner cell borders
+                    columnWidths: const {
+                      0: FlexColumnWidth(1),
+                      1: FlexColumnWidth(2),
+                    },
+                    children: [
+                      TableRow(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: Text(
+                              "Name",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppConstant.darkButton,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: Text(
+                              name!,
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                      TableRow(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: Text(
+                              "User ID ",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppConstant.darkButton,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: Text("$uid"),
+                          ),
+                        ],
+                      ),
+                      TableRow(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: Text(
+                              "Role",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppConstant.darkButton,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: Text(formatRoleName(rolename!)),
+                          ),
+                        ],
+                      ),
+                      TableRow(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: Text(
+                              "Auth ID",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppConstant.darkButton,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: Text("$authId"),
+                          ),
+                        ],
+                      ),
+                      TableRow(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: Text(
+                              "Mobile No.",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppConstant.darkButton,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: Text("$mobile"),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  child: Column(
+                    children: [
+                      const Divider(thickness: 1),
+                      const SizedBox(height: 8),
+                      Text(
+                        address!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                      const SizedBox(height: 6),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

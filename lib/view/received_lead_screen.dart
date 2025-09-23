@@ -1,15 +1,12 @@
-import 'dart:convert';
 import 'dart:io';
-import 'package:aws_s3_api/s3-2006-03-01.dart' hide Permission;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
-import 'package:intl/intl.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -27,7 +24,8 @@ class ReceivedLeadScreen extends StatefulWidget {
 }
 
 class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
-  final ReceivedLeadController receivedLeadController = ReceivedLeadController();
+  final ReceivedLeadController receivedLeadController =
+      ReceivedLeadController();
 
   // Future holding current list source (either full list or filtered result)
   late Future<List<Lead>> leads;
@@ -54,10 +52,13 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
     uid = prefs.getString('uid') ?? '';
     branchId = prefs.getString('branchId') ?? '';
   }
+
   String _formatDate(String? dateString) {
     if (dateString == null || dateString.isEmpty) return '';
     try {
-      final date = DateTime.parse(dateString); // API से जो format आता है वो parse होगा
+      final date = DateTime.parse(
+        dateString,
+      ); // API से जो format आता है वो parse होगा
       return DateFormat('dd-MM-yyyy').format(date);
     } catch (e) {
       return dateString; // अगर parse fail हो जाए तो original string return
@@ -93,12 +94,21 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
 
   // opens dialog to input leadId
   void _openSearchDialog() {
-    final TextEditingController controller = TextEditingController(text: _searchQuery);
+    final TextEditingController controller = TextEditingController(
+      text: _searchQuery,
+    );
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Search',style: TextStyle(fontSize: 15),),
+          title: const Text(
+            'Search',
+            style: TextStyle(
+              fontSize: 15,
+              color: AppConstant.darkHeadingColor,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           content: TextField(
             controller: controller,
             keyboardType: TextInputType.text,
@@ -106,6 +116,7 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
               hintText: 'Enter Lead_id/Pin code ',
               hintStyle: TextStyle(
                 fontSize: 14,
+                color: AppConstant.appTextColor,
               ),
             ),
 
@@ -116,11 +127,17 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
               onPressed: () {
                 Navigator.of(context).pop(); // cancel
               },
-              child: const Text('Cancel'),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: AppConstant.darkButton),
+              ),
             ),
             TextButton(
               onPressed: () => _performSearchFromDialog(controller),
-              child: const Text('Search'),
+              child: Text(
+                'Search',
+                style: TextStyle(color: AppConstant.darkButton),
+              ),
             ),
           ],
         );
@@ -189,17 +206,10 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
         SnackBar(
           content: Row(
             children: [
-              Image.asset(
-                "assets/logo/cmp_logo.png",
-                height: 24,
-                width: 24,
-              ),
+              Image.asset("assets/logo/cmp_logo.png", height: 24, width: 24),
               const SizedBox(width: 10),
               const Expanded(
-                child: Text(
-                  "No number found",
-                  style: TextStyle(fontSize: 16),
-                ),
+                child: Text("No number found", style: TextStyle(fontSize: 16)),
               ),
             ],
           ),
@@ -224,33 +234,34 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
       });
     });
   }
+
   String _sortOrder = "Oldest First";
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppConstant.appInsideColor,
+        backgroundColor: AppConstant.appBarColor,
         title: Text(
           _searchQuery.isEmpty
               ? 'Lead Received'.toUpperCase()
               : 'Search: ${_searchQuery}'.toUpperCase(),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.normal,
-            color: AppConstant.appTextColor,
+            color: AppConstant.appBarWhiteColor,
           ),
         ),
-        iconTheme: IconThemeData(color: AppConstant.appIconColor),
+        iconTheme: IconThemeData(color: AppConstant.appBarWhiteColor),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.search, color: Colors.white),
             onPressed: _openSearchDialog,
             tooltip: 'Search by lead id',
           ),
           if (_searchQuery.isNotEmpty)
             IconButton(
-              icon: const Icon(Icons.clear),
+              icon: const Icon(Icons.clear, color: Colors.white),
               onPressed: _clearSearch,
               tooltip: 'Clear search',
             ),
@@ -262,6 +273,7 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
+            print("Error : ${snapshot.error}");
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             // update visible total
@@ -272,8 +284,10 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
             // update visible total only when changed (avoids re-build loops)
             // 🔹 sort by date (oldest first)
             leadsList.sort((a, b) {
-              final dateA = DateTime.tryParse(a.leadDate ?? '') ?? DateTime(1900);
-              final dateB = DateTime.tryParse(b.leadDate ?? '') ?? DateTime(1900);
+              final dateA =
+                  DateTime.tryParse(a.leadDate ?? '') ?? DateTime(1900);
+              final dateB =
+                  DateTime.tryParse(b.leadDate ?? '') ?? DateTime(1900);
 
               if (_sortOrder == "Oldest First") {
                 return dateA.compareTo(dateB); // oldest → newest
@@ -296,8 +310,11 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
               children: [
                 // 🔹 Filter bar
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  color: Colors.grey.shade200,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  color: Colors.white,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -307,6 +324,7 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
+                          color: AppConstant.darkHeadingColor,
                         ),
                       ),
 
@@ -314,8 +332,10 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
                       DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
                           value: _sortOrder,
-                          dropdownColor: Colors.white,
-                          items: ["Oldest First", "Newest First"].map((String value) {
+                          dropdownColor: AppConstant.darkButton,
+                          items: ["Oldest First", "Newest First"].map((
+                            String value,
+                          ) {
                             return DropdownMenuItem<String>(
                               value: value,
                               child: Text(
@@ -340,189 +360,228 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
                 ),
 
                 // 🔹 Leads list
-                Expanded(child: ListView.builder(
-                  itemCount: leadsList.length,
-                  itemBuilder: (context, index) {
-                    final lead = leadsList[index];
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: leadsList.length,
+                    itemBuilder: (context, index) {
+                      final lead = leadsList[index];
 
-                    return Card(
-                      color: Colors.white,
-                      elevation: 2,
-                      margin: const EdgeInsets.all(6),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    (lead.customerName ?? '').toUpperCase(),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,fontSize: 12
-                                    ),
-                                  ),
-                                ),
-                                CircleAvatar(
-                                  backgroundColor: AppConstant.appInsideColor,
-                                  child: IconButton(
-                                    onPressed: () async {
-                                      final response = lead.leadId ?? '';
-                                      _callLeads(context, response);
-                                    },
-                                    icon: Icon(
-                                      Icons.call,
-                                      color: AppConstant.appIconColor,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const Divider(),
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: AppConstant.appInsideColor,
-                                  child: Icon(
-                                    Icons.house_outlined,
-                                    color: AppConstant.appIconColor,
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    lead.clientname ?? '',
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 2,style: TextStyle(fontSize: 12),
-                                  ),
-                                ),
-                                const Text(
-                                  "N/A",
-                                  style: TextStyle(color: Colors.grey,fontSize: 10),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 2),
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: AppConstant.appInsideColor,
-                                  child: Icon(
-                                    Icons.date_range,
-                                    color: AppConstant.appIconColor,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-
-                      Expanded(
-                      child: Text(
-                          _formatDate(lead.leadDate),
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    ),
-                                Expanded(
-                                  child: Text(
-                                    lead.apptime ?? '',
-                                    style: const TextStyle(
-                                        color: Colors.black, fontSize: 10),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 2),
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: AppConstant.appInsideColor,
-                                  child: InkWell(
-                                    onTap: () async {
-                                      try {
-                                        final locations =
-                                        await locationFromAddress(lead.resAddress ?? '');
-                                        final locations2 = await locationFromAddress(lead.resAddress ?? '');
-                                        if (locations.isNotEmpty && locations2.isNotEmpty) {
-                                          final latitude = locations[0].latitude;
-                                          final longitude = locations[0].longitude;
-                                          final latitude2 = locations2[0].latitude;
-                                          final longitude2 = locations2[0].longitude;
-
-                                          await openMap(
-                                            fromLat: latitude,
-                                            fromLng: longitude,
-                                            toLat: latitude2,
-                                            toLng: longitude2,
-                                          );
-                                        } else {
-                                          print('No location found for one or both addresses.');
-                                        }
-                                      } catch (e) {
-                                        print("Error: $e");
-                                      }
-                                    },
-                                    child: Icon(
-                                      Icons.location_on,
-                                      color: AppConstant.appIconColor,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    lead.resAddress ?? '',
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 10,style: TextStyle(fontSize: 12),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 2),
-                            ElevatedButton(
-                              onPressed: () {
-                                Get.to(() => LeadDetailScreen(lead: lead));
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppConstant.appBatton1,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  'More Details',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                      return Card(
+                        color: Colors.white,
+                        elevation: 2,
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
                         ),
-                      ),
-                    );
-                  },
-                ))
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(
+                            color: AppConstant.borderColor, // 🔶 Orange border
+                            width: 2, // Border thickness
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      (lead.customerName ?? '').toUpperCase(),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                        color: AppConstant.darkHeadingColor,
+                                      ),
+                                    ),
+                                  ),
+                                  CircleAvatar(
+                                    backgroundColor: AppConstant.darkButton,
+                                    child: IconButton(
+                                      onPressed: () async {
+                                        final response = lead.leadId ?? '';
+                                        _callLeads(context, response);
+                                      },
+                                      icon: Icon(
+                                        Icons.call,
+                                        color: AppConstant.whiteBackColor,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const Divider(),
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: AppConstant.iconColor,
+                                    child: Icon(
+                                      Icons.house_outlined,
+                                      color: AppConstant.whiteBackColor,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      lead.clientname ?? '',
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 2,
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                  const Text(
+                                    "N/A",
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: AppConstant.darkButton,
+                                    child: Icon(
+                                      Icons.date_range,
+                                      color: AppConstant.whiteBackColor,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+
+                                  Expanded(
+                                    child: Text(
+                                      _formatDate(lead.leadDate),
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      lead.apptime ?? '',
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: AppConstant.iconColor,
+                                    child: InkWell(
+                                      onTap: () async {
+                                        try {
+                                          final locations =
+                                              await locationFromAddress(
+                                                lead.resAddress ?? '',
+                                              );
+                                          // String offAdd = lead.offAddress;
+                                          // offAdd = offAdd.replaceAll(' ', '');
+                                          final locations2 =
+                                              await locationFromAddress(
+                                                "Prem Mandir, Vrindavan" ?? '',
+                                              );
+                                          print("----------------------");
+                                          print("location : ${locations2}");
+                                          print(
+                                            "location : ${lead.resAddress}",
+                                          );
+                                          print("-----------------------");
+                                          if (locations.isNotEmpty &&
+                                              locations2.isNotEmpty) {
+                                            final latitude =
+                                                locations[0].latitude;
+                                            final longitude =
+                                                locations[0].longitude;
+                                            final latitude2 =
+                                                locations2[0].latitude;
+                                            final longitude2 =
+                                                locations2[0].longitude;
+
+                                            await openMap(
+                                              fromLat: latitude,
+                                              fromLng: longitude,
+                                              toLat: latitude2,
+                                              toLng: longitude2,
+                                            );
+                                          } else {
+                                            print(
+                                              'No location found for one or both addresses.',
+                                            );
+                                          }
+                                        } catch (e) {
+                                          print("Error: $e");
+                                        }
+                                      },
+                                      child: Icon(
+                                        Icons.location_on,
+                                        color: AppConstant.whiteBackColor,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      lead.resAddress ?? '',
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 10,
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Get.to(() => LeadDetailScreen(lead: lead));
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppConstant.darkButton,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: const Center(
+                                  child: Text(
+                                    'More Details',
+                                    style: TextStyle(
+                                      color: AppConstant.whiteBackColor,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ],
             );
-
           }
         },
       ),
 
-
       floatingActionButton: FloatingActionButton(
-        backgroundColor: AppConstant.appInsideColor,
+        backgroundColor: AppConstant.borderColor,
         onPressed: () {
           setState(() {
             // refresh current list according to whether search is active
-            leads = _searchQuery.isEmpty ? _fetchLeadsFromApi() : _searchLeadsById(_searchQuery);
+            leads = _searchQuery.isEmpty
+                ? _fetchLeadsFromApi()
+                : _searchLeadsById(_searchQuery);
           });
         },
-        child: const Icon(Icons.refresh, color: AppConstant.appIconColor),
+        child: const Icon(Icons.refresh, color: AppConstant.whiteBackColor),
       ),
     );
   }

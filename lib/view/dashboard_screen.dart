@@ -212,30 +212,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         iconTheme: IconThemeData(color: Colors.black),
-        backgroundColor: AppConstant.appInsideColor,
-        title: Text("Peak Me ", style: TextStyle(color: Colors.black)),
+        backgroundColor: AppConstant.appBarColor,
+        title: Text(
+          "Peak Me ",
+          style: TextStyle(color: AppConstant.appBarWhiteColor),
+        ),
         actions: [
           IconButton(
             onPressed: () {
               Get.to(() => ProfileScreen());
             },
-            icon: Icon(Icons.person_pin, color: Colors.black),
+            icon: Icon(Icons.person_pin, color: AppConstant.appBarWhiteColor),
           ),
           IconButton(
             onPressed: () async {
               showDialog(
                 context: context,
                 builder: (_) => AlertDialog(
-                  title: Text("Logout", style: TextStyle(fontSize: 20)),
+                  title: Text(
+                    "Logout",
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: AppConstant.whiteBackColor,
+                    ),
+                  ),
                   content: Text(
                     "are you sure you want to logout of your account?",
+                    style: TextStyle(color: AppConstant.whiteBackColor),
                   ),
                   actions: [
                     IconButton(
                       onPressed: () async {
                         Navigator.pop(context);
                       },
-                      icon: Text('No'),
+                      icon: Text(
+                        'No',
+                        style: TextStyle(color: AppConstant.whiteBackColor),
+                      ),
                     ),
                     IconButton(
                       onPressed: () async {
@@ -243,15 +256,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         await prefs.clear();
                         Get.offAll(() => Login());
                       },
-                      icon: Text('Yes'),
+                      icon: Text(
+                        'Yes',
+                        style: TextStyle(color: AppConstant.whiteBackColor),
+                      ),
                     ),
                   ],
                   elevation: 10,
-                  backgroundColor: Colors.white,
+                  backgroundColor: AppConstant.darkButton,
                 ),
               );
             },
-            icon: Icon(Icons.logout, color: Colors.black),
+            icon: Icon(Icons.logout, color: AppConstant.appBarWhiteColor),
             onLongPress: () async {
               // 1️⃣ Fetch server key first
               GetServerKey getServerKey = GetServerKey();
@@ -317,6 +333,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -325,36 +342,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color: AppConstant.appBattonBack,
+                        color: AppConstant.whiteBackColor,
                         borderRadius: BorderRadius.circular(5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.shade300,
-                            blurRadius: 5,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
+                        border: Border.all(
+                          color: AppConstant.borderColor,
+                          width: 2,
+                        ),
                       ),
-                      padding: EdgeInsets.all(16),
                       child: InkWell(
                         onTap: () {
                           Get.to(() => ReceivedLeadScreen());
                         },
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        child: Stack(
                           children: [
-                            Icon(
-                              Icons.dashboard,
-                              size: 30,
-                              color: Colors.black87,
+                            // Inner shadow overlay
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(5),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Colors.orange.withOpacity(0.16),
+                                      // inner shadow feel
+                                      Colors.transparent,
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
-                            SizedBox(height: 12),
-                            Text(
-                              "Pending Lead's",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
+                            // Actual content
+                            Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.dashboard,
+                                    size: 30,
+                                    color: AppConstant.iconColor,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    "Pending Lead's",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      color: AppConstant.darkHeadingColor,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -365,36 +403,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color: AppConstant.appBattonBack,
+                        color: AppConstant.whiteBackColor,
                         borderRadius: BorderRadius.circular(5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.shade300,
-                            blurRadius: 5,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
+                        border: Border.all(
+                          color: AppConstant.borderColor,
+                          width: 2,
+                        ),
                       ),
-                      padding: EdgeInsets.all(16),
                       child: InkWell(
-                        onTap: () {
+                        onTap: () async {
                           Get.to(() => TransferLeadScreen());
                         },
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        child: Stack(
                           children: [
-                            Icon(
-                              Icons.transfer_within_a_station_outlined,
-                              size: 30,
-                              color: Colors.black87,
+                            // Inner shadow overlay
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(5),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Colors.orange.withOpacity(0.16),
+                                      // inner shadow feel
+                                      Colors.transparent,
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
-                            SizedBox(height: 12),
-                            Text(
-                              "Transfer Lead's ",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
+                            // Actual content
+                            Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.transfer_within_a_station_outlined,
+                                    size: 30,
+                                    color: AppConstant.iconColor,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    "Transfer Lead's",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      color: AppConstant.darkHeadingColor,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -411,34 +470,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color: AppConstant.appBattonBack,
+                        color: AppConstant.whiteBackColor,
                         borderRadius: BorderRadius.circular(5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.shade300,
-                            blurRadius: 5,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
+                        border: Border.all(
+                          color: AppConstant.borderColor,
+                          width: 2,
+                        ),
                       ),
-                      padding: EdgeInsets.all(16),
                       child: InkWell(
                         onTap: () {
                           Get.to(
                             () => LeadCheckScreen(uid: uid, branchId: branchId),
                           );
                         },
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        child: Stack(
                           children: [
-                            Icon(Icons.wallet, size: 30, color: Colors.black87),
-                            SizedBox(height: 12),
-                            Text(
-                              "Self Lead's Alloter",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
+                            // Inner shadow overlay
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(5),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Colors.orange.withOpacity(0.16),
+                                      // inner shadow feel
+                                      Colors.transparent,
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Actual content
+                            Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.wallet,
+                                    size: 30,
+                                    color: AppConstant.iconColor,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    "Self Lead's Alloter",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      color: AppConstant.darkHeadingColor,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -449,38 +533,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color: AppConstant.appBattonBack,
+                        color: AppConstant.whiteBackColor,
                         borderRadius: BorderRadius.circular(5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.shade300,
-                            blurRadius: 5,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
+                        border: Border.all(
+                          color: AppConstant.borderColor,
+                          width: 2,
+                        ),
                       ),
-                      padding: EdgeInsets.all(16),
                       child: InkWell(
-                        onTap: () {
+                        onTap: () async {
                           _launchInBrowser(
                             'https://fms.bizipac.com/apinew/secureapi/icici_pre_paid_card_gen.php?user_id=$uid&branch_id=$branchId#!/',
                           );
                         },
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        child: Stack(
                           children: [
-                            Icon(
-                              Icons.card_travel_outlined,
-                              size: 22,
-                              color: Colors.black87,
+                            // Inner shadow overlay
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(5),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Colors.orange.withOpacity(0.16),
+                                      // inner shadow feel
+                                      Colors.transparent,
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
-                            SizedBox(height: 10),
-                            Text(
-                              "Submission's ",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 11,
+                            // Actual content
+                            Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.card_travel_outlined,
+                                    size: 30,
+                                    color: AppConstant.iconColor,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    "Submission's",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      color: AppConstant.darkHeadingColor,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -497,17 +602,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color: AppConstant.appBattonBack,
+                        color: AppConstant.whiteBackColor,
                         borderRadius: BorderRadius.circular(5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.shade300,
-                            blurRadius: 5,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
+                        border: Border.all(
+                          color: AppConstant.borderColor,
+                          width: 2,
+                        ),
                       ),
-                      padding: EdgeInsets.all(16),
                       child: InkWell(
                         onTap: () {
                           final service = LeadService(
@@ -525,21 +626,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                           );
                         },
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        child: Stack(
                           children: [
-                            Icon(
-                              Icons.file_copy_outlined,
-                              size: 22,
-                              color: Colors.black87,
+                            // Inner shadow overlay
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(5),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Colors.orange.withOpacity(0.16),
+                                      // inner shadow feel
+                                      Colors.transparent,
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
-                            SizedBox(height: 10),
-                            Text(
-                              "Today's Completed Lead's ",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 11,
+                            // Actual content
+                            Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.file_copy_outlined,
+                                    size: 30,
+                                    color: AppConstant.iconColor,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    "Today's Completed \nLead's",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      color: AppConstant.darkHeadingColor,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -550,38 +676,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 100,
                       width: 150,
                       decoration: BoxDecoration(
-                        color: AppConstant.appBattonBack,
+                        color: AppConstant.whiteBackColor,
                         borderRadius: BorderRadius.circular(5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.shade300,
-                            blurRadius: 5,
-                            offset: Offset(1, 4),
-                          ),
-                        ],
+                        border: Border.all(
+                          color: AppConstant.borderColor,
+                          width: 2,
+                        ),
                       ),
-                      padding: EdgeInsets.all(16),
                       child: InkWell(
-                        onTap: () {
+                        onTap: () async {
                           Get.to(
                             () => TodayTransferredScreen(uid: uid.toString()),
                           );
                         },
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        child: Stack(
                           children: [
-                            Icon(
-                              Icons.transfer_within_a_station_outlined,
-                              size: 22,
-                              color: Colors.black87,
+                            // Inner shadow overlay
+                            Positioned.fill(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(5),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Colors.orange.withOpacity(0.16),
+                                      // inner shadow feel
+                                      Colors.transparent,
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
-                            SizedBox(height: 10),
-                            Text(
-                              "Today's Transfer Lead",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 11,
+                            // Actual content
+                            Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.transfer_within_a_station_outlined,
+                                    size: 30,
+                                    color: AppConstant.iconColor,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    "Today Transfer \n Lead's",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                      color: AppConstant.darkHeadingColor,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -591,145 +738,164 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ],
                 ),
                 SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Container(
-                      height: 100,
-                      width: 150,
-                      decoration: BoxDecoration(
-                        color: AppConstant.appBattonBack,
-                        borderRadius: BorderRadius.circular(5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.shade300,
-                            blurRadius: 5,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      padding: EdgeInsets.all(16),
-                      child: InkWell(
-                        onTap: () async {
-                          GetServerKey getServerKey = GetServerKey();
-                          String? serverKey = await getServerKey
-                              .getServerKeyToken();
-                          print("----------------------");
-                          print(serverKey);
-                          print("------------------------");
-                          Get.to(() => ProfileScreen());
-                        },
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.person_3_sharp,
-                              size: 30,
-                              color: Colors.black87,
-                            ),
-                            SizedBox(height: 12),
-                            Text(
-                              "Profile",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  child: Container(
+                    height: 100,
+                    width: 325,
+                    decoration: BoxDecoration(
+                      color: AppConstant.whiteBackColor,
+                      borderRadius: BorderRadius.circular(5),
+                      border: Border.all(
+                        color: AppConstant.borderColor,
+                        width: 2,
                       ),
                     ),
-                  ],
-                ),
-                SizedBox(height: 150),
-
-                Container(
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Current Time : ".toUpperCase(),
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          Text(
-                            timeString,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.normal,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          SizedBox(width: 5),
-                          Icon(
-                            Icons.access_time,
-                            size: 10,
-                            color: Colors.black87,
-                          ),
-                        ],
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Version : ",
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          Text(
-                            '1.0.01',
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          SizedBox(width: 5),
-                          Icon(
-                            Icons.verified_outlined,
-                            size: 10,
-                            color: Colors.black87,
-                          ),
-                        ],
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Flexible(
-                            child: Center(
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "Copyrights © 2025 All Rights Reserved by - ",
-                                    maxLines: 2,
-                                    style: TextStyle(fontSize: 9),
-                                  ),
-                                  Text(
-                                    "Bizipac Couriers Pvt. Ltd.",
-                                    maxLines: 2,
-                                    style: TextStyle(
-                                      fontSize: 9,
-                                      color: Colors.red,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
+                    child: Stack(
+                      children: [
+                        // Inner shadow overlay
+                        Positioned.fill(
+                          child: InkWell(
+                            onTap: () async {
+                              GetServerKey getServerKey = GetServerKey();
+                              String? serverKey = await getServerKey
+                                  .getServerKeyToken();
+                              print("----------------------");
+                              print(serverKey);
+                              print("------------------------");
+                              Get.to(() => ProfileScreen());
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(5),
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Colors.orange.withOpacity(0.16),
+                                    // inner shadow feel
+                                    Colors.transparent,
+                                  ],
+                                ),
                               ),
                             ),
                           ),
-                        ],
+                        ),
+                        // Actual content
+                        Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.person_3_sharp,
+                                size: 30,
+                                color: AppConstant.iconColor,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                "Profile",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  color: AppConstant.darkHeadingColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  child: Text(
+                    "Dashboard",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  child: Divider(),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  child: Row(
+                    children: [
+                      Text(
+                        "Total Pending Lead's :",
+                        style: TextStyle(
+                          color: AppConstant.darkButton,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                      Text(
+                        " 10",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  child: Row(
+                    children: [
+                      Text(
+                        "Total Transfer Lead's :",
+                        style: TextStyle(
+                          color: AppConstant.darkButton,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                      Text(
+                        " 10",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                  child: Row(
+                    children: [
+                      Text(
+                        "Total Completed Lead's :",
+                        style: TextStyle(
+                          color: AppConstant.darkButton,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                        textAlign: TextAlign.left,
+                      ),
+                      Text(
+                        " 10",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                        textAlign: TextAlign.left,
                       ),
                     ],
                   ),
@@ -737,6 +903,103 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
+        ),
+      ),
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 👇 Time Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "Current Time : ".toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                Text(
+                  timeString,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.normal,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(width: 5),
+                Icon(Icons.access_time, size: 10, color: AppConstant.iconColor),
+              ],
+            ),
+
+            // 👇 Version Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  "Version : ",
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                Text(
+                  '1.0.01',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.normal,
+                    color: AppConstant.appIconColor,
+                  ),
+                ),
+                const SizedBox(width: 5),
+                Icon(
+                  Icons.verified_outlined,
+                  size: 10,
+                  color: AppConstant.iconColor,
+                ),
+              ],
+            ),
+
+            // 👇 Copyright Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const Text(
+                          "Copyrights © 2025 All Rights Reserved by - ",
+                          maxLines: 2,
+                          style: TextStyle(fontSize: 9),
+                        ),
+                        Text(
+                          "Bizipac Couriers Pvt. Ltd.",
+                          maxLines: 2,
+                          style: TextStyle(
+                            fontSize: 9,
+                            color: AppConstant.darkButton,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            // 👇 Postpone Lead Button
+          ],
         ),
       ),
     );

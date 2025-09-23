@@ -40,9 +40,7 @@ class _LeadCheckScreenState extends State<LeadCheckScreen> {
 
       if (lead != null) {
         // ✅ Lead exists
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("✅ 'Mobile number exists!'")));
+        // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("")));
       } else {
         // ❌ Lead not found
         ScaffoldMessenger.of(
@@ -84,12 +82,12 @@ class _LeadCheckScreenState extends State<LeadCheckScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppConstant.appInsideColor,
+        backgroundColor: AppConstant.appBarColor,
         title: Text(
           "Self Lead's Alloter",
-          style: TextStyle(color: AppConstant.appTextColor, fontSize: 17),
+          style: TextStyle(color: AppConstant.appBarWhiteColor, fontSize: 17),
         ),
-        iconTheme: IconThemeData(color: AppConstant.appIconColor),
+        iconTheme: IconThemeData(color: AppConstant.appBarWhiteColor),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -99,14 +97,35 @@ class _LeadCheckScreenState extends State<LeadCheckScreen> {
               controller: _mobileController,
               decoration: InputDecoration(
                 labelText: "Enter Mobile Number",
-                border: const OutlineInputBorder(),
+                labelStyle: TextStyle(color: AppConstant.darkHeadingColor),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: AppConstant.borderColor,
+                    width: 2,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: AppConstant.borderColor,
+                    width: 2,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: AppConstant.borderColor,
+                    width: 2,
+                  ),
+                ),
                 suffixIcon: IconButton(
                   icon: _loading
                       ? const Padding(
                           padding: EdgeInsets.all(8.0),
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.search),
+                      : Icon(Icons.search, color: AppConstant.iconColor),
                   onPressed: _loading ? null : _checkLead,
                 ),
               ),
@@ -126,11 +145,11 @@ class _LeadCheckScreenState extends State<LeadCheckScreen> {
                       final leadItem = _lead!.data[index];
                       return Card(
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(10),
                           // 🔹 rounded corners
-                          side: const BorderSide(
-                            color: Colors.blueAccent, // 🔹 border color
-                            width: 1.2, // 🔹 border width
+                          side: BorderSide(
+                            color: AppConstant.borderColor, // 🔹 border color
+                            width: 2, // 🔹 border width
                           ),
                         ),
                         elevation: 4, // 🔹 shadow effect
@@ -146,14 +165,14 @@ class _LeadCheckScreenState extends State<LeadCheckScreen> {
                               decryptFMS(
                                 leadItem.customerName,
                                 "QWRTEfnfdys635",
-                              ),
+                              ).toUpperCase(),
                               style: const TextStyle(
                                 fontSize: 18,
                                 // 🔹 bigger font
                                 fontWeight: FontWeight.bold,
                                 fontFamily: "Roboto",
                                 // 🔹 custom font-family (change if needed)
-                                color: Colors.black87,
+                                color: AppConstant.darkHeadingColor,
                               ),
                             ),
                             subtitle: Column(
@@ -192,8 +211,8 @@ class _LeadCheckScreenState extends State<LeadCheckScreen> {
                             ),
                             trailing: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blueAccent,
-                                foregroundColor: Colors.white,
+                                backgroundColor: AppConstant.darkButton,
+                                foregroundColor: AppConstant.whiteBackColor,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),

@@ -195,8 +195,8 @@ class _LoginState extends State<Login> {
             ),
             shouldIconPulse: true,
             // Small animation on the icon
-            backgroundColor: AppConstant.appSnackBarBackground,
-            colorText: AppConstant.appTextColor,
+            backgroundColor: AppConstant.snackBackColor,
+            colorText: AppConstant.snackFontColor,
             snackPosition: SnackPosition.BOTTOM,
             // or TOP
             borderRadius: 15,
@@ -222,11 +222,11 @@ class _LoginState extends State<Login> {
             ),
             shouldIconPulse: true,
             // Small animation on the icon
-            backgroundColor: AppConstant.appSnackBarBackground,
-            colorText: AppConstant.appTextColor,
-            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: AppConstant.snackBackColor,
+            colorText: AppConstant.snackFontColor,
+            snackPosition: SnackPosition.TOP,
             // or TOP
-            borderRadius: 15,
+            borderRadius: 5,
             margin: const EdgeInsets.all(12),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             duration: const Duration(seconds: 3),
@@ -288,7 +288,7 @@ class _LoginState extends State<Login> {
                                 SizedBox(width: 5),
                                 Icon(
                                   Icons.login_rounded,
-                                  color: Colors.blueAccent,
+                                  color: AppConstant.iconColor,
                                 ),
                               ],
                             ),
@@ -306,7 +306,22 @@ class _LoginState extends State<Login> {
                               },
                               decoration: InputDecoration(
                                 labelText: 'UserId',
+                                labelStyle: TextStyle(
+                                  color: AppConstant.appTextColor,
+                                  fontSize: 12,
+                                ),
                                 border: OutlineInputBorder(),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: AppConstant.borderColor,
+                                  ), // border when not focused
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: AppConstant.borderColor,
+                                    width: 2.0,
+                                  ), // border when focused
+                                ),
                               ),
                             ),
                             SizedBox(height: 16),
@@ -326,7 +341,22 @@ class _LoginState extends State<Login> {
                               // 👈 use state variable
                               decoration: InputDecoration(
                                 labelText: 'Password',
+                                labelStyle: TextStyle(
+                                  color: AppConstant.appTextColor,
+                                  fontSize: 12,
+                                ),
                                 border: const OutlineInputBorder(),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: AppConstant.borderColor,
+                                  ), // border when not focused
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: AppConstant.borderColor,
+                                    width: 2.0,
+                                  ), // border when focused
+                                ),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword
@@ -354,7 +384,12 @@ class _LoginState extends State<Login> {
                                     ),
                                   );
                                 },
-                                child: Text("Forgot Password?"),
+                                child: Text(
+                                  "Forgot Password?",
+                                  style: TextStyle(
+                                    color: AppConstant.darkButton,
+                                  ),
+                                ),
                               ),
                             ),
                             SizedBox(height: 10),
@@ -368,7 +403,7 @@ class _LoginState extends State<Login> {
                                 height: 50,
                                 width: 330,
                                 decoration: BoxDecoration(
-                                  color: Colors.orangeAccent,
+                                  color: AppConstant.darkButton,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
 
@@ -376,9 +411,9 @@ class _LoginState extends State<Login> {
                                   child: Text(
                                     'Login',
                                     style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontFamily: 'sens-serif',
+                                      color: AppConstant.darkTextColor,
+                                      fontSize: 16,
+                                      fontFamily: AppConstant.appTextFamily,
                                     ),
                                   ),
                                 ),
@@ -402,14 +437,17 @@ class _LoginState extends State<Login> {
                                       Text(
                                         "Copyrights © 2025 All Rights Reserved by - ",
                                         maxLines: 2,
-                                        style: TextStyle(fontSize: 7),
+                                        style: TextStyle(
+                                          fontSize: 7,
+                                          color: AppConstant.appTextColor,
+                                        ),
                                       ),
                                       Text(
                                         "Bizipac Couriers Pvt. Ltd.",
                                         maxLines: 2,
                                         style: TextStyle(
                                           fontSize: 7,
-                                          color: Colors.red,
+                                          color: AppConstant.darkButton,
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -451,7 +489,10 @@ class _LoginState extends State<Login> {
                 padding: const EdgeInsets.all(18.0),
                 child: Column(
                   children: [
-                    Text('Send To :  +91-${userId.toString()}'),
+                    Text(
+                      'Send To :  +91-${userId.toString()}',
+                      style: TextStyle(color: AppConstant.appTextColor),
+                    ),
                     Text('OTP : - ${newOtp}'),
                     // Text('Token: ${userDiviceToken.toString()}')
                   ],
@@ -472,10 +513,25 @@ class _LoginState extends State<Login> {
                     keyboardType: TextInputType.number,
                     maxLength: 4,
                     decoration: InputDecoration(
-                      labelText: 'Enter Otp ',
+                      labelText: 'Enter OTP',
+                      labelStyle: TextStyle(
+                        color: AppConstant.appTextColor,
+                        fontSize: 12,
+                      ),
                       contentPadding: EdgeInsets.symmetric(horizontal: 10.0),
                       hintStyle: TextStyle(fontSize: 12),
                       border: OutlineInputBorder(),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: AppConstant.borderColor,
+                        ), // border when not focused
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: AppConstant.borderColor,
+                          width: 2.0,
+                        ), // border when focused
+                      ),
                     ),
                   ),
                 ),
@@ -489,13 +545,16 @@ class _LoginState extends State<Login> {
                     height: Get.height / 10,
 
                     decoration: BoxDecoration(
-                      color: AppConstant.appSecondaryColor,
+                      color: AppConstant.darkButton,
                       borderRadius: BorderRadius.circular(10.0),
                     ),
                     child: TextButton(
                       child: Text(
                         'Login',
-                        style: TextStyle(color: Colors.white, fontSize: 15),
+                        style: TextStyle(
+                          color: AppConstant.darkTextColor,
+                          fontSize: 15,
+                        ),
                       ),
                       onPressed: () async {
                         String otp = userOtp;
@@ -523,9 +582,8 @@ class _LoginState extends State<Login> {
                                 width: 30,
                               ),
                               shouldIconPulse: true,
-                              backgroundColor:
-                                  AppConstant.appSnackBarBackground,
-                              colorText: AppConstant.appTextColor,
+                              backgroundColor: AppConstant.snackBackColor,
+                              colorText: AppConstant.snackFontColor,
                               snackPosition: SnackPosition.BOTTOM,
                               borderRadius: 15,
                               margin: const EdgeInsets.all(12),
@@ -547,10 +605,9 @@ class _LoginState extends State<Login> {
                                 size: 28,
                               ),
                               shouldIconPulse: true,
-                              backgroundColor:
-                                  AppConstant.appSnackBarBackground,
-                              colorText: AppConstant.appTextColor,
-                              snackPosition: SnackPosition.BOTTOM,
+                              backgroundColor: AppConstant.snackBackColor,
+                              colorText: AppConstant.snackFontColor,
+                              snackPosition: SnackPosition.TOP,
                               borderRadius: 15,
                               margin: const EdgeInsets.all(12),
                               padding: const EdgeInsets.symmetric(
@@ -565,33 +622,6 @@ class _LoginState extends State<Login> {
                           }
                         } else {
                           Get.snackbar(
-                            "Error",
-                            'Your OTP does not match please check the otp!!',
-                            backgroundColor: AppConstant.appSnackBarBackground,
-                            // Background color of the snackbar
-                            colorText: Colors.black,
-                            // Color of the title and message text
-                            snackPosition: SnackPosition.BOTTOM,
-                            // Position of the snackbar (TOP or BOTTOM)
-                            margin: const EdgeInsets.all(10),
-                            // Margin around the snackbar
-                            borderRadius: 10,
-                            // Border radius of the snackbar
-                            animationDuration: const Duration(
-                              milliseconds: 500,
-                            ),
-                            // Animation duration
-                            duration: const Duration(seconds: 3),
-                            // Duration the snackbar is displayed
-                            icon: const Icon(Icons.error, color: Colors.black),
-                            // Optional icon
-                            shouldIconPulse: true,
-                            // Whether the icon should pulse
-                            isDismissible: true,
-                            // Whether the snackbar can be dismissed by swiping
-                            dismissDirection: DismissDirection.horizontal,
-                          );
-                          Get.snackbar(
                             "Error !!",
                             "Your OTP does not match please check the otp ❌ !!",
                             icon: Image.asset(
@@ -600,9 +630,9 @@ class _LoginState extends State<Login> {
                               width: 30,
                             ),
                             shouldIconPulse: true,
-                            backgroundColor: AppConstant.appSnackBarBackground,
-                            colorText: AppConstant.appTextColor,
-                            snackPosition: SnackPosition.BOTTOM,
+                            backgroundColor: AppConstant.snackBackColor,
+                            colorText: AppConstant.snackFontColor,
+                            snackPosition: SnackPosition.TOP,
                             borderRadius: 15,
                             margin: const EdgeInsets.all(12),
                             padding: const EdgeInsets.symmetric(

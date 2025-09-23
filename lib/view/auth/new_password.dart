@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:peckme/controller/update_password_controller.dart';
+
 import '../../utils/app_constant.dart';
 import 'login.dart';
 
@@ -27,19 +28,17 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
       Get.snackbar(
         "Error !!",
         "Please enter OTP ❌",
-        icon:  Image.asset(
-          "assets/logo/cmp_logo.png",
-          height: 30,
-          width: 30,
-        ),
-        shouldIconPulse: true,     // Small animation on the icon
-        backgroundColor:AppConstant.appSnackBarBackground,
-        colorText: AppConstant.appTextColor,
-        snackPosition: SnackPosition.BOTTOM, // or TOP
+        icon: Image.asset("assets/logo/cmp_logo.png", height: 30, width: 30),
+        shouldIconPulse: true,
+        // Small animation on the icon
+        backgroundColor: AppConstant.snackBackColor,
+        colorText: AppConstant.snackFontColor,
+        snackPosition: SnackPosition.TOP,
+        // or TOP
         borderRadius: 15,
         margin: const EdgeInsets.all(12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 3),
         isDismissible: true,
         forwardAnimationCurve: Curves.easeOutBack,
       );
@@ -51,19 +50,17 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
       Get.snackbar(
         "Error !!",
         "Please enter new password ❌",
-        icon:  Image.asset(
-          "assets/logo/cmp_logo.png",
-          height: 30,
-          width: 30,
-        ),
-        shouldIconPulse: true,     // Small animation on the icon
-        backgroundColor:AppConstant.appSnackBarBackground,
-        colorText: AppConstant.appTextColor,
-        snackPosition: SnackPosition.BOTTOM, // or TOP
+        icon: Image.asset("assets/logo/cmp_logo.png", height: 30, width: 30),
+        shouldIconPulse: true,
+        // Small animation on the icon
+        backgroundColor: AppConstant.snackBackColor,
+        colorText: AppConstant.snackFontColor,
+        snackPosition: SnackPosition.TOP,
+        // or TOP
         borderRadius: 15,
         margin: const EdgeInsets.all(12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 3),
         isDismissible: true,
         forwardAnimationCurve: Curves.easeOutBack,
       );
@@ -75,19 +72,17 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
       Get.snackbar(
         "Invalid OTP !!",
         "Your OTP does not match ❌",
-        icon:  Image.asset(
-          "assets/logo/cmp_logo.png",
-          height: 30,
-          width: 30,
-        ),
-        shouldIconPulse: true,     // Small animation on the icon
-        backgroundColor:AppConstant.appSnackBarBackground,
-        colorText: AppConstant.appTextColor,
-        snackPosition: SnackPosition.BOTTOM, // or TOP
+        icon: Image.asset("assets/logo/cmp_logo.png", height: 30, width: 30),
+        shouldIconPulse: true,
+        // Small animation on the icon
+        backgroundColor: AppConstant.snackBackColor,
+        colorText: AppConstant.snackFontColor,
+        snackPosition: SnackPosition.TOP,
+        // or TOP
         borderRadius: 15,
         margin: const EdgeInsets.all(12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 3),
         isDismissible: true,
         forwardAnimationCurve: Curves.easeOutBack,
       );
@@ -103,44 +98,39 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
     );
 
     if (result['success'] == true) {
-      Get.to(()=>Login());
+      Get.to(() => Login());
       Get.snackbar(
         "Success!!!",
         "Password updated successfully ✅",
-        icon:  Image.asset(
-          "assets/logo/cmp_logo.png",
-          height: 30,
-          width: 30,
-        ),
-        shouldIconPulse: true,     // Small animation on the icon
-        backgroundColor:AppConstant.appSnackBarBackground,
-        colorText: AppConstant.appTextColor,
-        snackPosition: SnackPosition.BOTTOM, // or TOP
+        icon: Image.asset("assets/logo/cmp_logo.png", height: 30, width: 30),
+        shouldIconPulse: true,
+        // Small animation on the icon
+        backgroundColor: AppConstant.snackBackColor,
+        colorText: AppConstant.snackFontColor,
+        snackPosition: SnackPosition.TOP,
+        // or TOP
         borderRadius: 15,
         margin: const EdgeInsets.all(12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 3),
         isDismissible: true,
         forwardAnimationCurve: Curves.easeOutBack,
       );
-
     } else {
       Get.snackbar(
         "Failed!",
         result['message'] ?? "Something went wrong ❌",
-        icon:  Image.asset(
-          "assets/logo/cmp_logo.png",
-          height: 30,
-          width: 30,
-        ),
-        shouldIconPulse: true,     // Small animation on the icon
-        backgroundColor:AppConstant.appSnackBarBackground,
-        colorText: AppConstant.appTextColor,
-        snackPosition: SnackPosition.BOTTOM, // or TOP
+        icon: Image.asset("assets/logo/cmp_logo.png", height: 30, width: 30),
+        shouldIconPulse: true,
+        // Small animation on the icon
+        backgroundColor: AppConstant.snackBackColor,
+        colorText: AppConstant.snackFontColor,
+        snackPosition: SnackPosition.TOP,
+        // or TOP
         borderRadius: 15,
         margin: const EdgeInsets.all(12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 3),
         isDismissible: true,
         forwardAnimationCurve: Curves.easeOutBack,
       );
@@ -158,7 +148,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               IconButton(
-                icon: Icon(Icons.arrow_back),
+                icon: Icon(Icons.arrow_back, color: AppConstant.iconColor),
                 onPressed: () => Navigator.pop(context),
               ),
               SizedBox(height: 30),
@@ -167,45 +157,86 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 30),
-        
+
               // OTP Field
               TextFormField(
                 controller: otpController,
                 keyboardType: TextInputType.number,
-                maxLength: 6,
+                maxLength: 4,
                 decoration: InputDecoration(
                   labelText: 'Enter OTP',
+                  labelStyle: TextStyle(
+                    color: AppConstant.appTextColor,
+                    fontSize: 12,
+                  ),
                   border: OutlineInputBorder(),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: AppConstant.borderColor,
+                    ), // border when not focused
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: AppConstant.borderColor,
+                      width: 2.0,
+                    ), // border when focused
+                  ),
                 ),
               ),
               SizedBox(height: 15),
-        
+
               // New Password Field
               TextFormField(
                 controller: newPassController,
                 obscureText: true,
                 maxLength: 12,
                 decoration: InputDecoration(
-                  labelText: 'New Password',
+                  labelText: 'Enter the new password',
+                  labelStyle: TextStyle(
+                    color: AppConstant.appTextColor,
+                    fontSize: 12,
+                  ),
                   border: OutlineInputBorder(),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: AppConstant.borderColor,
+                    ), // border when not focused
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: AppConstant.borderColor,
+                      width: 2.0,
+                    ), // border when focused
+                  ),
                 ),
               ),
               SizedBox(height: 20),
-        
+
               SizedBox(
                 width: double.infinity,
                 height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppConstant.appSecondaryColor,
-                  ),
-                  onPressed: (){
+                child: InkWell(
+                  onTap: () {
                     _updatePassword();
-                    Get.offAll(()=>Login());
+                    Get.offAll(() => Login());
                   },
-                  child: Text(
-                    "Update Password",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  child: Container(
+                    height: 50,
+                    width: 330,
+                    decoration: BoxDecoration(
+                      color: AppConstant.darkButton,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Update Password',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontFamily: AppConstant.appTextFamily,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),

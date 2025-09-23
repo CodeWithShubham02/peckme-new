@@ -103,12 +103,12 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppConstant.appInsideColor,
+        backgroundColor: AppConstant.appBarColor,
         title: Text(
           widget.customer_name.toString(),
-          style: TextStyle(color: AppConstant.appTextColor, fontSize: 17),
+          style: TextStyle(color: AppConstant.appBarWhiteColor, fontSize: 17),
         ),
-        iconTheme: IconThemeData(color: AppConstant.appIconColor),
+        iconTheme: IconThemeData(color: AppConstant.appBarWhiteColor),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -120,10 +120,10 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                 'Select the date and time you want to Refix Appointment : *',
                 style: GoogleFonts.poppins(
                   // 👈 changed font family
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Colors
-                      .redAccent, // 👈 changed color (you can also use AppConstant.appTextColor)
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppConstant
+                      .darkHeadingColor, // 👈 changed color (you can also use AppConstant.appTextColor)
                 ),
               ),
             ),
@@ -138,12 +138,16 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                           dateTime(); // Date picker open
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
+                          backgroundColor:
+                              AppConstant.darkButton, // 👈 button color
+                          foregroundColor:
+                              AppConstant.whiteBackColor, // 👈 text color
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(
+                              12,
+                            ), // 👈 rounded corners
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          elevation: 2,
+                          elevation: 4, // 👈
                         ),
                         child: Container(
                           width: 150,
@@ -153,7 +157,7 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                               Text(
                                 'Select Date',
                                 style: GoogleFonts.poppins(
-                                  color: Colors.black,
+                                  color: AppConstant.whiteBackColor,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 15,
                                 ),
@@ -161,7 +165,7 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                               SizedBox(width: 10),
                               Icon(
                                 Icons.date_range_outlined,
-                                color: AppConstant.appTextColor,
+                                color: AppConstant.whiteBackColor,
                               ),
                             ],
                           ),
@@ -178,11 +182,11 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                         vertical: 14,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: Colors.grey.shade400,
-                          width: 1,
+                          color: AppConstant.borderColor,
+                          width: 2,
                         ),
                       ),
                       child: Row(
@@ -203,7 +207,7 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                             },
                             icon: Icon(
                               Icons.calendar_today_outlined,
-                              color: Colors.deepPurple,
+                              color: AppConstant.iconColor,
                               size: 20,
                             ),
                           ),
@@ -217,9 +221,9 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
               child: Text(
                 'Choose Time Slot :',
                 style: GoogleFonts.poppins(
-                  color: Colors.black87,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  color: AppConstant.darkHeadingColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -263,22 +267,26 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                           });
                         },
                         decoration: InputDecoration(
-                          labelText: "Select Time Slot",
-                          labelStyle: GoogleFonts.poppins(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: AppConstant.appTextColor,
-                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide(
-                              color: Colors.grey.shade400,
-                              width: 1,
+                              color: AppConstant.borderColor,
+                              width: 2,
                             ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: AppConstant.borderColor,
+                              width: 2,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: AppConstant.borderColor,
+                              width: 2,
+                            ),
                           ),
                         ),
                       ),
@@ -289,9 +297,9 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
               child: Text(
                 'Select the location where you want to Refix Appointment : *',
                 style: GoogleFonts.poppins(
-                  color: Colors.black87,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  color: AppConstant.darkHeadingColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -306,17 +314,21 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: AppConstant.borderColor, // Orange border color
+                      width: 2, // Border width (adjust as needed)
+                    ),
                   ),
                   child: RadioListTile<String>(
                     title: Text(
                       'Office',
                       style: GoogleFonts.poppins(
-                        fontSize: 14,
+                        fontSize: 15,
                         fontWeight: FontWeight.w500,
-                        color: Colors.black87,
+                        color: AppConstant.iconColor,
                       ),
                     ),
-                    activeColor: Colors.deepPurple,
+                    activeColor: AppConstant.iconColor,
                     // 👈 custom color
                     value: 'Office',
                     groupValue: _location,
@@ -335,17 +347,21 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: Colors.orange, // Orange border color
+                      width: 2, // Border width (adjust as needed)
+                    ),
                   ),
                   child: RadioListTile<String>(
                     title: Text(
                       'Residence',
                       style: GoogleFonts.poppins(
-                        fontSize: 14,
+                        fontSize: 15,
                         fontWeight: FontWeight.w500,
-                        color: Colors.black87,
+                        color: AppConstant.iconColor,
                       ),
                     ),
-                    activeColor: Colors.deepPurple,
+                    activeColor: AppConstant.iconColor,
                     // 👈 custom color
                     value: 'Residence',
                     groupValue: _location,
@@ -364,9 +380,9 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
               child: Text(
                 'Select reason for Refix Appointment : *',
                 style: GoogleFonts.poppins(
-                  color: Colors.black87,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  color: AppConstant.darkHeadingColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -382,7 +398,7 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                         style: GoogleFonts.poppins(
                           fontSize: 12,
                           fontWeight: FontWeight.w400,
-                          color: Colors.grey.shade600,
+                          color: AppConstant.darkHeadingColor,
                         ),
                       ),
                       items: reasons.map((item) {
@@ -406,9 +422,9 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                       decoration: InputDecoration(
                         labelText: "Reason",
                         labelStyle: GoogleFonts.poppins(
-                          fontSize: 12,
+                          fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: Colors.deepPurple,
+                          color: AppConstant.darkButton,
                         ),
                         filled: true,
                         fillColor: Colors.grey.shade100,
@@ -419,22 +435,22 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: Colors.grey.shade400,
-                            width: 1,
+                            color: AppConstant.borderColor,
+                            width: 2,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: Colors.grey.shade400,
-                            width: 1,
+                            color: AppConstant.borderColor,
+                            width: 2,
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Colors.deepPurple,
-                            width: 1.5,
+                          borderSide: BorderSide(
+                            color: AppConstant.borderColor,
+                            width: 2,
                           ),
                         ),
                       ),
@@ -446,9 +462,9 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
               child: Text(
                 'Enter remarks for Refix Appointment :',
                 style: GoogleFonts.poppins(
-                  color: Colors.black87,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  color: AppConstant.darkHeadingColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -471,7 +487,7 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                   hintStyle: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: Colors.grey.shade500,
+                    color: AppConstant.darkHeadingColor,
                   ),
                   filled: true,
                   fillColor: Colors.grey.shade100,
@@ -482,22 +498,22 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: Colors.grey.shade400,
-                      width: 1,
+                      color: AppConstant.borderColor,
+                      width: 2,
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(
-                      color: Colors.grey.shade400,
-                      width: 1,
+                      color: AppConstant.borderColor,
+                      width: 2,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: Colors.deepPurple,
-                      width: 1.5,
+                    borderSide: BorderSide(
+                      color: AppConstant.borderColor,
+                      width: 2,
                     ),
                   ),
                 ),
@@ -546,7 +562,7 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppConstant.appBatton1, // 👈 button color
+                backgroundColor: AppConstant.darkButton, // 👈 button color
                 foregroundColor: AppConstant.appTextColor, // 👈 text color
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12), // 👈 rounded corners
@@ -557,8 +573,8 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                 "Refix Appointment",
                 style: GoogleFonts.poppins(
                   fontSize: 15,
-                  fontWeight: FontWeight.w400,
-                  color: AppConstant.appTextColor,
+                  fontWeight: FontWeight.bold,
+                  color: AppConstant.whiteBackColor,
                 ),
               ),
             ),

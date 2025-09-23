@@ -33,16 +33,16 @@ class _LeadStatusScreenState extends State<LeadStatusScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppConstant.appInsideColor,
+        backgroundColor: AppConstant.appBarColor,
         title: Text(
           'Today Completed Lead',
-          style: const TextStyle(
-            fontSize: 20,
+          style: TextStyle(
+            fontSize: 18,
             fontWeight: FontWeight.normal,
-            color: AppConstant.appTextColor,
+            color: AppConstant.appBarWhiteColor,
           ),
         ),
-        iconTheme: IconThemeData(color: AppConstant.appIconColor),
+        iconTheme: IconThemeData(color: AppConstant.appBarWhiteColor),
       ),
       body: FutureBuilder<LeadStatusResponse>(
         future: _future,
@@ -65,7 +65,7 @@ class _LeadStatusScreenState extends State<LeadStatusScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Text("Total: ${result.total}"),
+                      //Text("Total: ${result.total}"),
                       Text("✅ Completed: ${result.completedTotal}"),
                       //Text("⌛ Pending: ${result.pendingTotal}"),
                     ],
@@ -83,7 +83,6 @@ class _LeadStatusScreenState extends State<LeadStatusScreen> {
                         .where((lead) => lead.status == "Completed")
                         .toList();
                     final lead = completedLeads[index];
-
                     return Card(
                       margin: const EdgeInsets.symmetric(
                         horizontal: 8,

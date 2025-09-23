@@ -5,7 +5,8 @@ import '../../utils/app_constant.dart';
 
 class IciciWebviewWidget extends StatefulWidget {
   final String url;
-   IciciWebviewWidget({super.key , required this.url,});
+
+  IciciWebviewWidget({super.key, required this.url});
 
   @override
   State<IciciWebviewWidget> createState() => _IciciWebviewWidgetState();
@@ -27,8 +28,8 @@ class _IciciWebviewWidgetState extends State<IciciWebviewWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppConstant.appInsideColor,
-        iconTheme: IconThemeData(color: Colors.black),
+        backgroundColor: AppConstant.appBarColor,
+        iconTheme: IconThemeData(color: AppConstant.appBarWhiteColor),
         title: Text("Onfield Prepaid Card"),
       ),
       body: SafeArea(child: WebViewWidget(controller: _controller)),

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:peckme/utils/app_constant.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -11,12 +9,14 @@ class WebViewScreen extends StatefulWidget {
   final String client;
   final int fidatal;
 
-   WebViewScreen({Key? key,
-     required this.customerName,
-     required this.leadid,
-     required this.client,
-     required this.url,
-     required this.fidatal}) : super(key: key);
+  WebViewScreen({
+    Key? key,
+    required this.customerName,
+    required this.leadid,
+    required this.client,
+    required this.url,
+    required this.fidatal,
+  }) : super(key: key);
 
   @override
   State<WebViewScreen> createState() => _WebViewScreenState();
@@ -33,8 +33,6 @@ class _WebViewScreenState extends State<WebViewScreen> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..loadRequest(Uri.parse(widget.url));
-
-
   }
 
   @override
@@ -44,35 +42,57 @@ class _WebViewScreenState extends State<WebViewScreen> {
         preferredSize: Size.fromHeight(60), // Set custom height here
 
         child: AppBar(
-          backgroundColor: AppConstant.appInsideColor,
+          backgroundColor: AppConstant.appBarColor,
           iconTheme: IconThemeData(color: Colors.white),
           title: Container(
             height: 100,
             child: Padding(
               padding: const EdgeInsets.only(top: 20),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start, // optional: aligns text left
+                crossAxisAlignment: CrossAxisAlignment.start,
+                // optional: aligns text left
                 children: [
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Text("CustomerName : ", style: TextStyle(fontSize: 13,color: Colors.white)),
-                      Expanded(child: Text("${widget.customerName}", style: TextStyle(fontSize: 13,color: Colors.white), overflow: TextOverflow.fade,maxLines: 1,)),
+                      Text(
+                        "CustomerName : ",
+                        style: TextStyle(fontSize: 13, color: Colors.white),
+                      ),
+                      Expanded(
+                        child: Text(
+                          "${widget.customerName}",
+                          style: TextStyle(fontSize: 13, color: Colors.white),
+                          overflow: TextOverflow.fade,
+                          maxLines: 1,
+                        ),
+                      ),
                     ],
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Text("LeadId : ", style: TextStyle(fontSize: 13,color: Colors.white)),
-                      Text("${widget.leadid}", style: TextStyle(fontSize: 13,color: Colors.white)),
+                      Text(
+                        "LeadId : ",
+                        style: TextStyle(fontSize: 13, color: Colors.white),
+                      ),
+                      Text(
+                        "${widget.leadid}",
+                        style: TextStyle(fontSize: 13, color: Colors.white),
+                      ),
                     ],
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Text("ClientName : ", style: TextStyle(fontSize: 13,color: Colors.white)),
-                      Text("${widget.client}", style: TextStyle(fontSize: 13,color: Colors.white)),
+                      Text(
+                        "ClientName : ",
+                        style: TextStyle(fontSize: 13, color: Colors.white),
+                      ),
+                      Text(
+                        "${widget.client}",
+                        style: TextStyle(fontSize: 13, color: Colors.white),
+                      ),
                     ],
                   ),
                 ],

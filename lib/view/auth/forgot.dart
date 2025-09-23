@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:peckme/controller/forgot_otp_password.dart';
 import 'package:peckme/view/auth/new_password.dart';
-
 
 import '../../utils/app_constant.dart';
 import 'login.dart';
@@ -23,23 +21,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   void requestOtp() async {
     final mobile = userId.trim();
     if (mobile.isNotEmpty) {
-      final result = await ForgotOtpPasswordService.getOtp(
-        mobile: mobile,
-      );
+      final result = await ForgotOtpPasswordService.getOtp(mobile: mobile);
       setState(() {
-        if(result.success==1){
+        if (result.success == 1) {
           Get.snackbar(
             "Success!",
             "OTP sent successfully (Test OTP: ${result.otp ?? ''})",
-            icon:  Image.asset(
+            icon: Image.asset(
               "assets/logo/cmp_logo.png",
               height: 30,
               width: 30,
             ),
-            shouldIconPulse: true,     // Small animation on the icon
-            backgroundColor:AppConstant.appSnackBarBackground,
-            colorText: AppConstant.appTextColor,
-            snackPosition: SnackPosition.BOTTOM, // or TOP
+            shouldIconPulse: true,
+            // Small animation on the icon
+            backgroundColor: AppConstant.snackBackColor,
+            colorText: AppConstant.snackFontColor,
+            snackPosition: SnackPosition.TOP,
+            // or TOP
             borderRadius: 15,
             margin: const EdgeInsets.all(12),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -47,21 +45,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             isDismissible: true,
             forwardAnimationCurve: Curves.easeOutBack,
           );
-          Get.to(()=>NewPasswordScreen(userId: mobile,otp:result.otp ?? ''));
+          Get.to(
+            () => NewPasswordScreen(userId: mobile, otp: result.otp ?? ''),
+          );
           //showCustomBottomSheet(userId,token.userToken.toString(),result.message.toString());
-        }else{
+        } else {
           Get.snackbar(
             "Failed!",
             "Something went wrong please connect to the office, Thank You!!",
-            icon:  Image.asset(
+            icon: Image.asset(
               "assets/logo/cmp_logo.png",
               height: 30,
               width: 30,
             ),
-            shouldIconPulse: true,     // Small animation on the icon
-            backgroundColor:AppConstant.appSnackBarBackground,
-            colorText: AppConstant.appTextColor,
-            snackPosition: SnackPosition.BOTTOM, // or TOP
+            shouldIconPulse: true,
+            // Small animation on the icon
+            backgroundColor: AppConstant.snackBackColor,
+            colorText: AppConstant.snackFontColor,
+            snackPosition: SnackPosition.TOP,
+            // or TOP
             borderRadius: 15,
             margin: const EdgeInsets.all(12),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -77,6 +79,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       });
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,37 +92,49 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               IconButton(
-                icon: Icon(Icons.arrow_back),
+                icon: Icon(Icons.arrow_back, color: AppConstant.iconColor),
                 onPressed: () {
-                 Navigator.pop(context);
+                  Navigator.pop(context);
                 },
               ),
               SizedBox(height: 30),
               Text(
                 'Forget Password',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 30),
               TextFormField(
-                onChanged: (value){
-                  userId=value;
+                onChanged: (value) {
+                  userId = value;
                 },
                 maxLength: 10,
-                validator: (value){
-                  if(value!.isEmpty){
+                validator: (value) {
+                  if (value!.isEmpty) {
                     return 'enter your number';
-                  }else{
+                  } else {
                     return null;
                   }
                 },
                 decoration: InputDecoration(
                   labelText: 'UserId',
-                  hintText: 'Your Phone Number',
+                  hintText: 'Enter your userId',
+                  hintStyle: TextStyle(fontSize: 12),
+                  labelStyle: TextStyle(
+                    color: AppConstant.appTextColor,
+                    fontSize: 12,
+                  ),
                   border: OutlineInputBorder(),
-
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: AppConstant.borderColor,
+                    ), // border when not focused
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: AppConstant.borderColor,
+                      width: 2.0,
+                    ), // border when focused
+                  ),
                 ),
               ),
               SizedBox(height: 20),
@@ -128,19 +143,28 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 height: 50,
                 child: InkWell(
                   onTap: () {
-                    if(_formKey.currentState!.validate()) {
+                    if (_formKey.currentState!.validate()) {
                       requestOtp();
                     }
                   },
-                  child:  Container(
+                  child: Container(
                     height: 50,
                     width: 330,
                     decoration: BoxDecoration(
-                        color: AppConstant.appSecondaryColor,
-                        borderRadius: BorderRadius.circular(10),
+                      color: AppConstant.darkButton,
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Center(child: Text('Forgot',style: TextStyle(color: Colors.white,fontSize: 15,fontFamily: 'sens-serif'),)),
-                  )
+                    child: Center(
+                      child: Text(
+                        'Forget',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontFamily: AppConstant.appTextFamily,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
               Spacer(),
@@ -152,18 +176,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     GestureDetector(
                       onTap: () {
                         // Navigate to login screen
-                        Navigator.push(context, MaterialPageRoute(builder: (context){
-                        return Login();
-                        }));
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) {
+                              return Login();
+                            },
+                          ),
+                        );
                       },
                       child: Text(
                         "Log in",
                         style: TextStyle(
-                          color: Colors.orange,
+                          color: AppConstant.darkButton,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),

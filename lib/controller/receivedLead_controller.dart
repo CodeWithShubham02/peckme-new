@@ -22,21 +22,30 @@ class ReceivedLeadController {
     final response = await http.get(Uri.parse(apiUrl));
 
     if (response.statusCode == 200) {
-      print("---------------Encrypt data--------------");
+      print("---------------Encrypted data--------------");
       print(response.body);
+
       final decoded = jsonDecode(response.body);
+
       if (decoded['success'] == 1) {
         List<dynamic> leads = decoded['data'];
+
         for (var lead in leads) {
+          // Decrypt fields
           lead['customer_name'] = decryptFMS(lead['customer_name'], HASH_KEY);
           lead['mobile'] = decryptFMS(lead['mobile'], HASH_KEY);
-          if (lead['res_address'] != '') {
-            lead['res_address'] = decryptFMS(lead['res_address'], HASH_KEY);
+
+          var resAddress = lead['res_address'];
+          if (resAddress != null && resAddress.toString().trim().isNotEmpty) {
+            // Handle multi-part encrypted address
+            lead['res_address'] = decryptFMS(resAddress, HASH_KEY);
           }
         }
-        print("---------------decrypt data--------------");
+
+        print("---------------Decrypted data--------------");
         print(decoded['clientname']);
         print(leads.toString());
+
         return leads.map((lead) => Lead.fromJson(lead)).toList();
       } else {
         throw Exception("No data found.");
