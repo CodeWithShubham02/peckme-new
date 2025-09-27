@@ -38,7 +38,9 @@ class LeadDetailScreen extends StatefulWidget {
 class _LeadDetailScreenState extends State<LeadDetailScreen> {
   late List<String> collectedDoc;
   Future<LeadResponse?>? _futureLead;
+
   final platform = const MethodChannel("com.example.peckme/channel1");
+
   String user_id = '';
   String branchId = '';
   String authId = '';
@@ -151,8 +153,6 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
     required String agentName,
   }) async {
     try {
-      //it should be same on the flutter side and native side method name
-      // String message=await platform.invokeMethod("callNativeMethod");
       final result = await platform.invokeMethod<String>('callNativeMethod', {
         "client_id": clientId, // You can change this dynamically
         "lead_id": leadId, // You can change this dynamically
@@ -819,7 +819,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                                     } else {
                                       Get.snackbar(
                                         "Message",
-                                        "Your auth_id or sessionId is not create!",
+                                        "Your auth_id expire please contact to head office!",
                                         icon: Image.asset(
                                           "assets/logo/cmp_logo.png",
                                           height: 30,
@@ -920,7 +920,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                                     } else {
                                       Get.snackbar(
                                         "Message",
-                                        "Your auth_id or sessionId is not create!",
+                                        "Your auth_id expire please contact head office!",
                                         icon: Image.asset(
                                           "assets/logo/cmp_logo.png",
                                           height: 30,
@@ -1019,7 +1019,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                                     } else {
                                       Get.snackbar(
                                         "Message",
-                                        "Your auth_id or sessionId is not create!",
+                                        "Your auth_id expire please contact head office!",
                                         icon: Image.asset(
                                           "assets/logo/cmp_logo.png",
                                           height: 30,

@@ -183,11 +183,13 @@ class _LoginState extends State<Login> {
         "OTP": result.message.toString(),
         "dateTime": DateTime.now(),
       });
+      print('otp : ${result.message.toString()}');
       setState(() {
         if (result.success == 1) {
           Get.snackbar(
             "Send OTP!",
-            "please enter the 4 digit otp!!!",
+            "please enter the 4 digit !!!", //otp ${result.message.toString()}
+
             icon: Image.asset(
               "assets/logo/cmp_logo.png",
               height: 30,
@@ -458,6 +460,13 @@ class _LoginState extends State<Login> {
                             ),
                           ],
                         ),
+                        Text(
+                          "Version - ${AppConstant.appVersion}",
+                          style: TextStyle(
+                            fontSize: 7,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -493,7 +502,7 @@ class _LoginState extends State<Login> {
                       'Send To :  +91-${userId.toString()}',
                       style: TextStyle(color: AppConstant.appTextColor),
                     ),
-                    Text('OTP : - ${newOtp}'),
+                    //Text('OTP : - ${newOtp}'),
                     // Text('Token: ${userDiviceToken.toString()}')
                   ],
                 ),

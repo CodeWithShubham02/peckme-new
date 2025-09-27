@@ -52,7 +52,7 @@ class _LeadStatusScreenState extends State<LeadStatusScreen> {
           } else if (snapshot.hasError) {
             return Center(child: Text("Error: ${snapshot.error}"));
           } else if (!snapshot.hasData || snapshot.data!.data.isEmpty) {
-            return const Center(child: Text("No leads found for today"));
+            return const Center(child: Text("No leads completed today"));
           }
           final result = snapshot.data!;
 

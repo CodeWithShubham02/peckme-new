@@ -26,7 +26,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         if (result.success == 1) {
           Get.snackbar(
             "Success!",
-            "OTP sent successfully (Test OTP: ${result.otp ?? ''})",
+            "OTP sent successfully (Send OTP: ${mobile})",
             icon: Image.asset(
               "assets/logo/cmp_logo.png",
               height: 30,

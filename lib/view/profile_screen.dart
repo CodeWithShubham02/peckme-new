@@ -46,7 +46,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     // "fieldexecutive" ko "field executive" me convert
     text = text.replaceAll("fieldexecutive", "field executive");
-
+    text = text.replaceAll("childexecutive", "child executive");
     // Har word ka pehla letter capital
     return text
         .split(' ')

@@ -19,7 +19,9 @@ import 'package:peckme/view/transfer_lead_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../controller/dashboard_counts_controller.dart';
 import '../controller/lead_status_services.dart';
+import '../model/dashboard_response_model.dart';
 import '../services/get_server_key.dart';
 import '../utils/app_constant.dart';
 import 'auth/login.dart';
@@ -70,16 +72,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
       authId = prefs.getString('authId') ?? '';
       image = prefs.getString('image') ?? '';
       address = prefs.getString('address') ?? '';
+      _dashboardFuture = DashboardService().fetchDashboardCounts(uid: uid);
     });
   }
 
   DateTime _currentTime = DateTime.now();
 
-  // A Timer variable to control the periodic updates.
+  // A Timer variable to control the  periodic updates.
   late Timer _timer;
 
   //user permission allow
   NotificationService notificationService = NotificationService();
+  late Future<DashboardResponse> _dashboardFuture;
 
   @override
   void initState() {
@@ -301,7 +305,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       ElevatedButton(
                         onPressed: () {
-                          if (_passwordController.text.trim() == "1111") {
+                          if (_passwordController.text.trim() == "7506") {
                             passwordCorrect = true;
                             Navigator.of(context).pop();
                           } else {
@@ -339,7 +343,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Container(
-                      height: 100,
+                      height: 125,
                       width: 150,
                       decoration: BoxDecoration(
                         color: AppConstant.whiteBackColor,
@@ -400,7 +404,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     Container(
-                      height: 100,
+                      height: 125,
                       width: 150,
                       decoration: BoxDecoration(
                         color: AppConstant.whiteBackColor,
@@ -467,7 +471,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Container(
-                      height: 100,
+                      height: 125,
                       width: 150,
                       decoration: BoxDecoration(
                         color: AppConstant.whiteBackColor,
@@ -530,7 +534,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     Container(
-                      height: 100,
+                      height: 125,
                       width: 150,
                       decoration: BoxDecoration(
                         color: AppConstant.whiteBackColor,
@@ -599,7 +603,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Container(
-                      height: 100,
+                      height: 125,
                       width: 150,
                       decoration: BoxDecoration(
                         color: AppConstant.whiteBackColor,
@@ -673,7 +677,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     Container(
-                      height: 100,
+                      height: 125,
                       width: 150,
                       decoration: BoxDecoration(
                         color: AppConstant.whiteBackColor,
@@ -737,168 +741,309 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 10),
+                SizedBox(height: 25),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: Container(
-                    height: 100,
-                    width: 325,
-                    decoration: BoxDecoration(
-                      color: AppConstant.whiteBackColor,
-                      borderRadius: BorderRadius.circular(5),
-                      border: Border.all(
-                        color: AppConstant.borderColor,
-                        width: 2,
+                  child: Center(
+                    child: Text(
+                      "Dashboard",
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
                       ),
+                      textAlign: TextAlign.left,
                     ),
-                    child: Stack(
-                      children: [
-                        // Inner shadow overlay
-                        Positioned.fill(
-                          child: InkWell(
-                            onTap: () async {
-                              GetServerKey getServerKey = GetServerKey();
-                              String? serverKey = await getServerKey
-                                  .getServerKeyToken();
-                              print("----------------------");
-                              print(serverKey);
-                              print("------------------------");
-                              Get.to(() => ProfileScreen());
-                            },
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5),
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Colors.orange.withOpacity(0.16),
-                                    // inner shadow feel
-                                    Colors.transparent,
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Actual content
-                        Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.person_3_sharp,
-                                size: 30,
-                                color: AppConstant.iconColor,
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                "Profile",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                  color: AppConstant.darkHeadingColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(height: 10),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: Text(
-                    "Dashboard",
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                    textAlign: TextAlign.left,
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10.0),
                   child: Divider(),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: Row(
-                    children: [
-                      Text(
-                        "Total Pending Lead's :",
-                        style: TextStyle(
-                          color: AppConstant.darkButton,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
+                FutureBuilder<DashboardResponse>(
+                  future: _dashboardFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text("Error: ${snapshot.error}"));
+                    } else if (snapshot.hasData &&
+                        snapshot.data!.success == 1 &&
+                        snapshot.data!.data != null) {
+                      final data = snapshot.data!.data!;
+                      return Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Table(
+                          border: TableBorder.all(
+                            color: AppConstant.borderColor,
+                            width: 2,
+                          ),
+                          // optional border
+                          columnWidths: const {
+                            0: FlexColumnWidth(2), // first column (label)
+                            1: FlexColumnWidth(1), // second column (value)
+                          },
+                          children: [
+                            TableRow(
+                              children: [
+                                TableCell(
+                                  child: Stack(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          "Pending Leads",
+                                          style: TextStyle(
+                                            color: AppConstant.darkButton,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ),
+                                      // Inner shadow overlay
+                                      Positioned.fill(
+                                        child: IgnorePointer(
+                                          child: DecoratedBox(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [
+                                                  Colors.orange.withOpacity(
+                                                    0.2,
+                                                  ),
+                                                  Colors.transparent,
+                                                  Colors.orange.withOpacity(
+                                                    0.2,
+                                                  ),
+                                                ],
+                                                stops: [0.0, 0.5, 1.0],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                TableCell(
+                                  child: Stack(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Center(
+                                          child: Text(
+                                            "${data.totalPending}",
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned.fill(
+                                        child: IgnorePointer(
+                                          child: DecoratedBox(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [
+                                                  Colors.orange.withOpacity(
+                                                    0.2,
+                                                  ),
+                                                  Colors.transparent,
+                                                  Colors.orange.withOpacity(
+                                                    0.2,
+                                                  ),
+                                                ],
+                                                stops: [0.0, 0.5, 1.0],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            TableRow(
+                              children: [
+                                TableCell(
+                                  child: Stack(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          "EOD Transfer Leads",
+                                          style: TextStyle(
+                                            color: AppConstant.darkButton,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned.fill(
+                                        child: IgnorePointer(
+                                          child: DecoratedBox(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [
+                                                  Colors.orange.withOpacity(
+                                                    0.2,
+                                                  ),
+                                                  Colors.transparent,
+                                                  Colors.orange.withOpacity(
+                                                    0.2,
+                                                  ),
+                                                ],
+                                                stops: [0.0, 0.5, 1.0],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                TableCell(
+                                  child: Stack(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Center(
+                                          child: Text(
+                                            "${data.totalMTD}",
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned.fill(
+                                        child: IgnorePointer(
+                                          child: DecoratedBox(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [
+                                                  Colors.orange.withOpacity(
+                                                    0.2,
+                                                  ),
+                                                  Colors.transparent,
+                                                  Colors.orange.withOpacity(
+                                                    0.2,
+                                                  ),
+                                                ],
+                                                stops: [0.0, 0.5, 1.0],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            TableRow(
+                              children: [
+                                TableCell(
+                                  child: Stack(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          "EOD Completed Leads",
+                                          style: TextStyle(
+                                            color: AppConstant.darkButton,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned.fill(
+                                        child: IgnorePointer(
+                                          child: DecoratedBox(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [
+                                                  Colors.orange.withOpacity(
+                                                    0.2,
+                                                  ),
+                                                  Colors.transparent,
+                                                  Colors.orange.withOpacity(
+                                                    0.2,
+                                                  ),
+                                                ],
+                                                stops: [0.0, 0.5, 1.0],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                TableCell(
+                                  child: Stack(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Center(
+                                          child: Text(
+                                            "${data.totalCompleted}",
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned.fill(
+                                        child: IgnorePointer(
+                                          child: DecoratedBox(
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [
+                                                  Colors.orange.withOpacity(
+                                                    0.2,
+                                                  ),
+                                                  Colors.transparent,
+                                                  Colors.orange.withOpacity(
+                                                    0.2,
+                                                  ),
+                                                ],
+                                                stops: [0.0, 0.5, 1.0],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                        textAlign: TextAlign.left,
-                      ),
-                      Text(
-                        " 10",
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                        textAlign: TextAlign.left,
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: Row(
-                    children: [
-                      Text(
-                        "Total Transfer Lead's :",
-                        style: TextStyle(
-                          color: AppConstant.darkButton,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                        textAlign: TextAlign.left,
-                      ),
-                      Text(
-                        " 10",
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                        textAlign: TextAlign.left,
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: Row(
-                    children: [
-                      Text(
-                        "Total Completed Lead's :",
-                        style: TextStyle(
-                          color: AppConstant.darkButton,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                        textAlign: TextAlign.left,
-                      ),
-                      Text(
-                        " 10",
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                        textAlign: TextAlign.left,
-                      ),
-                    ],
-                  ),
+                      );
+                    } else {
+                      return const Center(child: Text("No data found"));
+                    }
+                  },
                 ),
               ],
             ),
@@ -948,7 +1093,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 Text(
-                  '1.0.01',
+                  AppConstant.appVersion,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.normal,
