@@ -1,158 +1,78 @@
-📌 Bizipac API Documentation
+=======API URL===========
+BASE_URL="https://fms.bizipac.com/apinew/ws_new/";
 
-Base URL:
+#THIS IS USER AUTH URL
+POST METHOD
+'https://fms.bizipac.com/ws/userverification.php?mobile=6393539704&password=12345678'
+RETURN OTP=1234
 
-https://fms.bizipac.com/apinew/ws_new/
+AFTER OTP ENTER THE THEN LOGIN USER AND FULL AUTHORISE
+'https://fms.bizipac.com/ws/userauth.php?mobile=6393539704&password=123455674&userToken=DFDFGDFGD&teamho=1234&imeiNumber=GFRR34DF?'
 
-🔑 Authentication
-1. User Verification (Step 1: OTP request)
+IF YOU ARE SHOW THE ALL LEAD'S TO HIT THIS API
+'https://fms.bizipac.com/apinew/ws_new/new_lead.php?uid=$uid&start=$start&end=$end&branch_id=$branchId&app_version=$app_version&app_type=$appType'
 
-Method: POST
-URL:
+IF YOU ARE SHOW THE LEAD DETAILS BY LEAD TO HIT THIS API
+"https://fms.bizipac.com/apinew/ws_new/new_lead_detail.php?lead_id=$leadId"
 
-https://fms.bizipac.com/ws/userverification.php?mobile={mobile}&password={password}
+FETCH THE CHILD EXECUTIVE TO HIT THIS API
+https://fms.bizipac.com/apinew/ws_new/childlist.php?parentid=$parentId //PARENTID IT MEANS USER ID
 
+IF YOU ARE REFIX LEAD'S TO HIT THIS URL
+"https://fms.bizipac.com/apinew/ws_new/refixlead.php?loginid=$loginId&leadid=$leadId&newdate=$newDate&location=$location&reason=$reason&newtime=$newTime&remark=$remark"
 
-Response: Returns OTP (e.g., 1234)
+IF YOU ARE POSTPONED LEAD'S TO HIT THIS API
+final uri = Uri.parse("https://fms.bizipac.com/apinew/ws_new/postponedlead.php");
+final response = await http.post(
+uri,
+body: {
+"loginid": loginId,
+"leadid": leadId,
+"remark": remark,
+"location": location,
+"reason": reason,
+"newdate": newDate,
+"newtime": newTime,
+},
+);
 
-2. User Authentication (Step 2: Full login)
+IF YOU ARE SINGLE LEAD'S TRANSER TO HIT THIS API
+'https://fms.bizipac.com/apinew/ws_new/todaystransfered.php?uid=$uid'
 
-Method: POST
-URL:
+IF YOU ARE MULTIPLE LEAD'S TRANSFER TO HIT THIS API
+"https://fms.bizipac.com/apinew/ws_new/multipleLeadTransfer.php?leaddata=$payload""
 
-https://fms.bizipac.com/ws/userauth.php?mobile={mobile}&password={password}&userToken={token}&teamho={otp}&imeiNumber={imei}
+IF ARE CHECK THE COMPLETED LEAD COUNT TO THE USER
+'https://fms.bizipac.com/apinew/ws_new/today_completed_lead.php?uid=$uid&branch_id=$branchId'
 
+THIS API USED TO FORGOT PASSWORD AND USER ENTER THE MOBILE NO EXIST OUR DATABASE MATCHING AND SEND
+THE USER MOBILE NUMBER ON OTP
+'https://fms.bizipac.com/apinew/ws_new/forgotPassword.php'
 
-Response: Returns user authorization and login success.
+AFTER OTP PUT AND NEW PASSWORD ENTER THEN SUCCESSFULLY MESSAGE
+'https://fms.bizipac.com/apinew/ws_new/userForgotPassword.php?'
 
-📋 Lead Management
-3. Get All Leads
+ALL THE DOCUMENT HERE THIS API
+"https://fms.bizipac.com/apinew/display/document.php"
 
-Method: GET
-URL:
+IF YOU ARE CALLING FUCTION THEN THIS API GET A LEADID AND CALL
+""https://fms.bizipac.com/apinew/ws_new/exotel_getnumber.php?lead_id=$leadId""
 
-https://fms.bizipac.com/apinew/ws_new/new_lead.php?uid={uid}&start={start}&end={end}&branch_id={branchId}&app_version={appVersion}&app_type={appType}
+THIS API STORE THE DOCUMENT IN MYSQL DATABASE
+""https://fms.bizipac.com/apinew/ws_new/add_doc_simple.php""
 
-4. Get Lead Details
+IF YOU ARE FETCH THE TIME_SLOT TO HIT THIS API
+"https://fms.bizipac.com/apinew/ws_new/time_slot.php"
 
-Method: GET
-URL:
+IF YOU ARE FETCH THE REASON SO CALL THIS API
+"https://fms.bizipac.com/apinew/ws_new/reason.php?leadid=$leadId"
 
-https://fms.bizipac.com/apinew/ws_new/new_lead_detail.php?lead_id={leadId}
 
-5. Get Child Executives
 
-Method: GET
-URL:
 
-https://fms.bizipac.com/apinew/ws_new/childlist.php?parentid={parentId}
 
 
-👉 parentId means User ID of parent executive.
 
-6. Refix Lead
 
-Method: GET
-URL:
 
-https://fms.bizipac.com/apinew/ws_new/refixlead.php?loginid={loginId}&leadid={leadId}&newdate={newDate}&location={location}&reason={reason}&newtime={newTime}&remark={remark}
 
-7. Postpone Lead
-
-Method: POST
-URL:
-
-https://fms.bizipac.com/apinew/ws_new/postponedlead.php
-
-
-Body Params:
-
-{
-  "loginid": "{loginId}",
-  "leadid": "{leadId}",
-  "remark": "{remark}",
-  "location": "{location}",
-  "reason": "{reason}",
-  "newdate": "{newDate}",
-  "newtime": "{newTime}"
-}
-
-8. Get Transferred Leads (Single)
-
-Method: GET
-URL:
-
-https://fms.bizipac.com/apinew/ws_new/todaystransfered.php?uid={uid}
-
-9. Transfer Multiple Leads
-
-Method: GET
-URL:
-
-https://fms.bizipac.com/apinew/ws_new/multipleLeadTransfer.php?leaddata={payload}
-
-10. Completed Lead Count
-
-Method: GET
-URL:
-
-https://fms.bizipac.com/apinew/ws_new/today_completed_lead.php?uid={uid}&branch_id={branchId}
-
-🔐 Forgot Password
-11. Request Forgot Password OTP
-
-Method: GET
-URL:
-
-https://fms.bizipac.com/apinew/ws_new/forgotPassword.php?mobile={mobile}
-
-
-👉 Checks if mobile exists, sends OTP.
-
-12. Reset Password with OTP
-
-Method: POST
-URL:
-
-https://fms.bizipac.com/apinew/ws_new/userForgotPassword.php
-
-
-👉 Requires OTP + new password.
-
-📂 Documents
-13. Get All Documents
-
-Method: GET
-URL:
-
-https://fms.bizipac.com/apinew/display/document.php
-
-14. Upload Document
-
-Method: POST
-URL:
-
-https://fms.bizipac.com/apinew/ws_new/add_doc_simple.php
-
-📞 Calls
-15. Get Exotel Call Number
-
-Method: GET
-URL:
-
-https://fms.bizipac.com/apinew/ws_new/exotel_getnumber.php?lead_id={leadId}
-
-⏰ Time & Reason
-16. Get Time Slots
-
-Method: GET
-URL:
-
-https://fms.bizipac.com/apinew/ws_new/time_slot.php
-
-17. Get Reasons
-
-Method: GET
-URL:
-
-https://fms.bizipac.com/apinew/ws_new/reason.php?leadid={leadId}

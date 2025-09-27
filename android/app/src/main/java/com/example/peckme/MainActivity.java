@@ -1,6 +1,10 @@
 package com.example.peckme;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -8,9 +12,6 @@ import java.util.Locale;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.MethodChannel;
-import android.content.pm.PackageManager;
-import android.os.Bundle;
-import android.content.ActivityNotFoundException;
 
 public class MainActivity extends FlutterActivity {
 
@@ -41,10 +42,10 @@ public class MainActivity extends FlutterActivity {
                         String client_lead_id = call.argument("client_lead_id");
 
                         System.out.println("------------------------");
-                        System.out.println("AuthID  :"+auth_id);
-                        System.out.println("BanId  :"+banID);
-                        System.out.println("session  :"+sessionId);
-                        System.out.println("athena  :"+athena_lead_id);
+                        System.out.println("AuthID  :" + auth_id);
+                        System.out.println("BanId  :" + banID);
+                        System.out.println("session  :" + sessionId);
+                        System.out.println("athena  :" + athena_lead_id);
                         System.out.println("-----------------------");
 
                         try {
@@ -85,7 +86,7 @@ public class MainActivity extends FlutterActivity {
 
                                         Class<?> iciciClass = Class.forName("com.bcpl.icici.IciciActivity"); // ⚠️ confirm correct name
                                         Intent intent = new Intent(getApplicationContext(), iciciClass);
-                                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
 
                                         intent.putExtra("appId", athena_lead_id);
                                         intent.putExtra("firstCallDate", currentDate);
@@ -138,9 +139,9 @@ public class MainActivity extends FlutterActivity {
         try {
 
             System.out.println("------------------------");
-            System.out.println("BanId  :"+agentName);
-            System.out.println("session  :"+sessionValue);
-            System.out.println("athena  :"+athena_lead_id);
+            System.out.println("BanId  :" + agentName);
+            System.out.println("session  :" + sessionValue);
+            System.out.println("athena  :" + athena_lead_id);
             System.out.println("-----------------------");
 
             PackageManager pm = getPackageManager();
