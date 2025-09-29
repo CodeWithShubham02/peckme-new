@@ -59,6 +59,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await intent.launch();
   }
 
+  Future<DashboardResponse>? _dashboardFuture;
+  final _service = DashboardService();
+
   void loadUserData() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -72,7 +75,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
       authId = prefs.getString('authId') ?? '';
       image = prefs.getString('image') ?? '';
       address = prefs.getString('address') ?? '';
-      _dashboardFuture = DashboardService().fetchDashboardCounts(uid: uid);
+      // Pehle local data check karo
+      final localData = _service.getStoredDashboard();
+      if (localData != null) {
+        // Agar local data hai to usko future bana ke assign karo
+        _dashboardFuture = Future.value(localData);
+
+        // Saath hi API call background me karo
+        _service.fetchDashboardCounts(uid: uid).then((freshData) {
+          setState(() {
+            _dashboardFuture = Future.value(freshData);
+          });
+        });
+      } else {
+        // Agar local data nahi hai to direct API call karo
+        _dashboardFuture = DashboardService().fetchDashboardCounts(uid: uid);
+      }
     });
   }
 
@@ -83,7 +101,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   //user permission allow
   NotificationService notificationService = NotificationService();
-  late Future<DashboardResponse> _dashboardFuture;
 
   @override
   void initState() {
@@ -877,7 +894,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       Container(
                                         padding: const EdgeInsets.all(8.0),
                                         child: Text(
-                                          "EOD Transfer Leads",
+                                          "MTD Completed Leads",
                                           style: TextStyle(
                                             color: AppConstant.darkButton,
                                             fontWeight: FontWeight.bold,

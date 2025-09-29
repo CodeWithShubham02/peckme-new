@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_navigation/src/snackbar/snackbar.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -5221,7 +5224,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageIDProofofPersonMet(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -5435,7 +5438,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImagePancard(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -5659,7 +5662,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageAnnexure(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -5872,7 +5875,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageOthers(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -6087,7 +6090,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImage1monthBankStatement(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -6301,7 +6304,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageCancelledCheque(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -6515,7 +6518,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageCompanyID(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -6730,7 +6733,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageCompletelyFilledJob(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -6944,7 +6947,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageDueDiligenceForm(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -7157,7 +7160,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageForm26AS(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -7369,7 +7372,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageForm60(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -7581,7 +7584,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageGazetteCertificate(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -7793,7 +7796,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageGSTAnnexA(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -8004,7 +8007,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageGSTAnnexB(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -8216,7 +8219,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageLoanAgreement(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -8428,7 +8431,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageMarriageCertificate(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -8639,7 +8642,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageNachOnly(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -8850,7 +8853,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageOVDDeclaration(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -9061,7 +9064,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImagePODImage(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -9272,7 +9275,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageCheques(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -9484,7 +9487,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageAuthSignForm(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -9697,7 +9700,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageShopEstablishmentCertificate(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -9922,7 +9925,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageAadhaarBack(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -10136,7 +10139,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageAadhaarFront(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -10350,7 +10353,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageAllotmentLetter(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -10565,7 +10568,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageDrivingLicense(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -10779,7 +10782,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageElectricityBill(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -10993,7 +10996,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageGasBill(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -11207,7 +11210,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageLandLineBill(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -11421,7 +11424,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageMaintainanceReceipt(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -11635,7 +11638,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageMobileBill(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -11850,7 +11853,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageMunicipalityWaterBill(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -12063,7 +12066,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImagePassport(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -12277,7 +12280,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImagePostOfficeSB(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -12492,7 +12495,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageRegisteredRent(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -12706,7 +12709,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageRegisteredSales(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -12920,7 +12923,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageRentAgreement(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -13134,7 +13137,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageVoterCard(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -13359,7 +13362,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageCreditCardCopy(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -13574,7 +13577,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageITRComputation(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -13764,7 +13767,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageLatestCreditCard(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -13979,7 +13982,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageLatestSalarySlip(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -14193,7 +14196,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageSalarySlip(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -14419,7 +14422,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImage3MonthsBankStatement(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -14633,7 +14636,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageBankPassbook(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -14859,7 +14862,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageDrivingLicenseAddProof(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -15073,7 +15076,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImageNREGACard(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -15286,7 +15289,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                                             onTap: () async {
                                                                               await pickImagePassportAddProof(
                                                                                 ImageSource.camera,
-                                                                                doc.docName,
+                                                                                doc.docId,
                                                                               );
                                                                             },
                                                                             child: const Text(
@@ -15781,6 +15784,30 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                       });
 
                       // 3️⃣ Close BottomSheet
+                      Get.snackbar(
+                        "Document uploaded successfully.",
+                        "Now, you can complete the lead.",
+                        icon: Image.asset(
+                          "assets/logo/cmp_logo.png",
+                          height: 30,
+                          width: 30,
+                        ),
+                        shouldIconPulse: true,
+                        // Small animation on the icon
+                        backgroundColor: AppConstant.snackBackColor,
+                        colorText: AppConstant.snackFontColor,
+                        snackPosition: SnackPosition.TOP,
+                        // or TOP
+                        borderRadius: 5,
+                        margin: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        duration: const Duration(seconds: 3),
+                        isDismissible: true,
+                        forwardAnimationCurve: Curves.easeOutBack,
+                      );
                       Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(

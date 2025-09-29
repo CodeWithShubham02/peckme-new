@@ -1,13 +1,18 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:peckme/utils/app_constant.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+
+import '../received_lead_screen.dart';
 
 class WebViewScreen extends StatefulWidget {
   final String url;
   final String customerName;
   final String leadid;
   final String client;
-  final int fidatal;
 
   WebViewScreen({
     Key? key,
@@ -15,7 +20,6 @@ class WebViewScreen extends StatefulWidget {
     required this.leadid,
     required this.client,
     required this.url,
-    required this.fidatal,
   }) : super(key: key);
 
   @override
@@ -24,125 +28,148 @@ class WebViewScreen extends StatefulWidget {
 
 class _WebViewScreenState extends State<WebViewScreen> {
   late final WebViewController _controller;
+  bool _isLoading = false; // overlay loader flag
 
   @override
   void initState() {
     super.initState();
-
-    // Initialize controller
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (url) {
+            print("✅ Page finished: $url");
+          },
+        ),
+      )
       ..loadRequest(Uri.parse(widget.url));
+  }
+
+  Future<void> _checkFiStatus() async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+
+    final String apiUrl =
+        "https://fms.bizipac.com/ws/new_lead_detail.php?lead_id=4866927";
+
+    try {
+      final response = await http.get(Uri.parse(apiUrl));
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+
+        // ✅ Fix: extract from first element of "data"
+        final firstItem = decoded["data"][0];
+        int fiData = firstItem["fiData"] ?? 0;
+
+        print("----------------");
+        print("FIDATA : $fiData");
+        print("----------------");
+
+        if (fiData == 1) {
+          Get.offAll(() => ReceivedLeadScreen());
+          Get.rawSnackbar(
+            message: "Upload the documents.!",
+            backgroundColor: AppConstant.appBarColor,
+            duration: const Duration(seconds: 3),
+          );
+        } else {
+          Get.rawSnackbar(
+            message: "Kindly complete FI Properly. Follow the instruction.!",
+            backgroundColor: AppConstant.appBarColor,
+            duration: const Duration(seconds: 3),
+          );
+        }
+      } else {
+        Get.rawSnackbar(
+          message: "Error Server error: ${response.statusCode}.!",
+          backgroundColor: AppConstant.appBarColor,
+          duration: const Duration(seconds: 3),
+        );
+      }
+    } catch (e) {
+      Get.snackbar("Error", "API error: $e");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(60), // Set custom height here
-
-        child: AppBar(
-          backgroundColor: AppConstant.appBarColor,
-          iconTheme: IconThemeData(color: Colors.white),
-          title: Container(
-            height: 100,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                // optional: aligns text left
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text(
-                        "CustomerName : ",
-                        style: TextStyle(fontSize: 13, color: Colors.white),
-                      ),
-                      Expanded(
-                        child: Text(
-                          "${widget.customerName}",
-                          style: TextStyle(fontSize: 13, color: Colors.white),
-                          overflow: TextOverflow.fade,
-                          maxLines: 1,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text(
-                        "LeadId : ",
-                        style: TextStyle(fontSize: 13, color: Colors.white),
-                      ),
-                      Text(
-                        "${widget.leadid}",
-                        style: TextStyle(fontSize: 13, color: Colors.white),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text(
-                        "ClientName : ",
-                        style: TextStyle(fontSize: 13, color: Colors.white),
-                      ),
-                      Text(
-                        "${widget.client}",
-                        style: TextStyle(fontSize: 13, color: Colors.white),
-                      ),
-                    ],
-                  ),
-                ],
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(60),
+            child: AppBar(
+              backgroundColor: AppConstant.appBarColor,
+              iconTheme: const IconThemeData(color: Colors.white),
+              title: Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildInfoRow("CustomerName : ", widget.customerName),
+                    _buildInfoRow("LeadId : ", widget.leadid),
+                    _buildInfoRow("ClientName : ", widget.client),
+                  ],
+                ),
               ),
             ),
           ),
+          body: SafeArea(child: WebViewWidget(controller: _controller)),
+
+          // Document Upload Button
+          floatingActionButton: InkWell(
+            onTap: _isLoading ? null : _checkFiStatus,
+            // disable tap while loading
+            child: Container(
+              height: 40,
+              width: 200,
+              decoration: BoxDecoration(
+                color: _isLoading ? Colors.grey[300] : Colors.green[100],
+                // dim color when loading
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: Center(
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.green,
+                        ),
+                      )
+                    : const Text(
+                        "Document Upload",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+              ),
+            ),
+          ),
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.centerFloat,
+          resizeToAvoidBottomInset: false, // 👈 Stops FAB from floating up
         ),
-      ),
-      body: SafeArea(child: WebViewWidget(controller: _controller)),
-      // floatingActionButton:Row(
-      //   crossAxisAlignment: CrossAxisAlignment.center,
-      //   mainAxisAlignment: MainAxisAlignment.center,
-      //   children: [
-      //     InkWell(
-      //       onTap: (){
-      //         if(widget.fidatal==1){
-      //           Text("Document upload");
-      //         }else{
-      //           Get.snackbar(
-      //             "Remember this!",
-      //             "Kindly complete FI Properly. Follow the instruction.!",
-      //             icon:  Image.asset(
-      //               "assets/logo/cmp_logo.png",
-      //               height: 30,
-      //               width: 30,
-      //             ),
-      //             shouldIconPulse: true,     // Small animation on the icon
-      //             backgroundColor:AppConstant.appSnackBarBackground,
-      //             colorText: AppConstant.appTextColor,
-      //             snackPosition: SnackPosition.BOTTOM, // or TOP
-      //             borderRadius: 15,
-      //             margin: const EdgeInsets.all(12),
-      //             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      //             duration: const Duration(seconds: 3),
-      //             isDismissible: true,
-      //             forwardAnimationCurve: Curves.easeOutBack,
-      //           );
-      //         }
-      //       },
-      //       child: Container(
-      //           height: 40,
-      //           width: 200,
-      //           decoration: BoxDecoration(
-      //             color: Colors.green[100],
-      //             borderRadius: BorderRadius.circular(5),
-      //           ),
-      //           child: Center(child: Text("Document Upload"))),
-      //     )
-      //   ],
-      // )
+      ],
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 12, color: Colors.white)),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontSize: 12, color: Colors.white),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        ),
+      ],
     );
   }
 }

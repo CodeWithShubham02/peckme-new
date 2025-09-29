@@ -220,6 +220,17 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
     _futureLead = LeadDetailsController.fetchLeadById(widget.lead.leadId);
     _getLocation();
     loadUserData();
+
+    platform.setMethodCallHandler((call) async {
+      if (call.method == "onSdkExit") {
+        String response = call.arguments ?? "No Response";
+        print("✅ SDK se wapas aaya: $response");
+
+        if (mounted) {
+          Get.offAll(() => DashboardScreen());
+        }
+      }
+    });
   }
 
   @override
@@ -1129,7 +1140,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                                           customerName: lead.customerName,
                                           client: lead.clientName,
                                           leadid: lead.leadId,
-                                          fidatal: lead.fiData,
+                                          //fidatal: lead.fiData,
                                         ),
                                       ),
                                     );
@@ -1175,7 +1186,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                                           customerName: lead.customerName,
                                           client: lead.clientName,
                                           leadid: lead.leadId,
-                                          fidatal: lead.fiData,
+                                          //fidatal: lead.fiData,
                                         ),
                                       ),
                                     );
@@ -1221,7 +1232,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                                           customerName: lead.customerName,
                                           client: lead.clientName,
                                           leadid: lead.leadId,
-                                          fidatal: lead.fiData,
+                                          // fidatal: lead.fiData,
                                         ),
                                       ),
                                     );
@@ -1267,7 +1278,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                                           customerName: lead.customerName,
                                           client: lead.clientName,
                                           leadid: lead.leadId,
-                                          fidatal: lead.fiData,
+                                          //fidatal: lead.fiData,
                                         ),
                                       ),
                                     );
@@ -1313,7 +1324,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                                           customerName: lead.customerName,
                                           client: lead.clientName,
                                           leadid: lead.leadId,
-                                          fidatal: lead.fiData,
+                                          //fidatal: lead.fiData,
                                         ),
                                       ),
                                     );
@@ -1359,7 +1370,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                                           customerName: lead.customerName,
                                           client: lead.clientName,
                                           leadid: lead.leadId,
-                                          fidatal: lead.fiData,
+                                          //fidatal: lead.fiData,
                                         ),
                                       ),
                                     );
@@ -1405,7 +1416,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                                           customerName: lead.customerName,
                                           client: lead.clientName,
                                           leadid: lead.leadId,
-                                          fidatal: lead.fiData,
+                                          //fidatal: lead.fiData,
                                         ),
                                       ),
                                     );
@@ -1451,7 +1462,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                                           customerName: lead.customerName,
                                           client: lead.clientName,
                                           leadid: lead.leadId,
-                                          fidatal: lead.fiData,
+                                          //fidatal: lead.fiData,
                                         ),
                                       ),
                                     );
@@ -1496,7 +1507,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                                           customerName: lead.customerName,
                                           client: lead.clientName,
                                           leadid: lead.leadId,
-                                          fidatal: lead.fiData,
+                                          //fidatal: lead.fiData,
                                         ),
                                       ),
                                     );
