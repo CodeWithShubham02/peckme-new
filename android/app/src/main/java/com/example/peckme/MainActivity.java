@@ -121,23 +121,32 @@ public class MainActivity extends FlutterActivity {
         });
     }
 
-    // ✅ Handle SDK exit result here
+    // Modified onActivityResult to send SDK exit reliably
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == 11 || requestCode == 2 || requestCode == 6) {
-            String response = (data != null && data.hasExtra("response"))
-                    ? data.getStringExtra("response")
-                    : "SDK closed";
+            String response = "SDK closed";
 
-            System.out.println("SDK Result: " + response);
+            if (data != null) {
+                if (data.hasExtra("cc_response")) {
+                    response = data.getStringExtra("cc_response");
+                } else if (data.hasExtra("response")) {
+                    response = data.getStringExtra("response");
+                }
+            } else if (resultCode == RESULT_OK) {
+                response = "Lead Completed"; // fallback
+            }
+
+            System.out.println("SDK Exit Response: " + response);
 
             if (flutterChannel != null) {
                 flutterChannel.invokeMethod("onSdkExit", response);
             }
         }
     }
+
 
     // ✅ Utility function to start ICICI external app
     private String startICICIApp(
