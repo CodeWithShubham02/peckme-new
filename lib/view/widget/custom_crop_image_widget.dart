@@ -41,7 +41,8 @@ class CustomCropWidget extends StatelessWidget {
             withCircleUi: false,
             cornerDotBuilder: (size, edgeAlignment) =>
                 const DotControl(color: Colors.white),
-            aspectRatio: 9 / 16,
+            aspectRatio: null,
+            initialSize: 0.6,
             onCropped: (Uint8List bytes) async {
               final croppedFile = await _saveCroppedData(bytes);
               onCropped(croppedFile);

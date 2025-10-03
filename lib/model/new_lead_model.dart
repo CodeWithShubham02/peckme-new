@@ -1,5 +1,3 @@
-import '../handler/EncryptionHandler.dart';
-
 class Lead {
   final String customerName;
   final String mobile;
@@ -8,6 +6,7 @@ class Lead {
   final String apptime;
   final String pincode;
   final String offAddress;
+  final String offName;
   final String offPincode;
   final String resAddress;
   final String clientname;
@@ -24,6 +23,7 @@ class Lead {
     required this.apptime,
     required this.pincode,
     required this.offAddress,
+    required this.offName,
     required this.offPincode,
     required this.resAddress,
     required this.clientname,
@@ -35,15 +35,21 @@ class Lead {
 
   factory Lead.fromJson(Map<String, dynamic> json) {
     return Lead(
-      customerName: json['customer_name'], //decryptText(json['customer_name'], key),
-      mobile:  json['mobile'],//decryptText(json['mobile'], key),
+      customerName: json['customer_name'],
+      //decryptText(json['customer_name'], key),
+      mobile: json['mobile'],
+      //decryptText(json['mobile'], key),
       location: json['location'],
       leadDate: json['lead_date'],
       apptime: json['apptime'],
       pincode: json['pincode'],
-      offAddress:json['off_address'], //decryptText(json['off_address'], key),
+      offAddress: json['off_address'],
+      //decryptText(json['off_address'], key),
+      offName: json['off_name'],
+      //decryptText(json['off_address'], key),
       offPincode: json['off_pincode'],
-      resAddress: json['res_address'],// decryptText(json['res_address'], key),
+      resAddress: json['res_address'],
+      // decryptText(json['res_address'], key),
       clientname: json['clientname'],
       leadId: json['lead_id'],
       leadType: json['lead_type'],

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:peckme/view/dashboard_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../controller/refix_lead_controller.dart';
@@ -530,6 +532,7 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
             height: 50, // 👈 fixed height
             child: ElevatedButton(
               onPressed: () async {
+                print(remark.text);
                 if (_location.isEmpty ||
                     selectedReason == null ||
                     currentDate.isEmpty) {
@@ -538,27 +541,41 @@ class _RefixLeadScreenState extends State<RefixLeadScreen> {
                   );
                   return;
                 }
-                final response = await RefixLeadService.submitRefixLead(
-                  loginId: uid.toString(),
-                  // example
-                  leadId: widget.leadId,
-                  newDate: currentDate,
-                  // must be "dd-MM-yyyy"
-                  newTime: selectedTimeslot ?? "",
-                  location: _location,
-                  reason: selectedReason!,
-                  remark: remark.toString(), // could be controller.text
-                  // You can fetch GPS if needed
-                );
-                print("----------------");
-                print(response);
-                print("----------------");
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(response.message)),
-                ); // All required fields filled
-                if (response.success == 1) {
-                  Navigator.pop(context);
+                // ✅ Show loader
+                EasyLoading.show(status: 'Please wait...');
+
+                try {
+                  final response = await RefixLeadService.submitRefixLead(
+                    loginId: uid.toString(),
+                    leadId: widget.leadId,
+                    newDate: currentDate,
+                    newTime: selectedTimeslot ?? "",
+                    location: _location,
+                    reason: selectedReason!,
+                    remark: remark.text,
+                  );
+
+                  EasyLoading.dismiss(); // ✅ Hide loader
+
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(response.message)));
+
+                  if (response.success == 1) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => DashboardScreen(),
+                      ),
+                      (Route<dynamic> route) => false,
+                    );
+                  }
+                } catch (e) {
+                  EasyLoading.dismiss(); // ✅ Hide loader on error
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Something went wrong!")),
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(

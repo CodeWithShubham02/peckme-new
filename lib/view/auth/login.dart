@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
@@ -7,6 +8,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../controller/auth_controller.dart';
@@ -43,6 +45,35 @@ class _LoginState extends State<Login> {
     return otp.toString();
   }
 
+  String _publicIp = "Fetching...";
+
+  Future<String> getPublicIP() async {
+    final response = await http.get(
+      Uri.parse('https://api.ipify.org?format=json'),
+    );
+
+    if (response.statusCode == 200) {
+      // Parse the JSON response
+      var data = json.decode(response.body);
+      return data['ip']; // Return the public IP address
+    } else {
+      throw Exception('Failed to load IP');
+    }
+  }
+
+  Future<void> _loadIp() async {
+    try {
+      String ip = await getPublicIP();
+      setState(() {
+        _publicIp = ip;
+      });
+    } catch (e) {
+      setState(() {
+        _publicIp = "Error: $e";
+      });
+    }
+  }
+
   //genrate IMEI id
   Future<void> _getDeviceInfo() async {
     final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
@@ -52,9 +83,6 @@ class _LoginState extends State<Login> {
     if (Platform.isAndroid) {
       // Request runtime permission
       var status = await Permission.phone.request();
-      // var camera = await Permission.camera.request();
-      // var photos = await Permission.photos.request();
-      // var location = await Permission.location.request();
 
       if (status.isGranted) {
         AndroidDeviceInfo androidInfo = await deviceInfoPlugin.androidInfo;
@@ -86,6 +114,7 @@ class _LoginState extends State<Login> {
 
     _getDeviceInfo();
     _checkConnection();
+    _loadIp();
     // Listen continuously
     _connectivity.onConnectivityChanged.listen((
       List<ConnectivityResult> results,
@@ -275,7 +304,8 @@ class _LoginState extends State<Login> {
                             ),
                             SizedBox(height: 10),
 
-                            //Text(_deviceInfo.toString()),
+                            //Text("Device ID: ${_deviceInfo.toString()}"),
+                            //Text("Public IP: $_publicIp"),
                             Divider(thickness: 2, height: 40),
                             Row(
                               children: [
@@ -576,7 +606,7 @@ class _LoginState extends State<Login> {
                             userToken: token.userToken.toString(),
                             // Normally from FCM
                             teamho: otp.toString(),
-                            imeiNumber: _deviceInfo.toString(),
+                            imeiNumber: _publicIp.toString(),
                             context: context, // Get from device_info
                           );
                           print(message.toString());

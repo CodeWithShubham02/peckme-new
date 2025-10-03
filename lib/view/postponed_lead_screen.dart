@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:peckme/view/dashboard_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../controller/postponed_lead_controller.dart';
@@ -238,38 +241,65 @@ class _PostponeLeadScreenState extends State<PostponeLeadScreen> {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: SizedBox(
-            width: double.infinity, // 👈 full width
-            height: 50, // 👈 fixed height
+            width: double.infinity, // full width
+            height: 50, // fixed height
             child: ElevatedButton(
               onPressed: () async {
+                print(remark.text);
+                if (selectedReason == null ||
+                    currentDate.isEmpty ||
+                    currentTime.isEmpty ||
+                    widget.location == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Please fill all required fields"),
+                    ),
+                  );
+                  return;
+                }
+
+                // ✅ Show loader
+                EasyLoading.show(status: 'Please wait...');
+                await Future.delayed(
+                  const Duration(milliseconds: 100),
+                ); // ensures loader displays
+
                 try {
                   final result = await postponeLead(
                     loginId: uid.toString(),
                     leadId: widget.leadId.toString(),
-                    remark: remark.toString(),
+                    remark: remark.text,
+                    // use controller.text
                     location: widget.location.toString(),
                     reason: selectedReason!,
                     newDate: currentDate,
                     newTime: currentTime,
                   );
+
+                  EasyLoading.dismiss(); // ✅ hide loader
+
                   ScaffoldMessenger.of(
                     context,
                   ).showSnackBar(SnackBar(content: Text(result.message)));
-                  Navigator.pop(context);
+
+                  if (result.success == 1) {
+                    Get.offAll(() => DashboardScreen());
+                  }
                 } catch (e) {
+                  EasyLoading.dismiss(); // ✅ hide loader on error
                   print("Error: $e");
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Failed to postpone lead")),
+                    const SnackBar(content: Text("Failed to postpone lead")),
                   );
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppConstant.darkButton, // 👈 button color
-                foregroundColor: AppConstant.appTextColor, // 👈 text color
+                backgroundColor: AppConstant.darkButton,
+                foregroundColor: AppConstant.appTextColor,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12), // 👈 rounded corners
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                elevation: 4, // 👈 shadow
+                elevation: 4,
               ),
               child: const Text(
                 "Postpone Lead",

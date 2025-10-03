@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:peckme/services/complete_lead_services.dart';
 import 'package:peckme/view/child_executive_screen.dart';
@@ -223,14 +224,64 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
 
     platform.setMethodCallHandler((call) async {
       if (call.method == "onSdkExit") {
-        String response = call.arguments ?? "No Response";
-        print("✅ SDK se wapas aaya: $response");
+        String rawResponse = call.arguments ?? "{}";
+        print("✅ SDK returned: $rawResponse");
 
-        if (mounted) {
-          Get.offAll(() => DashboardScreen());
+        try {
+          final Map<String, dynamic> response = jsonDecode(rawResponse);
+
+          if ((response["currentProgress"] ?? "") == "CKYC_APPROVAL") {
+            // Save to server
+            await _saveResponseToServer(response);
+
+            // Navigate to Dashboard
+            if (mounted) {
+              Get.offAll(() => DashboardScreen());
+              Get.snackbar(
+                "Success",
+                "Lead Completed successfully ✅!",
+                icon: Image.asset(
+                  "assets/logo/cmp_logo.png",
+                  height: 30,
+                  width: 30,
+                ),
+                shouldIconPulse: true,
+                backgroundColor: AppConstant.snackBackColor,
+                colorText: AppConstant.snackFontColor,
+                snackPosition: SnackPosition.BOTTOM,
+                borderRadius: 15,
+                margin: const EdgeInsets.all(12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                duration: const Duration(seconds: 3),
+                isDismissible: true,
+                forwardAnimationCurve: Curves.easeOutBack,
+              );
+            }
+          } else {
+            if (mounted) Get.back();
+          }
+        } catch (e) {
+          print("❌ JSON parse error: $e");
+          if (mounted) Get.back();
         }
       }
     });
+  }
+
+  Future<void> _saveResponseToServer(Map<String, dynamic> data) async {
+    try {
+      final res = await http.post(
+        Uri.parse("https://fms.bizipac.com/apinew/ws_new/amzonrevert.php"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"userid": user_id.toString(), "response": data}),
+      );
+      print("📡 Server reply: ${res.body}");
+    } catch (e) {
+      print("❌ Error saving response: $e");
+    }
   }
 
   @override

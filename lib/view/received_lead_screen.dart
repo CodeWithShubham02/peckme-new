@@ -283,6 +283,7 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
             final leadsList = snapshot.data!;
             // update visible total only when changed (avoids re-build loops)
             // 🔹 sort by date (oldest first)
+
             leadsList.sort((a, b) {
               final dateA =
                   DateTime.tryParse(a.leadDate ?? '') ?? DateTime(1900);
@@ -478,46 +479,109 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
                                     child: InkWell(
                                       onTap: () async {
                                         try {
-                                          final locations =
-                                              await locationFromAddress(
-                                                lead.resAddress ?? '',
-                                              );
-                                          // String offAdd = lead.offAddress;
-                                          // offAdd = offAdd.replaceAll(' ', '');
-                                          final locations2 =
-                                              await locationFromAddress(
-                                                "Prem Mandir, Vrindavan" ?? '',
-                                              );
-                                          print("----------------------");
-                                          print("location : ${locations2}");
-                                          print(
-                                            "location : ${lead.resAddress}",
-                                          );
-                                          print("-----------------------");
-                                          if (locations.isNotEmpty &&
-                                              locations2.isNotEmpty) {
-                                            final latitude =
-                                                locations[0].latitude;
-                                            final longitude =
-                                                locations[0].longitude;
-                                            final latitude2 =
-                                                locations2[0].latitude;
-                                            final longitude2 =
-                                                locations2[0].longitude;
+                                          final resAddress =
+                                              lead.resAddress?.trim() ?? '';
+                                          final offName =
+                                              lead.offName?.trim() ?? '';
+                                          final offAddress =
+                                              lead.offAddress?.trim() ?? '';
+                                          final full_address =
+                                              [offName, offAddress]
+                                                  .where((s) => s.isNotEmpty)
+                                                  .join(', ');
 
+                                          print('Res Address: $resAddress');
+                                          print('Full Address: $full_address');
+
+                                          if (resAddress.isEmpty &&
+                                              full_address.isEmpty) {
+                                            // Both addresses missing
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  "No address available for navigation.",
+                                                ),
+                                              ),
+                                            );
+                                            return;
+                                          }
+
+                                          List<Location> locationsRes = [];
+                                          List<Location> locationsOffice = [];
+
+                                          // get coordinates only if address is non-empty
+                                          if (resAddress.isNotEmpty) {
+                                            try {
+                                              locationsRes =
+                                                  await locationFromAddress(
+                                                    resAddress,
+                                                  );
+                                            } catch (e) {
+                                              print(
+                                                'Error getting resAddress location: $e',
+                                              );
+                                            }
+                                          }
+
+                                          if (full_address.isNotEmpty) {
+                                            try {
+                                              locationsOffice =
+                                                  await locationFromAddress(
+                                                    full_address,
+                                                  );
+                                            } catch (e) {
+                                              print(
+                                                'Error getting full_address location: $e',
+                                              );
+                                            }
+                                          }
+
+                                          // Decide which coordinates to use
+                                          if (locationsRes.isNotEmpty &&
+                                              locationsOffice.isNotEmpty) {
                                             await openMap(
-                                              fromLat: latitude,
-                                              fromLng: longitude,
-                                              toLat: latitude2,
-                                              toLng: longitude2,
+                                              fromLat: locationsRes[0].latitude,
+                                              fromLng:
+                                                  locationsRes[0].longitude,
+                                              toLat:
+                                                  locationsOffice[0].latitude,
+                                              toLng:
+                                                  locationsOffice[0].longitude,
+                                            );
+                                          } else if (locationsRes.isNotEmpty) {
+                                            // Only resAddress available
+                                            await openMap(
+                                              fromLat: locationsRes[0].latitude,
+                                              fromLng:
+                                                  locationsRes[0].longitude,
+                                              toLat: locationsRes[0].latitude,
+                                              toLng: locationsRes[0].longitude,
                                             );
                                           } else {
-                                            print(
-                                              'No location found for one or both addresses.',
+                                            // Neither worked
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  "Could not find location for navigation.",
+                                                ),
+                                              ),
                                             );
                                           }
                                         } catch (e) {
-                                          print("Error: $e");
+                                          print("Unexpected error: $e");
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                "Unexpected error: $e",
+                                              ),
+                                            ),
+                                          );
                                         }
                                       },
                                       child: Icon(

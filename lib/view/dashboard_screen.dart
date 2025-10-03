@@ -761,16 +761,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 SizedBox(height: 25),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: Center(
-                    child: Text(
-                      "Dashboard",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Center(
+                        child: Text(
+                          "Dashboard",
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                          textAlign: TextAlign.left,
+                        ),
                       ),
-                      textAlign: TextAlign.left,
-                    ),
+                      IconButton(
+                        onPressed: () {
+                          final localData = _service.getStoredDashboard();
+                          if (localData != null) {
+                            // Agar local data hai to usko future bana ke assign karo
+                            _dashboardFuture = Future.value(localData);
+
+                            // Saath hi API call background me karo
+                            _service.fetchDashboardCounts(uid: uid).then((
+                              freshData,
+                            ) {
+                              setState(() {
+                                _dashboardFuture = Future.value(freshData);
+                              });
+                            });
+                          } else {
+                            // Agar local data nahi hai to direct API call karo
+                            _dashboardFuture = DashboardService()
+                                .fetchDashboardCounts(uid: uid);
+                          }
+                        },
+                        icon: Icon(Icons.refresh),
+                      ),
+                    ],
                   ),
                 ),
                 Padding(

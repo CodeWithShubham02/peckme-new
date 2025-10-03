@@ -34,16 +34,24 @@ class ReceivedLeadController {
           // Decrypt fields
           lead['customer_name'] = decryptFMS(lead['customer_name'], HASH_KEY);
           lead['mobile'] = decryptFMS(lead['mobile'], HASH_KEY);
-
           var resAddress = lead['res_address'];
           if (resAddress != null && resAddress.toString().trim().isNotEmpty) {
             // Handle multi-part encrypted address
             lead['res_address'] = decryptFMS(resAddress, HASH_KEY);
           }
+          var offAddress = lead['off_address'];
+          if (offAddress != null && offAddress.toString().trim().isNotEmpty) {
+            // Handle multi-part encrypted address
+            lead['off_address'] = decryptFMS(offAddress, HASH_KEY);
+          }
+          var offName = lead['off_name'];
+          if (offName != null && offName.toString().trim().isNotEmpty) {
+            // Handle multi-part encrypted address
+            lead['off_name'] = decryptFMS(offName, HASH_KEY);
+          }
         }
 
         print("---------------Decrypted data--------------");
-        print(decoded['clientname']);
         print(leads.toString());
 
         return leads.map((lead) => Lead.fromJson(lead)).toList();
