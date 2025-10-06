@@ -80,6 +80,8 @@ dependencies:
   get_storage:
   cloudinary_public: ^0.23.1
   flutter_easyloading:
+  google_mlkit_text_recognition: ^0.15.0
+  image: ^4.0.17
 
 
 dev_dependencies:
