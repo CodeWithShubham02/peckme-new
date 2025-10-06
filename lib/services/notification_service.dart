@@ -13,6 +13,13 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
+  // String uid = '';
+  //
+  // void loadUserData() async {
+  //   final SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   uid = prefs.getString('uid') ?? '';
+  // }
+
   //for notification request
   void requestNotificationPermission() async {
     NotificationSettings settings = await messaging.requestPermission(
@@ -56,7 +63,7 @@ class NotificationService {
     );
     await _flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
-      onDidReceiveBackgroundNotificationResponse: (payload) {
+      onDidReceiveNotificationResponse: (payload) {
         handleMessage(context, message);
       },
     );
@@ -158,6 +165,13 @@ class NotificationService {
     BuildContext context,
     RemoteMessage message,
   ) async {
+    print("---------------------");
+    print(message.notification?.title);
+    print(message.notification?.body);
+    print(message.sentTime);
+
+    print(message.mutableContent);
+    print("--------------------------");
     Get.to(() => DashboardScreen());
   }
 
