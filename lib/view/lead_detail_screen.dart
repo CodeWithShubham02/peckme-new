@@ -45,6 +45,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
   String user_id = '';
   String branchId = '';
   String authId = '';
+  String name = '';
 
   List<CollectedDoc> collectedDocs = [];
 
@@ -109,6 +110,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
       user_id = prefs.getString('uid') ?? '';
       branchId = prefs.getString('branchId') ?? '';
       authId = prefs.getString('authId') ?? '';
+      name = prefs.getString('name') ?? '';
     });
     final docs = await getCollectedDocsFromPrefs();
     setState(() {
@@ -1147,6 +1149,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                                         clientName: lead.clientName,
                                         leadId: lead.leadId,
                                         clientId: lead.clientId,
+                                        userName: name,
                                       ),
                                     );
                                   },
@@ -1619,6 +1622,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                                   clientName: lead.clientName,
                                   leadId: lead.leadId,
                                   clientId: lead.clientId,
+                                  userName: name,
                                 ),
                               );
                             },

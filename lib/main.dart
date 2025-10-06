@@ -18,10 +18,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await GetStorage.init();
+
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((
     _,
   ) {
     FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundHandler);
+
     runApp(MyApp());
   });
 }

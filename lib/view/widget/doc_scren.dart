@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' as ui;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -16,6 +18,7 @@ import '../../controller/document_controller.dart';
 import '../../controller/document_list_controller.dart';
 import '../../model/PdfImageUrlModel.dart';
 import '../../model/collected_doc_model.dart';
+import '../../services/aadhar_masking_service.dart';
 import '../../utils/app_constant.dart';
 import '../../services/image_to_pdf.dart';
 import 'custome_crop_screen.dart';
@@ -24,12 +27,14 @@ class DocumentScreenTest extends StatefulWidget {
   final String clientName;
   final String clientId;
   final String leadId;
+  final String userName;
 
   const DocumentScreenTest({
     Key? key,
     required this.clientName,
     required this.leadId,
     required this.clientId,
+    required this.userName,
   }) : super(key: key);
 
   @override
@@ -125,11 +130,14 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
 
     // Convert to PDF & upload
     final url = await convertImageToPdfAndSave(
-      file, // <-- Pass File, not String
+      file,
+      // <-- Pass File, not String
       "51",
       widget.clientName,
       widget.leadId,
       uid,
+      'Signature',
+      widget.userName,
     );
     if (url == null) return null;
 
@@ -215,9 +223,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   File? politicalConnections;
   String? politicalConnectionsUrl;
 
-  Future pickImageCompanyBoard(ImageSource source, String docname) async {
+  Future pickImageCompanyBoard(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingcompanuBoard = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingcompanuBoard = false;
       if (img != null) {
@@ -227,9 +237,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageFeSelfie(ImageSource source, String docname) async {
+  Future pickImageFeSelfie(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingfeSelfie = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingfeSelfie = false;
       if (img != null) {
@@ -239,9 +251,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageBillDesk(ImageSource source, String docname) async {
+  Future pickImageBillDesk(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingbillDesk = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingbillDesk = false;
       if (img != null) {
@@ -251,9 +265,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageFrontDoor(ImageSource source, String docname) async {
+  Future pickImageFrontDoor(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingfrontDoor = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingfrontDoor = false;
       if (img != null) {
@@ -263,9 +279,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageLocationSnap(ImageSource source, String docname) async {
+  Future pickImageLocationSnap(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadinglocationSnap = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadinglocationSnap = false;
       if (img != null) {
@@ -275,9 +293,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageNamePstatic(ImageSource source, String docname) async {
+  Future pickImageNamePstatic(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingnamePstatic = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingnamePstatic = false;
       if (img != null) {
@@ -287,9 +307,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImagePremisesInterior(ImageSource source, String docname) async {
+  Future pickImagePremisesInterior(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingpremisesInterior = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingpremisesInterior = false;
       if (img != null) {
@@ -299,9 +321,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageStock(ImageSource source, String docname) async {
+  Future pickImageStock(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingstock = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingstock = false;
       if (img != null) {
@@ -311,9 +335,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImagePhoto1(ImageSource source, String docname) async {
+  Future pickImagePhoto1(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingPhoto = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingPhoto = false;
       if (img != null) {
@@ -324,9 +350,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   }
 
   Future pickImageFESelfieWithPerson1(ImageSource source,
-      String docname,) async {
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingfESelfieWithPerson = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingfESelfieWithPerson = false;
       if (img != null) {
@@ -336,9 +363,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageImageOfPersonMet(ImageSource source, String docname) async {
+  Future pickImageImageOfPersonMet(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingimageOfPersonMet = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingimageOfPersonMet = false;
       if (img != null) {
@@ -349,9 +378,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   }
 
   Future pickImageBillDeskImageofShop(ImageSource source,
-      String docname,) async {
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingbillDeskImageofShop = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingbillDeskImageofShop = false;
       if (img != null) {
@@ -362,9 +392,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   }
 
   Future pickImageImageofShopFromOutside(ImageSource source,
-      String docname,) async {
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingimageofShopFromOutside = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingimageofShopFromOutside = false;
       if (img != null) {
@@ -374,9 +405,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageQRCode(ImageSource source, String docname) async {
+  Future pickImageQRCode(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingqRCode = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingqRCode = false;
       if (img != null) {
@@ -386,9 +419,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageTentCard(ImageSource source, String docname) async {
+  Future pickImageTentCard(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingtentCard = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingtentCard = false;
       if (img != null) {
@@ -399,9 +434,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   }
 
   Future pickImagePoliticalConnections(ImageSource source,
-      String docname,) async {
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingpoliticalConnections = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingpoliticalConnections = false;
       if (img != null) {
@@ -421,9 +457,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   File? pancard;
   String? pancardUrl;
 
-  Future pickImageIDProofofPersonMet(ImageSource source, String docname) async {
+  Future pickImageIDProofofPersonMet(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingiDProofofPersonMet = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingiDProofofPersonMet = false;
       if (img != null) {
@@ -433,9 +471,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImagePancard(ImageSource source, String docname) async {
+  Future pickImagePancard(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingpancard = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingpancard = false;
       if (img != null) {
@@ -509,9 +549,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   File? shopEstablishmentCertificate;
   String? shopEstablishmentCertificateUrl;
 
-  Future pickImageAnnexure(ImageSource source, String docname) async {
+  Future pickImageAnnexure(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingAnnexure = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingAnnexure = false;
       if (img != null) {
@@ -521,9 +563,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageOthers(ImageSource source, String docname) async {
+  Future pickImageOthers(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingOthers = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingOthers = false;
       if (img != null) {
@@ -534,9 +578,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   }
 
   Future pickImage1monthBankStatement(ImageSource source,
-      String docname,) async {
+      String docname,
+      String documentId,) async {
     setState(() => isLoading1monthBankStatement = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoading1monthBankStatement = false;
       if (img != null) {
@@ -546,9 +591,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageCancelledCheque(ImageSource source, String docname) async {
+  Future pickImageCancelledCheque(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingCancelledCheque = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingCancelledCheque = false;
       if (img != null) {
@@ -558,9 +605,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageCompanyID(ImageSource source, String docname) async {
+  Future pickImageCompanyID(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingCompanyID = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingCompanyID = false;
       if (img != null) {
@@ -571,9 +620,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   }
 
   Future pickImageCompletelyFilledJob(ImageSource source,
-      String docname,) async {
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingCompletelyFilledJob = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingCompletelyFilledJob = false;
       if (img != null) {
@@ -583,9 +633,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageDueDiligenceForm(ImageSource source, String docname) async {
+  Future pickImageDueDiligenceForm(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingDueDiligenceForm = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingDueDiligenceForm = false;
       if (img != null) {
@@ -595,9 +647,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageForm26AS(ImageSource source, String docname) async {
+  Future pickImageForm26AS(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingForm26AS = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingForm26AS = false;
       if (img != null) {
@@ -607,9 +661,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageForm60(ImageSource source, String docname) async {
+  Future pickImageForm60(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingForm60 = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingForm60 = false;
       if (img != null) {
@@ -619,9 +675,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageGazetteCertificate(ImageSource source, String docname) async {
+  Future pickImageGazetteCertificate(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingGazetteCertificate = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingGazetteCertificate = false;
       if (img != null) {
@@ -631,9 +689,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageGSTAnnexA(ImageSource source, String docname) async {
+  Future pickImageGSTAnnexA(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingGSTAnnexA = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingGSTAnnexA = false;
       if (img != null) {
@@ -643,9 +703,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageGSTAnnexB(ImageSource source, String docname) async {
+  Future pickImageGSTAnnexB(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingGSTAnnexB = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingGSTAnnexB = false;
       if (img != null) {
@@ -655,9 +717,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageLoanAgreement(ImageSource source, String docname) async {
+  Future pickImageLoanAgreement(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingLoanAgreement = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingLoanAgreement = false;
       if (img != null) {
@@ -668,9 +732,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   }
 
   Future pickImageMarriageCertificate(ImageSource source,
-      String docname,) async {
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingMarriageCertificate = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingMarriageCertificate = false;
       if (img != null) {
@@ -680,9 +745,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageNachOnly(ImageSource source, String docname) async {
+  Future pickImageNachOnly(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingNachOnly = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingNachOnly = false;
       if (img != null) {
@@ -692,9 +759,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageOVDDeclaration(ImageSource source, String docname) async {
+  Future pickImageOVDDeclaration(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingOVDDeclaration = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingOVDDeclaration = false;
       if (img != null) {
@@ -704,9 +773,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImagePODImage(ImageSource source, String docname) async {
+  Future pickImagePODImage(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingPODImage = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingPODImage = false;
       if (img != null) {
@@ -716,9 +787,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageCheques(ImageSource source, String docname) async {
+  Future pickImageCheques(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingCheques = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingCheques = false;
       if (img != null) {
@@ -728,9 +801,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageAuthSignForm(ImageSource source, String docname) async {
+  Future pickImageAuthSignForm(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingAuthSignForm = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingAuthSignForm = false;
       if (img != null) {
@@ -741,9 +816,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   }
 
   Future pickImageShopEstablishmentCertificate(ImageSource source,
-      String docname,) async {
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingShopEstablishmentCertificate = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingShopEstablishmentCertificate = false;
       if (img != null) {
@@ -805,9 +881,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   File? voterCard;
   String? voterCardUrl;
 
-  Future pickImageAadhaarBack(ImageSource source, String docname) async {
+  Future pickImageAadhaarBack(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingAadhaarBack = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadAadharMasking(source, docname, documentId);
     setState(() {
       isLoadingAadhaarBack = false;
       if (img != null) {
@@ -817,9 +895,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageAadhaarFront(ImageSource source, String docname) async {
+  Future pickImageAadhaarFront(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingAadhaarFront = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadAadharMasking(source, docname, documentId);
     setState(() {
       isLoadingAadhaarFront = false;
       if (img != null) {
@@ -829,9 +909,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageAllotmentLetter(ImageSource source, String docname) async {
+  Future pickImageAllotmentLetter(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingAllotmentLetter = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingAllotmentLetter = false;
       if (img != null) {
@@ -841,9 +923,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageDrivingLicense(ImageSource source, String docname) async {
+  Future pickImageDrivingLicense(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingDrivingLicense = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingDrivingLicense = false;
       if (img != null) {
@@ -853,9 +937,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageElectricityBill(ImageSource source, String docname) async {
+  Future pickImageElectricityBill(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingElectricityBill = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingElectricityBill = false;
       if (img != null) {
@@ -865,9 +951,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageGasBill(ImageSource source, String docname) async {
+  Future pickImageGasBill(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingGasBill = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingGasBill = false;
       if (img != null) {
@@ -877,9 +965,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageLandLineBill(ImageSource source, String docname) async {
+  Future pickImageLandLineBill(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingLandLineBill = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingLandLineBill = false;
       if (img != null) {
@@ -890,9 +980,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   }
 
   Future pickImageMaintainanceReceipt(ImageSource source,
-      String docname,) async {
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingMaintainanceReceipt = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingMaintainanceReceipt = false;
       if (img != null) {
@@ -902,9 +993,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageMobileBill(ImageSource source, String docname) async {
+  Future pickImageMobileBill(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingMobileBill = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingMobileBill = false;
       if (img != null) {
@@ -915,9 +1008,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   }
 
   Future pickImageMunicipalityWaterBill(ImageSource source,
-      String docname,) async {
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingMunicipalityWaterBill = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingMunicipalityWaterBill = false;
       if (img != null) {
@@ -927,9 +1021,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImagePassport(ImageSource source, String docname) async {
+  Future pickImagePassport(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingPassport = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingPassport = false;
       if (img != null) {
@@ -939,9 +1035,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImagePostOfficeSB(ImageSource source, String docname) async {
+  Future pickImagePostOfficeSB(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingPostOfficeSB = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingPostOfficeSB = false;
       if (img != null) {
@@ -951,9 +1049,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageRegisteredRent(ImageSource source, String docname) async {
+  Future pickImageRegisteredRent(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingRegisteredRent = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingRegisteredRent = false;
       if (img != null) {
@@ -963,9 +1063,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageRegisteredSales(ImageSource source, String docname) async {
+  Future pickImageRegisteredSales(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingRegisteredSales = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingRegisteredSales = false;
       if (img != null) {
@@ -975,9 +1077,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageRentAgreement(ImageSource source, String docname) async {
+  Future pickImageRentAgreement(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingRentAgreement = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingRentAgreement = false;
       if (img != null) {
@@ -987,9 +1091,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageVoterCard(ImageSource source, String docname) async {
+  Future pickImageVoterCard(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingVoterCard = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingVoterCard = false;
       if (img != null) {
@@ -1019,9 +1125,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   File? salarySlip;
   String? salarySlipUrl;
 
-  Future pickImageCreditCardCopy(ImageSource source, String docname) async {
+  Future pickImageCreditCardCopy(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingCreditCardCopy = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingCreditCardCopy = false;
       if (img != null) {
@@ -1031,9 +1139,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageITRComputation(ImageSource source, String docname) async {
+  Future pickImageITRComputation(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingITRComputation = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingITRComputation = false;
       if (img != null) {
@@ -1043,9 +1153,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageLatestCreditCard(ImageSource source, String docname) async {
+  Future pickImageLatestCreditCard(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingLatestCreditCard = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingLatestCreditCard = false;
       if (img != null) {
@@ -1055,9 +1167,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageLatestSalarySlip(ImageSource source, String docname) async {
+  Future pickImageLatestSalarySlip(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingLatestSalarySlip = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingLatestSalarySlip = false;
       if (img != null) {
@@ -1067,9 +1181,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageSalarySlip(ImageSource source, String docname) async {
+  Future pickImageSalarySlip(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingSalarySlip = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingSalarySlip = false;
       if (img != null) {
@@ -1090,9 +1206,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   String? bankPassbookUrl;
 
   Future pickImage3MonthsBankStatement(ImageSource source,
-      String docname,) async {
+      String docname,
+      String documentId,) async {
     setState(() => isLoading3MonthsBankStatement = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoading3MonthsBankStatement = false;
       if (img != null) {
@@ -1102,9 +1219,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageBankPassbook(ImageSource source, String docname) async {
+  Future pickImageBankPassbook(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingBankPassbook = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingBankPassbook = false;
       if (img != null) {
@@ -1128,9 +1247,10 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   String? passportAddProofUrl;
 
   Future pickImageDrivingLicenseAddProof(ImageSource source,
-      String docname,) async {
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingDrivingLicenseAddProof = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingDrivingLicenseAddProof = false;
       if (img != null) {
@@ -1140,9 +1260,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImageNREGACard(ImageSource source, String docname) async {
+  Future pickImageNREGACard(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingNREGACard = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingNREGACard = false;
       if (img != null) {
@@ -1152,9 +1274,11 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
     });
   }
 
-  Future pickImagePassportAddProof(ImageSource source, String docname) async {
+  Future pickImagePassportAddProof(ImageSource source,
+      String docname,
+      String documentId,) async {
     setState(() => isLoadingPassportAddProof = true);
-    final img = await _pickAndUploadImage(source, docname);
+    final img = await _pickAndUploadImage(source, docname, documentId);
     setState(() {
       isLoadingPassportAddProof = false;
       if (img != null) {
@@ -1219,6 +1343,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                 final img = await _pickAndUploadImage(
                                   ImageSource.camera,
                                   docId,
+                                  docName,
                                 );
 
                                 if (img != null) {
@@ -1383,7 +1508,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
   }
 
   Future<UploadResult?> _pickAndUploadImage(ImageSource source,
-      String docname,) async {
+      String docname,
+      String documentId,) async {
     try {
       final image = await ImagePicker().pickImage(source: source);
       if (image == null) return null;
@@ -1410,6 +1536,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
         widget.clientName,
         widget.leadId,
         uid,
+        documentId,
+        widget.userName,
       );
 
       if (url == null) return null;
@@ -1435,6 +1563,114 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
       print("❌ Error: $e");
       return null;
     }
+  }
+
+  late final AadhaarMaskService _aadhaarService = AadhaarMaskService();
+
+  Future<UploadResult?> _pickAndUploadAadharMasking(ImageSource source,
+      String docName,
+      String documentId,) async {
+    try {
+      final image = await ImagePicker().pickImage(source: source);
+      if (image == null) return null;
+
+      File img = File(image.path);
+
+      // Step 1️⃣ — Open crop screen
+      File? cropped = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CustomCropScreen(imageFile: img),
+        ),
+      );
+
+      if (cropped == null) {
+        print("⚠️ Cropping cancelled");
+        return null;
+      }
+
+      // Step 2️⃣ — Aadhaar Masking (after crop)
+
+      final result = await _aadhaarService.processImage(cropped);
+
+      // Optional: draw black boxes on cropped image & save to new file
+      File maskedFile = await _drawAndSaveMaskedImage(
+        cropped,
+        result.redactRects,
+      );
+
+      print("✅ Detected Aadhaar: ${result.maskedAadhaar}");
+
+      // Step 3️⃣ — Convert masked image to PDF
+      final url = await convertImageToPdfAndSave(
+        maskedFile,
+        // ← use masked file now
+        docName,
+        widget.clientName,
+        widget.leadId,
+        uid,
+        documentId,
+        widget.userName,
+      );
+
+      if (url == null) return null;
+
+      // Step 4️⃣ — Add to local list
+      final doc = CollectedDoc(path: maskedFile.path, pdfUrl: url);
+      setState(() {
+        collectedDocs.add(doc);
+      });
+
+      await _saveOrUpdateDocs(collectedDocs);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("✅ Document saved"),
+          duration: Duration(seconds: 3),
+        ),
+      );
+
+      return UploadResult(croppedImage: maskedFile, pdfUrl: url);
+    } catch (e, st) {
+      print("❌ Error while processing Aadhaar masking: $e\n$st");
+      return null;
+    }
+  }
+
+  Future<File> _drawAndSaveMaskedImage(File original,
+      List<Rect> redacts,) async {
+    final bytes = await original.readAsBytes();
+    final codec = await ui.instantiateImageCodec(bytes);
+    final frame = await codec.getNextFrame();
+    final image = frame.image;
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final paint = Paint();
+
+    // Draw original image
+    canvas.drawImage(image, Offset.zero, paint);
+
+    // Draw redaction rectangles
+    paint.color = const Color(0xFF000000);
+    for (final r in redacts) {
+      canvas.drawRect(r, paint);
+    }
+
+    // Convert to PNG bytes
+    final picture = recorder.endRecording();
+    final img = await picture.toImage(image.width, image.height);
+    final pngBytes = await img.toByteData(format: ui.ImageByteFormat.png);
+
+    // Save to file
+    final maskedFile = File(
+      '${original.parent.path}/masked_${DateTime
+          .now()
+          .millisecondsSinceEpoch}.png',
+    );
+    await maskedFile.writeAsBytes(pngBytes!.buffer.asUint8List());
+
+    return maskedFile;
   }
 
   Future<bool> deleteDocumentFromDB(String uid, String docUrl) async {
@@ -1802,6 +2038,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageCompanyBoard(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                       // pickImageCompanyBoard(ImageSource.camera);
                                                     },
@@ -2024,6 +2261,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageFeSelfie(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -2243,6 +2481,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageBillDesk(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -2463,6 +2702,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageFESelfieWithPerson1(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -2686,6 +2926,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageFrontDoor(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -2908,6 +3149,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageImageOfPersonMet(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -3132,6 +3374,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageBillDeskImageofShop(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: Text(
@@ -3356,6 +3599,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageImageofShopFromOutside(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -3579,6 +3823,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageLocationSnap(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -3801,6 +4046,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageNamePstatic(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -4020,6 +4266,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                           await pickImagePhoto1(
                                                             ImageSource.camera,
                                                             doc.docId,
+                                                            doc.docName,
                                                           );
                                                         },
                                                         child: const Text(
@@ -4243,6 +4490,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImagePremisesInterior(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -4465,6 +4713,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageQRCode(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -4684,6 +4933,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageStock(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -4902,6 +5152,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageTentCard(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -5122,6 +5373,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImagePoliticalConnections(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -5362,6 +5614,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageIDProofofPersonMet(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -5589,6 +5842,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImagePancard(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -5824,6 +6078,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageAnnexure(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -6048,6 +6303,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageOthers(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -6274,6 +6530,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImage1monthBankStatement(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -6501,6 +6758,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageCancelledCheque(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -6728,6 +6986,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageCompanyID(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -6954,6 +7213,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageCompletelyFilledJob(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -7181,6 +7441,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageDueDiligenceForm(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -7407,6 +7668,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageForm26AS(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -7630,6 +7892,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageForm60(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -7853,6 +8116,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageGazetteCertificate(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -8078,6 +8342,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageGSTAnnexA(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -8300,6 +8565,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageGSTAnnexB(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -8523,6 +8789,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageLoanAgreement(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -8748,6 +9015,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageMarriageCertificate(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -8972,6 +9240,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageNachOnly(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -9194,6 +9463,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageOVDDeclaration(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -9418,6 +9688,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImagePODImage(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -9640,6 +9911,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageCheques(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -9863,6 +10135,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageAuthSignForm(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -10088,6 +10361,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageShopEstablishmentCertificate(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -10286,8 +10560,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                       color: Colors.white60,
                                       child: Row(
                                         mainAxisAlignment:
-                                        MainAxisAlignment
-                                            .spaceBetween,
+                                        MainAxisAlignment.start,
                                         crossAxisAlignment:
                                         CrossAxisAlignment
                                             .start,
@@ -10326,6 +10599,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageAadhaarBack(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -10458,37 +10732,12 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                   color: Colors
                                                       .black,
                                                   fontSize:
-                                                  10,
+                                                  12,
                                                 ),
                                               ),
                                             ),
                                           )
                                               : SizedBox(),
-                                          Container(
-                                            height: MediaQuery
-                                                .of(
-                                              context,
-                                            )
-                                                .size
-                                                .height,
-                                            color: Colors.white,
-                                            width: 50,
-                                            child: IconButton(
-                                              icon: Icon(
-                                                Icons.add_circle,
-                                                color: AppConstant
-                                                    .iconColor,
-                                                size: 28,
-                                              ),
-                                              onPressed: () {
-                                                _showAddDialog(
-                                                  docName:
-                                                  doc.docName,
-                                                  docId: doc.docId,
-                                                );
-                                              },
-                                            ),
-                                          ),
                                         ],
                                       ),
                                     )
@@ -10513,7 +10762,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                       child: Row(
                                         mainAxisAlignment:
                                         MainAxisAlignment
-                                            .spaceBetween,
+                                            .start,
                                         crossAxisAlignment:
                                         CrossAxisAlignment
                                             .start,
@@ -10552,6 +10801,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageAadhaarFront(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -10684,37 +10934,13 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                   color: Colors
                                                       .black,
                                                   fontSize:
-                                                  10,
+                                                  12,
                                                 ),
                                               ),
                                             ),
                                           )
                                               : SizedBox(),
-                                          Container(
-                                            height: MediaQuery
-                                                .of(
-                                              context,
-                                            )
-                                                .size
-                                                .height,
-                                            color: Colors.white,
-                                            width: 50,
-                                            child: IconButton(
-                                              icon: Icon(
-                                                Icons.add_circle,
-                                                color: AppConstant
-                                                    .iconColor,
-                                                size: 28,
-                                              ),
-                                              onPressed: () {
-                                                _showAddDialog(
-                                                  docName:
-                                                  doc.docName,
-                                                  docId: doc.docId,
-                                                );
-                                              },
-                                            ),
-                                          ),
+
                                         ],
                                       ),
                                     )
@@ -10778,6 +11004,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageAllotmentLetter(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -11006,6 +11233,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageDrivingLicense(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -11233,6 +11461,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageElectricityBill(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -11460,6 +11689,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageGasBill(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -11685,6 +11915,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageLandLineBill(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -11911,6 +12142,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageMaintainanceReceipt(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -12138,6 +12370,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageMobileBill(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -12365,6 +12598,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageMunicipalityWaterBill(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -12591,6 +12825,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImagePassport(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -12816,6 +13051,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImagePostOfficeSB(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -13043,6 +13279,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageRegisteredRent(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -13270,6 +13507,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageRegisteredSales(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -13497,6 +13735,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageRentAgreement(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -13724,6 +13963,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageVoterCard(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -13960,6 +14200,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageCreditCardCopy(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -14188,6 +14429,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageITRComputation(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -14389,6 +14631,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageLatestCreditCard(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -14617,6 +14860,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageLatestSalarySlip(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -14844,6 +15088,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageSalarySlip(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -15082,6 +15327,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImage3MonthsBankStatement(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -15309,6 +15555,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageBankPassbook(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -15547,6 +15794,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageDrivingLicenseAddProof(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -15774,6 +16022,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImageNREGACard(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -15998,6 +16247,7 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                                       await pickImagePassportAddProof(
                                                         ImageSource.camera,
                                                         doc.docId,
+                                                        doc.docName,
                                                       );
                                                     },
                                                     child: const Text(
@@ -16449,17 +16699,23 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                               return Stack(
                                 children: [
                                   Container(
-                                    margin:
-                                    const EdgeInsets.symmetric(horizontal: 8),
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                    ),
                                     width: 100,
                                     height: 100,
                                     decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(5),
+                                      borderRadius: BorderRadius.circular(
+                                        5,
+                                      ),
                                       border: Border.all(
-                                          color: Colors.grey.shade300),
+                                        color: Colors.grey.shade300,
+                                      ),
                                     ),
                                     child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(5),
+                                      borderRadius: BorderRadius.circular(
+                                        5,
+                                      ),
                                       child: Image.file(
                                         File(doc.path),
                                         fit: BoxFit.cover,
@@ -16471,15 +16727,16 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                     right: 2,
                                     child: GestureDetector(
                                       onTap: () async {
-                                        bool success = await deleteDocumentFromDB(
+                                        bool success =
+                                        await deleteDocumentFromDB(
                                           uid,
                                           doc.pdfUrl,
                                         );
 
                                         if (success) {
                                           final file = File(doc.path);
-                                          if (await file.exists()) await file
-                                              .delete();
+                                          if (await file.exists())
+                                            await file.delete();
 
                                           setState(() {
                                             collectedDocs.removeAt(index);
@@ -16495,13 +16752,16 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                             jsonEncode(jsonList),
                                           );
 
-                                          ScaffoldMessenger
-                                              .of(context)
-                                              .showSnackBar(
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
                                             const SnackBar(
                                               content: Text(
-                                                  "✅ Deleted successfully"),
-                                              duration: Duration(seconds: 2),
+                                                "✅ Deleted successfully",
+                                              ),
+                                              duration: Duration(
+                                                seconds: 2,
+                                              ),
                                             ),
                                           );
                                         }
@@ -16528,8 +16788,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                           padding: const EdgeInsets.all(8.0),
                           child: ElevatedButton(
                             onPressed: () async {
-                              final prefs = await SharedPreferences
-                                  .getInstance();
+                              final prefs =
+                              await SharedPreferences.getInstance();
                               await prefs.remove("collectedDocs");
 
                               setState(() {
@@ -16545,7 +16805,8 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
                                   width: 30,
                                 ),
                                 shouldIconPulse: true,
-                                backgroundColor: AppConstant.snackBackColor,
+                                backgroundColor:
+                                AppConstant.snackBackColor,
                                 colorText: AppConstant.snackFontColor,
                                 snackPosition: SnackPosition.TOP,
                                 borderRadius: 5,
@@ -16574,8 +16835,6 @@ class _DocumentScreenTestState extends State<DocumentScreenTest> {
           ),
         ),
       ),
-
-
     );
   }
 }

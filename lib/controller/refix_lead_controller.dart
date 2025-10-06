@@ -15,10 +15,6 @@ class RefixLeadService {
     required String reason,
     required String remark,
   }) async {
-    print("-------------------");
-    print(remark);
-    print(newDate);
-    print("-------------------");
     String latLongText = await _getCurrentLocation();
     final Uri url = Uri.parse(
       "https://fms.bizipac.com/apinew/ws_new/refixlead.php?loginid=$loginId&leadid=$leadId&newdate=$newDate&location=$location&reason=$reason&newtime=$newTime&remark=$remark&geoLocation=$latLongText",
