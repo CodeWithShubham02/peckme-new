@@ -1,12 +1,15 @@
 import 'dart:io';
 
 import 'package:app_settings/app_settings.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
-import 'package:peckme/view/dashboard_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../view/widget/get_notification_screen.dart';
 
 class NotificationService {
   FirebaseMessaging messaging = FirebaseMessaging.instance;
@@ -19,6 +22,10 @@ class NotificationService {
   //   final SharedPreferences prefs = await SharedPreferences.getInstance();
   //   uid = prefs.getString('uid') ?? '';
   // }
+  Future<String?> getMobile() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('mobile'); // जो key आपने save की थी
+  }
 
   //for notification request
   void requestNotificationPermission() async {
@@ -165,14 +172,23 @@ class NotificationService {
     BuildContext context,
     RemoteMessage message,
   ) async {
-    print("---------------------");
-    print(message.notification?.title);
-    print(message.notification?.body);
-    print(message.sentTime);
+    String? mobile = await getMobile();
 
-    print(message.mutableContent);
-    print("--------------------------");
-    Get.to(() => DashboardScreen());
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(mobile)
+        .collection('notifications')
+        .add({
+          'title': message.notification?.title ?? '',
+          'body': message.notification?.body ?? '',
+          'sentTime':
+              message.sentTime?.toIso8601String() ??
+              DateTime.now().toIso8601String(),
+          'status': 'unread', // default status
+          'mutableContent': message.mutableContent ?? false,
+        });
+    Get.to(() => GetNotificationScreen());
+    //Get.to(() => DashboardScreen());
   }
 
   //ios message
