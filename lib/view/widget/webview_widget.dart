@@ -51,7 +51,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
     setState(() => _isLoading = true);
 
     final String apiUrl =
-        "https://fms.bizipac.com/ws/new_lead_detail.php?lead_id=4866927";
+        "https://fms.bizipac.com/ws/new_lead_detail.php?lead_id=${widget.leadid}";
 
     try {
       final response = await http.get(Uri.parse(apiUrl));

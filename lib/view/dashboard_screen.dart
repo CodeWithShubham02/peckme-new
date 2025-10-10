@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,6 +17,7 @@ import 'package:peckme/view/self_lead_alloter_screen.dart';
 import 'package:peckme/view/today_completed_lead_screen.dart';
 import 'package:peckme/view/today_transferd_lead_screen.dart';
 import 'package:peckme/view/transfer_lead_screen.dart';
+import 'package:peckme/view/widget/get_notification_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -239,6 +241,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
           style: TextStyle(color: AppConstant.appBarWhiteColor),
         ),
         actions: [
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('users')
+                .doc(mobile) // ⚠️ replace with your user's mobile/uid
+                .collection('notifications')
+                .where('status', isEqualTo: 'unread')
+                .snapshots(),
+            builder: (context, snapshot) {
+              int count = 0;
+              if (snapshot.hasData) {
+                count = snapshot.data!.docs.length;
+              }
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      Get.to(() => GetNotificationScreen());
+                    },
+                    icon: Icon(
+                      Icons.message_outlined,
+                      color: AppConstant.appBarWhiteColor,
+                    ),
+                  ),
+                  if (count > 0)
+                    Positioned(
+                      right: 6,
+                      top: 6,
+                      child: Container(
+                        padding: EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.orange,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        constraints: BoxConstraints(
+                          minWidth: 15,
+                          minHeight: 10,
+                        ),
+                        child: Text(
+                          '$count',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
           IconButton(
             onPressed: () {
               Get.to(() => ProfileScreen());

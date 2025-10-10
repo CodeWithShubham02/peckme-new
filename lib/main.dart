@@ -23,7 +23,6 @@ void main() async {
     _,
   ) {
     FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundHandler);
-
     runApp(MyApp());
   });
 }

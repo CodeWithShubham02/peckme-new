@@ -64,6 +64,7 @@ class LeadData {
   final String leadStatus;
   final String clientId;
   final String client_mobile_app;
+  final String cpv_url_new;
   final String email;
   final String productCode;
   final String source2;
@@ -118,6 +119,7 @@ class LeadData {
   LeadData({
     required this.fiData,
     required this.clientMobileApp,
+    required this.cpv_url_new,
     required this.responseId,
     required this.transferStatus,
     required this.leadId,
@@ -205,6 +207,7 @@ class LeadData {
     return LeadData(
       fiData: json['fiData'] ?? 0,
       clientMobileApp: json['client_mobile_app'] ?? '',
+      cpv_url_new: json['cpv_url_new'] ?? '',
       responseId: json['response_id'] ?? '',
       transferStatus: json['transfer_status'] ?? '',
       leadId: json['lead_id'] ?? '',
@@ -292,6 +295,7 @@ class LeadData {
   Map<String, dynamic> toJson() => {
     'fiData': fiData,
     'client_mobile_app': clientMobileApp,
+    'cpv_url_new': cpv_url_new,
     'response_id': responseId,
     'transfer_status': transferStatus,
     'lead_id': leadId,
