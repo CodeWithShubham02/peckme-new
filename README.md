@@ -1,4 +1,4 @@
-ssg=======API URL===========
+=======API URL===========
 BASE_URL="https://fms.bizipac.com/apinew/ws_new/";
 
 #THIS IS USER AUTH URL
@@ -66,7 +66,6 @@ IF YOU ARE FETCH THE TIME_SLOT TO HIT THIS API
 
 IF YOU ARE FETCH THE REASON SO CALL THIS API
 "https://fms.bizipac.com/apinew/ws_new/reason.php?leadid=$leadId"
-
 
 
 
