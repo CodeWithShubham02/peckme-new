@@ -1,9 +1,11 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin") // Flutter plugin must come after Android and Kotlin
     id("com.google.gms.google-services") // Firebase
-    id("org.jetbrains.kotlin.plugin.compose") // ✅ this is required
+    id("org.jetbrains.kotlin.plugin.compose") // Jetpack Compose
 }
 
 repositories {
@@ -36,31 +38,40 @@ android {
         multiDexEnabled = true
     }
 
+    // ✅ Kotlin DSL version of signing config
+    signingConfigs {
+        create("release") {
+            val keyProperties = Properties()
+            val keyFile = rootProject.file("key.properties")
+            if (keyFile.exists()) {
+                keyFile.inputStream().use { keyProperties.load(it) }
+                storeFile = file(keyProperties["storeFile"]!!)
+                storePassword = keyProperties["storePassword"] as String
+                keyAlias = keyProperties["keyAlias"] as String
+                keyPassword = keyProperties["keyPassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("debug") // 👈 important
             isMinifyEnabled = false
             isShrinkResources = false
+            signingConfig = signingConfigs.getByName("release")
         }
         getByName("debug") {
-            signingConfig = signingConfigs.getByName("debug")
-            isMinifyEnabled = false
-            isShrinkResources = false
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
     lint {
-        abortOnError = false // ✅ Safely disable lint build failure
-        disable.add("MissingTranslation") // Optional
+        abortOnError = false
+        disable.add("MissingTranslation")
     }
-//    repositories {
-//        flatDir { dirs("libs") }
-//    }
+
     buildFeatures {
         compose = true
     }
-
-
 }
 
 dependencies {
@@ -69,25 +80,24 @@ dependencies {
     implementation(files("libs/icici.aar"))
     implementation(files("libs/itext5-itextpdf-5.5.12.jar"))
 
-    // Jetpack Compose runtime + UI
     implementation("androidx.core:core-ktx:1.16.0")
     implementation("androidx.activity:activity-compose:1.9.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
-    // Jetpack Compose BOM keeps versions aligned
+
     implementation(platform("androidx.compose:compose-bom:2024.06.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material:material")
     implementation("androidx.compose.ui:ui-tooling-preview")
 
-    implementation("com.squareup.okhttp3:okhttp:4.9.0") // stable 3.x version
+    implementation("com.squareup.okhttp3:okhttp:4.9.0")
     implementation("com.squareup.okio:okio:1.17.5")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     implementation("com.google.firebase:firebase-analytics")
     implementation("androidx.multidex:multidex:2.0.1")
-
 }
+
 configurations.all {
     resolutionStrategy {
         force("com.squareup.okhttp3:okhttp:4.9.0")
