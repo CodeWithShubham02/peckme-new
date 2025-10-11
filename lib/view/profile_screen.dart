@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:peckme/view/widget/terms_conditions_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/app_constant.dart';
@@ -81,6 +82,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
           style: TextStyle(color: AppConstant.appBarWhiteColor, fontSize: 18),
         ),
         iconTheme: IconThemeData(color: AppConstant.appBarWhiteColor),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: IconButton(
+              icon: const Icon(Icons.info_outline),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TermsAndConditionsScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
       body: Center(
         child: Card(

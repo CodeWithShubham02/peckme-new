@@ -44,9 +44,19 @@ class _GetNotificationScreenState extends State<GetNotificationScreen> {
       return FirebaseFirestore.instance.collection('empty');
     }
     return FirebaseFirestore.instance
-        .collection('users')
+        .collection('message')
         .doc(mobile)
         .collection('notifications');
+  }
+
+  bool isToday(String sentTime) {
+    try {
+      final DateTime dt = DateTime.parse(sentTime);
+      final now = DateTime.now();
+      return dt.year == now.year && dt.month == now.month && dt.day == now.day;
+    } catch (e) {
+      return false;
+    }
   }
 
   @override
@@ -55,7 +65,7 @@ class _GetNotificationScreenState extends State<GetNotificationScreen> {
       // Waiting for SharedPreferences to load
       return Scaffold(
         appBar: AppBar(title: Text("Notifications")),
-        body: Center(child: CircularProgressIndicator()),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -63,7 +73,7 @@ class _GetNotificationScreenState extends State<GetNotificationScreen> {
       appBar: AppBar(
         backgroundColor: AppConstant.appBarColor,
         title: Text(
-          'Notification',
+          'Today\'s Notifications',
           style: TextStyle(color: AppConstant.appBarWhiteColor, fontSize: 18),
         ),
         iconTheme: IconThemeData(color: AppConstant.appBarWhiteColor),
@@ -74,13 +84,17 @@ class _GetNotificationScreenState extends State<GetNotificationScreen> {
             .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
-          final docs = snapshot.data!.docs;
+          // 🔹 Filter to show only today’s notifications
+          final docs = snapshot.data!.docs.where((doc) {
+            final data = doc.data();
+            return data['sentTime'] != null && isToday(data['sentTime']);
+          }).toList();
 
           if (docs.isEmpty) {
-            return Center(child: Text("No notifications yet"));
+            return const Center(child: Text("No notifications for today"));
           }
 
           return ListView.builder(
@@ -94,10 +108,9 @@ class _GetNotificationScreenState extends State<GetNotificationScreen> {
               return Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
-                  side: BorderSide(
-                    color: Colors.orange,
-                    width: 2,
-                  ), // Orange border
+                  side: isUnread
+                      ? const BorderSide(color: Colors.orange, width: 2)
+                      : BorderSide.none,
                 ),
                 elevation: 3,
                 margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
@@ -107,11 +120,11 @@ class _GetNotificationScreenState extends State<GetNotificationScreen> {
                     horizontal: 16,
                   ),
                   leading: CircleAvatar(
-                    backgroundColor: AppConstant.appBarColor, // Red background
-                    child: Icon(
+                    backgroundColor: AppConstant.appBarColor,
+                    child: const Icon(
                       Icons.message_outlined,
                       color: Colors.white,
-                    ), // White icon
+                    ),
                   ),
                   title: Text(
                     data['title'] ?? '',
@@ -127,7 +140,6 @@ class _GetNotificationScreenState extends State<GetNotificationScreen> {
                       Text(data['body'] ?? ''),
                       const SizedBox(height: 4),
                       Text(
-                        // Display message sent time
                         data['sentTime'] != null
                             ? formatDateTime(data['sentTime'])
                             : '',
@@ -135,25 +147,14 @@ class _GetNotificationScreenState extends State<GetNotificationScreen> {
                       ),
                     ],
                   ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (isUnread)
-                        Icon(Icons.circle, color: Colors.red, size: 12),
-                      const SizedBox(width: 12),
-                      GestureDetector(
-                        onTap: () async {
-                          await doc.reference.delete();
-                        },
-                        child: Icon(Icons.delete, color: Colors.grey[700]),
-                      ),
-                    ],
-                  ),
+                  trailing: isUnread
+                      ? const Icon(Icons.circle, color: Colors.red, size: 12)
+                      : null,
+                  // 🔹 Delete button removed
                   onTap: () async {
                     if (isUnread) {
                       await doc.reference.update({'status': 'read'});
                     }
-                    print("Notification clicked: ${data['title']}");
                   },
                 ),
               );

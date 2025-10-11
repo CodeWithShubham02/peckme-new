@@ -241,59 +241,88 @@ class _DashboardScreenState extends State<DashboardScreen> {
           style: TextStyle(color: AppConstant.appBarWhiteColor),
         ),
         actions: [
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('users')
-                .doc(mobile) // ⚠️ replace with your user's mobile/uid
-                .collection('notifications')
-                .where('status', isEqualTo: 'unread')
-                .snapshots(),
-            builder: (context, snapshot) {
-              int count = 0;
-              if (snapshot.hasData) {
-                count = snapshot.data!.docs.length;
-              }
-              return Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      Get.to(() => GetNotificationScreen());
-                    },
-                    icon: Icon(
-                      Icons.message_outlined,
-                      color: AppConstant.appBarWhiteColor,
-                    ),
+          mobile.isEmpty
+              ? IconButton(
+                  onPressed: null,
+                  icon: Icon(
+                    Icons.message_outlined,
+                    color: AppConstant.appBarWhiteColor,
                   ),
-                  if (count > 0)
-                    Positioned(
-                      right: 6,
-                      top: 6,
-                      child: Container(
-                        padding: EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: Colors.orange,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        constraints: BoxConstraints(
-                          minWidth: 15,
-                          minHeight: 10,
-                        ),
-                        child: Text(
-                          '$count',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
+                )
+              : StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('message')
+                      .doc(
+                        mobile.isEmpty ? 'temp' : mobile,
+                      ) // avoid invalid doc
+                      .collection('notifications')
+                      .where('status', isEqualTo: 'unread')
+                      .orderBy('sentTime', descending: true)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    int count = 0;
+                    if (snapshot.hasData) {
+                      // 🔹 Filter only today's notifications
+                      final now = DateTime.now();
+                      final todayDocs = snapshot.data!.docs.where((doc) {
+                        final data = doc.data() as Map<String, dynamic>;
+                        if (data['sentTime'] == null) return false;
+
+                        try {
+                          final sentTime = DateTime.parse(data['sentTime']);
+                          return sentTime.year == now.year &&
+                              sentTime.month == now.month &&
+                              sentTime.day == now.day;
+                        } catch (e) {
+                          return false;
+                        }
+                      }).toList();
+
+                      count = todayDocs.length;
+                    }
+
+                    return Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            Get.to(() => GetNotificationScreen());
+                          },
+                          icon: Icon(
+                            Icons.message_outlined,
+                            color: AppConstant.appBarWhiteColor,
                           ),
-                          textAlign: TextAlign.center,
                         ),
-                      ),
-                    ),
-                ],
-              );
-            },
-          ),
+                        if (count > 0)
+                          Positioned(
+                            right: 6,
+                            top: 6,
+                            child: Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                color: Colors.orange,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 15,
+                                minHeight: 10,
+                              ),
+                              child: Text(
+                                '$count',
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+
           IconButton(
             onPressed: () {
               Get.to(() => ProfileScreen());
@@ -377,7 +406,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       ElevatedButton(
                         onPressed: () {
-                          if (_passwordController.text.trim() == "7506") {
+                          if (_passwordController.text.trim() == "#8090#") {
                             passwordCorrect = true;
                             Navigator.of(context).pop();
                           } else {
