@@ -175,7 +175,7 @@ class NotificationService {
     String? mobile = await getMobile();
 
     await FirebaseFirestore.instance
-        .collection('users')
+        .collection('message')
         .doc(mobile)
         .collection('notifications')
         .add({
