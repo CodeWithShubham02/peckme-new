@@ -2,9 +2,14 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:peckme/controller/chart_controller/chart_user_controller.dart';
+import 'package:peckme/model/charts/chart_user_model.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 
 import '../../services/get_server_key.dart';
 import '../../utils/app_constant.dart';
@@ -30,6 +35,7 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
 
   final titleController = TextEditingController();
   final bodyController = TextEditingController();
+  final GetAllUserChart getAllUserChart = Get.put(GetAllUserChart());
 
   @override
   void initState() {
@@ -349,6 +355,37 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
                     ),
                   ),
                 ),
+              ),
+              Column(
+                children: [
+                  Obx(() {
+                    final monthlyData = getAllUserChart.monthlyUserData;
+                    if (monthlyData.isEmpty) {
+                      return Container(
+                        child: Center(child: CupertinoActivityIndicator()),
+                      );
+                    } else {
+                      return SizedBox(
+                        height: Get.height / 2,
+                        child: SfCartesianChart(
+                          tooltipBehavior: TooltipBehavior(enable: true),
+                          primaryXAxis: CategoryAxis(arrangeByIndex: true),
+                          series: <LineSeries<ChartData, String>>[
+                            LineSeries<ChartData, String>(
+                              dataSource: monthlyData,
+                              width: 2.5,
+                              color: AppConstant.appBarColor,
+                              xValueMapper: (ChartData data, _) => data.month,
+                              yValueMapper: (ChartData data, _) => data.value,
+                              name: "Monthly Users",
+                              markerSettings: MarkerSettings(isVisible: true),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                  }),
+                ],
               ),
             ],
           ),

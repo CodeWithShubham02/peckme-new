@@ -125,7 +125,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
             // disable tap while loading
             child: Container(
               height: 40,
-              width: 200,
+              width: 111,
               decoration: BoxDecoration(
                 color: _isLoading ? Colors.grey[300] : Colors.green[100],
                 // dim color when loading
@@ -142,8 +142,11 @@ class _WebViewScreenState extends State<WebViewScreen> {
                         ),
                       )
                     : const Text(
-                        "Document Upload",
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        "Document Upload ",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
                       ),
               ),
             ),

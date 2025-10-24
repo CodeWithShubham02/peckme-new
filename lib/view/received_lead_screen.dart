@@ -28,7 +28,8 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
       ReceivedLeadController();
 
   // Future holding current list source (either full list or filtered result)
-  late Future<List<Lead>> leads;
+  //late Future<List<Lead>> leads;
+  late Future<List<Lead>> leads = Future.value([]);
 
   // For user/session values
   String uid = '';
@@ -70,7 +71,7 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
     return receivedLeadController.fetchLeads(
       uid: uid,
       start: 0,
-      end: 10,
+      end: 2000,
       branchId: branchId,
       app_version: appVersion,
       appType: appType,
@@ -433,8 +434,10 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
                                       style: TextStyle(fontSize: 12),
                                     ),
                                   ),
-                                  const Text(
-                                    "N/A",
+                                  Text(
+                                    lead.pincode ?? '',
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 2,
                                     style: TextStyle(
                                       color: Colors.grey,
                                       fontSize: 10,

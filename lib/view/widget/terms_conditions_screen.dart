@@ -113,10 +113,45 @@ class TermsAndConditionsScreen extends StatelessWidget {
 
             Divider(),
             Center(
-              child: Text(
-                "© 2025 Peak Me. All rights reserved.\nAuthorized by Google as an Open App.",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+              child: Column(
+                children: [
+                  Text(
+                    "© 2025 Peak Me. All rights reserved.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    "Company Name: Bizipac Couriers Pvt. Ltd.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    "Address: 337, Omkar Apartments, Shradhanand Road, Vile Parle East, Mumbai-400057, Maharashtra, India",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  SizedBox(height: 2),
+
+                  Text(
+                    "Developed by: Shubham Gupta",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  Text(
+                    "Email: shubhamcmp695@gmail.com",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  SizedBox(height: 2),
+                  SizedBox(height: 4),
+                  Text(
+                    "Authorized by Google as an Open App.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
               ),
             ),
           ],

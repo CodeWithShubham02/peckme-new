@@ -489,7 +489,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                   const SizedBox(height: 12),
                                   Text(
-                                    "Pending Lead's",
+                                    "Pending",
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
@@ -550,7 +550,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                   const SizedBox(height: 12),
                                   Text(
-                                    "Transfer Lead's",
+                                    "Assign",
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
@@ -619,7 +619,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                   const SizedBox(height: 12),
                                   Text(
-                                    "Self Lead's Alloter",
+                                    "Assign to self",
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
@@ -648,7 +648,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: InkWell(
                         onTap: () async {
                           _launchInBrowser(
-                            'https://fms.bizipac.com/apinew/secureapi/icici_pre_paid_card_gen.php?user_id=$uid&branch_id=$branchId#!/',
+                            'https://fms.bizipac.com/apinew/dynamic_form/executive_add_form.php?user_id=$uid#!/',
                           );
                         },
                         child: Stack(
@@ -682,7 +682,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                   const SizedBox(height: 12),
                                   Text(
-                                    "Submission's",
+                                    "Entry Hub",
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
@@ -762,7 +762,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                   const SizedBox(height: 12),
                                   Text(
-                                    "Today's Completed \nLead's",
+                                    "EOD Fulfilled",
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
@@ -825,7 +825,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                   const SizedBox(height: 12),
                                   Text(
-                                    "Today Transfer \n Lead's",
+                                    "Assigned leads\n status",
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
