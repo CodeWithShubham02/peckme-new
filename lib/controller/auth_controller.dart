@@ -32,7 +32,6 @@ class AuthService {
         },
       );
       print('response the body ------------------------');
-
       print(response.body);
       print('response the body ------------------------');
       if (response.statusCode == 200) {
@@ -48,6 +47,7 @@ class AuthService {
           await prefs.setString('userToken', userToken);
           await prefs.setString('mobile', user.mobile);
           await prefs.setString('rolename', user.rolename);
+          await prefs.setString('company_name', user.imagePoliceVerification);
           await prefs.setString('roleId', user.roleId);
           await prefs.setString('branchId', user.branchId);
           await prefs.setString('branch_name', user.branch_name);

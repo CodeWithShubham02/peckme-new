@@ -72,28 +72,34 @@ class MyApp extends StatelessWidget {
             return Scaffold(
               body: Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  padding: EdgeInsets.all(20.0),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const Icon(
                         Icons.system_update,
                         size: 80,
                         color: Colors.red,
                       ),
-                      const SizedBox(height: 20),
                       Text(
-                        "Please download the latest version ($latestVersion)",
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 18),
+                        "You are using the current version ($localVersion)",
+                        style: TextStyle(fontSize: 10),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 30),
+                      Text(
+                        "Please download the latest version ($latestVersion). \n Click on the download button and download the latest version.\n",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 16),
+                      ),
+
+                      const SizedBox(height: 10),
                       ElevatedButton(
                         onPressed: () {
                           // open Play Store link
                           launchUrl(
                             Uri.parse(
-                              "https://play.google.com/store/apps/details?id=com.example.app",
+                              "https://drive.google.com/drive/folders/1cW5XkhTHqU-rZFnWnRra4DM5EJ6cgFOF?usp=drive_link",
                             ),
                           );
                           showDialog(

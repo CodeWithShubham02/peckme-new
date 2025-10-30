@@ -575,6 +575,13 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                                                     lead.doc,
                                                     maxLines: 5,
                                                   ),
+                                                if (lead.doc != null &&
+                                                    lead.doc!.isNotEmpty)
+                                                  _infoRow(
+                                                    "Doc By Tc",
+                                                    lead.doc,
+                                                    maxLines: 5,
+                                                  ),
                                                 if (lead.accHolder != null &&
                                                     lead.accHolder!.isNotEmpty)
                                                   _infoRow(
@@ -627,6 +634,12 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                                                   _infoRow(
                                                     "Res Pin Code",
                                                     lead.resPin,
+                                                  ),
+                                                if (lead.location != null &&
+                                                    lead.location!.isNotEmpty)
+                                                  _infoRow(
+                                                    "Location",
+                                                    lead.location,
                                                   ),
                                                 if (lead.appAdd != null &&
                                                     lead.appAdd!.isNotEmpty)

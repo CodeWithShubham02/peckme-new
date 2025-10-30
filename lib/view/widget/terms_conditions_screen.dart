@@ -72,7 +72,6 @@ class TermsAndConditionsScreen extends StatelessWidget {
               "You may not misuse the app or attempt to gain unauthorized access to its systems.",
             ),
             SizedBox(height: 10),
-
             Text(
               "3. Data & Privacy",
               style: TextStyle(fontWeight: FontWeight.bold),
@@ -140,7 +139,7 @@ class TermsAndConditionsScreen extends StatelessWidget {
                     style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                   Text(
-                    "Email: shubhamcmp695@gmail.com",
+                    "Email: info@teamunited.net",
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),

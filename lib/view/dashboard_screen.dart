@@ -245,8 +245,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ? IconButton(
                   onPressed: null,
                   icon: Icon(
-                    Icons.message_outlined,
+                    Icons.notifications,
                     color: AppConstant.appBarWhiteColor,
+                    size: 25,
                   ),
                 )
               : StreamBuilder<QuerySnapshot>(
@@ -289,8 +290,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Get.to(() => GetNotificationScreen());
                           },
                           icon: Icon(
-                            Icons.message_outlined,
+                            Icons.notifications,
                             color: AppConstant.appBarWhiteColor,
+                            size: 25,
                           ),
                         ),
                         if (count > 0)
@@ -405,15 +407,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         child: Text("Cancel"),
                       ),
                       ElevatedButton(
-                        onPressed: () {
-                          if (_passwordController.text.trim() == "#8090#") {
-                            passwordCorrect = true;
-                            Navigator.of(context).pop();
-                          } else {
-                            // Optional: show error
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Incorrect password")),
-                            );
+                        onPressed: () async {
+                          try {
+                            final snapshot = await FirebaseFirestore.instance
+                                .collection("admin")
+                                .get();
+                            if (snapshot.docs.isEmpty) {
+                              print("No documents found in auth_id_status");
+                            }
+                            // Loop through each document
+                            for (var doc in snapshot.docs) {
+                              final data = doc.data();
+
+                              // Safely access 'status'
+                              final status =
+                                  data['login_auth'] ?? "No status field";
+                              if (_passwordController.text.trim() == status) {
+                                passwordCorrect = true;
+                                Navigator.of(context).pop();
+                              } else {
+                                // Optional: show error
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Incorrect password")),
+                                );
+                              }
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text("Welcome"),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            print("Error : $e");
                           }
                         },
                         child: Text("OK"),
@@ -681,14 +707,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     color: AppConstant.iconColor,
                                   ),
                                   const SizedBox(height: 12),
-                                  Text(
-                                    "Entry Hub",
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                      color: AppConstant.darkHeadingColor,
-                                    ),
+                                  Column(
+                                    children: [
+                                      Text(
+                                        "Entry Hub",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                          color: AppConstant.darkHeadingColor,
+                                        ),
+                                      ),
+                                      Text(
+                                        "(of client app)",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 6,
+                                          color: AppConstant.darkHeadingColor,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),

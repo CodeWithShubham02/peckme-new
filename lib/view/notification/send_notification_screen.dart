@@ -37,6 +37,8 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
   final bodyController = TextEditingController();
   final GetAllUserChart getAllUserChart = Get.put(GetAllUserChart());
 
+  int _selectedIndex = 0; // 🔹 For bottom navigation
+
   @override
   void initState() {
     super.initState();
@@ -133,7 +135,6 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
       final image = await ImagePicker().pickImage(source: source);
       if (image == null) return null;
       File? img = File(image.path);
-      // // Wait for cropped image from CustomCropScreen
       return img;
     } catch (e) {
       print("❌ Error: $e");
@@ -145,12 +146,21 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: AppConstant.appBarColor,
         title: Text(
           "Send Message",
           style: TextStyle(color: AppConstant.whiteBackColor),
         ),
         iconTheme: IconThemeData(color: AppConstant.whiteBackColor),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: Icon(Icons.logout_outlined),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -356,6 +366,8 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
                   ),
                 ),
               ),
+
+              // 🔹 Chart Section
               Column(
                 children: [
                   Obx(() {
@@ -365,20 +377,85 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
                         child: Center(child: CupertinoActivityIndicator()),
                       );
                     } else {
+                      // Calculate total value for center text
+                      final totalUsers = monthlyData.fold<int>(
+                        0,
+                        (sum, item) => sum + item.value.toInt(),
+                      );
+
                       return SizedBox(
                         height: Get.height / 2,
-                        child: SfCartesianChart(
-                          tooltipBehavior: TooltipBehavior(enable: true),
-                          primaryXAxis: CategoryAxis(arrangeByIndex: true),
-                          series: <LineSeries<ChartData, String>>[
-                            LineSeries<ChartData, String>(
-                              dataSource: monthlyData,
-                              width: 2.5,
-                              color: AppConstant.appBarColor,
-                              xValueMapper: (ChartData data, _) => data.month,
-                              yValueMapper: (ChartData data, _) => data.value,
-                              name: "Monthly Users",
-                              markerSettings: MarkerSettings(isVisible: true),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            SfCircularChart(
+                              legend: Legend(
+                                isVisible: true,
+                                overflowMode: LegendItemOverflowMode.wrap,
+                                position: LegendPosition.bottom,
+                              ),
+                              tooltipBehavior: TooltipBehavior(enable: true),
+                              palette: <Color>[
+                                Color(0xFF1976D2), // Blue
+                                Color(0xFFFF9800), // Orange
+                                Color(0xFF4CAF50), // Green
+                                Color(0xFFE91E63), // Pink
+                                Color(0xFF9C27B0), // Purple
+                                Color(0xFFFF5722), // Deep Orange
+                                Color(0xFF009688), // Teal
+                                Color(0xFF607D8B), // Blue Grey
+                              ],
+                              series: <DoughnutSeries<ChartData, String>>[
+                                DoughnutSeries<ChartData, String>(
+                                  dataSource: monthlyData,
+                                  xValueMapper: (ChartData data, _) =>
+                                      data.month,
+                                  yValueMapper: (ChartData data, _) =>
+                                      data.value,
+                                  dataLabelMapper: (ChartData data, _) =>
+                                      '${data.month}: ${data.value}',
+                                  dataLabelSettings: DataLabelSettings(
+                                    isVisible: true,
+                                    labelPosition:
+                                        ChartDataLabelPosition.outside,
+                                    connectorLineSettings:
+                                        ConnectorLineSettings(
+                                          type: ConnectorType.curve,
+                                        ),
+                                  ),
+                                  explode: true,
+                                  explodeIndex: 0,
+                                  innerRadius: '65%',
+                                  // 👈 hole in center
+                                  animationDuration: 1500,
+                                  startAngle: 90,
+                                  endAngle: 450,
+                                ),
+                              ],
+                            ),
+
+                            // 👇 Center Text inside Doughnut
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Total Users",
+                                  style: TextStyle(
+                                    color: Colors.grey[700],
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  totalUsers.toString(),
+                                  style: TextStyle(
+                                    color: AppConstant.appBarColor,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
