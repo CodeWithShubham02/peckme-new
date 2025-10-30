@@ -1,5 +1,4 @@
 =======API URL===========
-Shubham Gupta
 BASE_URL="https://fms.bizipac.com/apinew/ws_new/";
 
 #THIS IS USER AUTH URL
