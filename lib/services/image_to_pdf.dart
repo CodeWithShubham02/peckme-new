@@ -1,23 +1,27 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
+import 'dart:typed_data';
+
 import 'package:aws_s3_api/s3-2006-03-01.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:path/path.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:pdf/pdf.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 import 'package:peckme/services/save_complete_lead.dart';
-import 'dart:typed_data';
-import 'dart:math';
-import 'package:flutter/material.dart'; // for BuildContext, SnackBar
-import 'package:pdf/widgets.dart' as pw; // for PDF widgets
 
-import 'package:shared_preferences/shared_preferences.dart';
+import '../handler/EncryptionHandler.dart';
 
-Future<String?> convertImageToPdfAndSave(File imageFile, String docname, String clientName, String leadId,String uid) async {
-
+Future<String?> convertImageToPdfAndSave(
+  File imageFile,
+  String docname,
+  String clientName,
+  String leadId,
+  String uid,
+  String documentId,
+  String userName,
+) async {
   final compressedBytes = await FlutterImageCompress.compressWithList(
     await imageFile.readAsBytes(),
     quality: 75, // try 30-50 for smaller size
@@ -26,11 +30,7 @@ Future<String?> convertImageToPdfAndSave(File imageFile, String docname, String 
   );
 
   final pdfImage = pw.MemoryImage(compressedBytes);
-  //final pdfImage = pw.MemoryImage(compressedBytes);
   final pdf = pw.Document();
-  //final imageBytes = await imageFile.readAsBytes();
-
-
 
   // 🔹 Get current location
   String latLongText = await _getCurrentLocation();
@@ -39,53 +39,63 @@ Future<String?> convertImageToPdfAndSave(File imageFile, String docname, String 
     pw.Page(
       pageFormat: PdfPageFormat.a4,
       build: (pw.Context context) {
-        // Flutter color → PdfColor
-        final myFlutterColor = Colors.white;
-        final myPdfColor = PdfColor.fromInt(myFlutterColor.value);
-
         return pw.Stack(
           children: [
-            // 🔹 Full-page Background Image
+            // 🔹 Centered Image scaled to fit A4 without distortion
             pw.Positioned.fill(
-              child: pw.Image(
-                pdfImage,
-                fit: pw.BoxFit.cover,
-                //fit:pw.BoxFit.fitHeight,
-                width: PdfPageFormat.a4.width,
-                height: PdfPageFormat.a4.height,
+              child: pw.FittedBox(
+                fit: pw.BoxFit.contain, // 👈 contains inside A4
+                child: pw.Image(
+                  pdfImage,
+                  width: PdfPageFormat.a4.width,
+                  height: PdfPageFormat.a4.height,
+                ),
               ),
             ),
-            // Lat/Long Overlay (bottom left corner)
+            // 🔹 Overlay Info
             pw.Positioned(
-              top: 20,
-              left: 20,
+              top: 450,
+              left: 250,
               child: pw.Opacity(
-                opacity: 0.8, // 🔹 adjust 0.0 (fully transparent) → 1.0 (fully opaque)
+                opacity: 0.5,
                 child: pw.Container(
                   padding: const pw.EdgeInsets.all(6),
-                  color: PdfColors.black, // base color (will respect opacity above)
+                  color: PdfColors.black,
                   child: pw.Column(
-                    mainAxisAlignment: pw.MainAxisAlignment.start,
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Text(
-                        'TO BE USED FOR : $clientName',
+                        'To be used for : $clientName',
                         style: pw.TextStyle(
-                          fontSize: 12,
+                          fontSize: 10,
+                          color: PdfColors.white,
+                        ),
+                      ),
+                      // pw.Text(
+                      //   'Doc Name : $documentId',
+                      //   style: pw.TextStyle(
+                      //     fontSize: 12,
+                      //     color: PdfColors.white,
+                      //   ),
+                      // ),
+                      pw.Text(
+                        '$userName',
+                        style: pw.TextStyle(
+                          fontSize: 10,
                           color: PdfColors.white,
                         ),
                       ),
                       pw.Text(
-                        'Location : $latLongText',
+                        '$latLongText',
                         style: pw.TextStyle(
-                          fontSize: 12,
+                          fontSize: 10,
                           color: PdfColors.white,
                         ),
                       ),
                       pw.Text(
-                        'DATE & TIME : ${DateTime.now()}',
+                        '${DateTime.now()}',
                         style: pw.TextStyle(
-                          fontSize: 12,
+                          fontSize: 10,
                           color: PdfColors.white,
                         ),
                       ),
@@ -99,6 +109,7 @@ Future<String?> convertImageToPdfAndSave(File imageFile, String docname, String 
       },
     ),
   );
+
   print("User ID : $uid");
   int min = 1000;
   int max = 99999999;
@@ -107,42 +118,41 @@ Future<String?> convertImageToPdfAndSave(File imageFile, String docname, String 
 
   print("📄 PDF Size: ${(pdfBytes.length / 1024).toStringAsFixed(2)} KB");
 
-// 🔹 Calculate PDF size
+  // 🔹 Calculate PDF size
   int pdfSizeInBytes = pdfBytes.length;
   double pdfSizeInKB = pdfSizeInBytes / 1024;
-
 
   print("📄 PDF Size MB : ${pdfSizeInBytes.toStringAsFixed(2)} KB");
   print("📄 PDF Size Kb : ${pdfSizeInKB.toStringAsFixed(2)} KB");
 
-  final String docName=docname;
+  final String docName = docname;
   String newStr4 = docName.replaceAll(" ", "_");
   String newStr5 = newStr4.replaceAll("-", "_");
   print(newStr5);
-  final String docCliName=clientName;
+
+  final String docCliName = clientName;
   String newStr6 = docName.replaceAll(" ", "_");
   String newStr7 = newStr6.replaceAll("-", "_");
   print(newStr7);
 
   // 🔹 Unique file name for S3
-  final objectKey = "$docCliName-$leadId-$number.pdf";
+  final objectKey = "$docCliName-$docName-$leadId-$number.pdf";
   String newStr = objectKey.replaceAll(" ", "_");
   String newStr1 = newStr.replaceAll("-", "_");
 
-  final res=await uploadPdfToS3(
+  final res = await uploadPdfToS3(
     pdfFile: pdfBytes,
     bucket: "bizipac-walnut",
     objectKey: newStr1,
-    leadID:leadId,
-    clientName:newStr7,
-    docName:newStr5,
-    loginid:uid,
+    leadID: leadId,
+    clientName: newStr7,
+    docName: newStr5,
+    loginid: uid,
     // context: context,
   );
   // print("✅✅ PDF uploaded to: $uploadedUrl");
-  return 'Uploaded & saved successfully ';
+  return res;
 }
-
 
 /// Upload PDF AWS/MySQL Method
 Future<String?> uploadPdfToS3({
@@ -166,8 +176,14 @@ Future<String?> uploadPdfToS3({
   final s3 = S3(
     region: region,
     credentials: AwsClientCredentials(
-      accessKey: "---------------------------",
-      secretKey: "---------------------------",
+      accessKey: decryptFMS(
+        "TohPtOvObC8NnBOp/1BM30tSr97U803JZ+gqI3Jf4uM=",
+        "QWRTEfnfdys635",
+      ),
+      secretKey: decryptFMS(
+        "Exz2WIEt2w1JRVZREvtIPeRX5Jti2p2mcHqs7Hh87/47BQidFAUAkLOxlzYFlctw",
+        "QWRTEfnfdys635",
+      ),
     ),
   );
 
@@ -176,16 +192,19 @@ Future<String?> uploadPdfToS3({
   try {
     await s3
         .putObject(
-      bucket: bucket,
-      key: objectKey,
-      body: pdfFile,
-      contentLength: pdfFile.length,
-      contentType: 'application/pdf',
-      acl: ObjectCannedACL.publicRead,
-    )
+          bucket: bucket,
+          key: objectKey,
+          body: pdfFile,
+          contentLength: pdfFile.length,
+          contentType: 'application/pdf',
+          acl: ObjectCannedACL.publicRead,
+        )
         .timeout(const Duration(minutes: 2)); // safety timeout
   } on TimeoutException {
-    _notifyStatus('Network is very slow or stalled (upload timeout)', context: context);
+    _notifyStatus(
+      'Network is very slow or stalled (upload timeout)',
+      context: context,
+    );
     return 'Network is very slow or stalled (upload timeout)';
   } catch (e) {
     _notifyStatus('Upload failed: $e', context: context);
@@ -196,14 +215,14 @@ Future<String?> uploadPdfToS3({
 
   // 📏 Calculate upload speed
   final seconds = sw.elapsedMilliseconds / 1000.0;
-  final bits = pdfFile.length * 8;      // bytes → bits
-  final bps = bits / seconds;           // bits per second
-  final mbps = bps / 1e6;               // Mbps
+  final bits = pdfFile.length * 8; // bytes → bits
+  final bps = bits / seconds; // bits per second
+  final mbps = bps / 1e6; // Mbps
 
   final code = _classifySpeed(bps);
   final human = _labelForUser(code);
 
-// ✅ Always show internet status (slow / ok / fast)
+  // ✅ Always show internet status (slow / ok / fast)
   _notifyStatus(
     '$human • Upload speed: ${mbps.toStringAsFixed(2)} Mbps',
     context: context,
@@ -214,7 +233,9 @@ Future<String?> uploadPdfToS3({
   print("Uploaded file URL: $publicUrl");
 
   // 🔹 Save to your MySQL API
-  final Uri api = Uri.parse("https://fms.bizipac.com/apinew/ws_new/add_doc_simple.php");
+  final Uri api = Uri.parse(
+    "https://fms.bizipac.com/apinew/ws_new/add_doc_simple.php",
+  );
   final res = await saveCompletedLeadUrl(
     endpoint: api,
     loginid: loginid,
@@ -230,25 +251,29 @@ Future<String?> uploadPdfToS3({
   } else {
     _notifyStatus('Upload OK, but DB save failed', context: context);
   }
-  return "$res";
+  return publicUrl;
 }
+
 // Optional: basic internet availability check (no plugin)
 Future<bool> _hasInternet() async {
   try {
-    final res = await InternetAddress.lookup('example.com')
-        .timeout(const Duration(seconds: 5));
+    final res = await InternetAddress.lookup(
+      'example.com',
+    ).timeout(const Duration(seconds: 5));
     return res.isNotEmpty && res.first.rawAddress.isNotEmpty;
   } catch (_) {
     return false;
   }
 }
+
 // Classify speed based on bits-per-second (bps)
 String _classifySpeed(double bps) {
-  if (bps < 200000) return 'very_slow';   // <0.2 Mbps
-  if (bps < 1000000) return 'slow';       // 0.2–1 Mbps
-  if (bps < 5000000) return 'ok';         // 1–5 Mbps
-  return 'good';                          // >5 Mbps
+  if (bps < 200000) return 'very_slow'; // <0.2 Mbps
+  if (bps < 1000000) return 'slow'; // 0.2–1 Mbps
+  if (bps < 5000000) return 'ok'; // 1–5 Mbps
+  return 'good'; // >5 Mbps
 }
+
 String _labelForUser(String code) {
   switch (code) {
     case 'very_slow':
@@ -262,6 +287,7 @@ String _labelForUser(String code) {
       return '🚀 Your internet is fast';
   }
 }
+
 // Show message via SnackBar if context diya hai, warna print
 void _notifyStatus(String msg, {BuildContext? context}) {
   if (context != null) {
@@ -298,7 +324,6 @@ void _notifyStatus(String msg, {BuildContext? context}) {
   }
 }
 
-
 /// 🔹 Helper function: fetch current location
 Future<String> _getCurrentLocation() async {
   bool serviceEnabled;
@@ -320,9 +345,9 @@ Future<String> _getCurrentLocation() async {
     return "Permission permanently denied";
   }
 
-  Position position =
-  await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+  Position position = await Geolocator.getCurrentPosition(
+    desiredAccuracy: LocationAccuracy.high,
+  );
 
   return "${position.latitude},${position.longitude}";
 }
-
