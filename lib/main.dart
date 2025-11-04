@@ -77,10 +77,10 @@ class MyApp extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.system_update,
                         size: 80,
-                        color: Colors.red,
+                        color: AppConstant.appBarColor,
                       ),
                       Text(
                         "You are using the current version ($localVersion)",

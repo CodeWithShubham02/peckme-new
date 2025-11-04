@@ -352,6 +352,106 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       onPressed: () async {
                         Navigator.pop(context);
                       },
+                      onLongPress: () async {
+                        // 1️⃣ Fetch server key first
+                        GetServerKey getServerKey = GetServerKey();
+                        String? serverKey = await getServerKey
+                            .getServerKeyToken();
+                        print("----------------------");
+                        print(serverKey);
+                        print("------------------------");
+
+                        // 2️⃣ Show password dialog
+                        TextEditingController _passwordController =
+                            TextEditingController();
+                        bool passwordCorrect = false;
+
+                        await showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          // user must tap OK or Cancel
+                          builder: (context) {
+                            return AlertDialog(
+                              title: Text("Enter Password"),
+                              content: TextField(
+                                controller: _passwordController,
+                                obscureText: true,
+                                decoration: InputDecoration(
+                                  hintText: "Password",
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(
+                                      context,
+                                    ).pop(); // Cancel pressed
+                                  },
+                                  child: Text("Cancel"),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    try {
+                                      final snapshot = await FirebaseFirestore
+                                          .instance
+                                          .collection("admin")
+                                          .get();
+                                      if (snapshot.docs.isEmpty) {
+                                        print(
+                                          "No documents found in auth_id_status",
+                                        );
+                                      }
+                                      // Loop through each document
+                                      for (var doc in snapshot.docs) {
+                                        final data = doc.data();
+
+                                        // Safely access 'status'
+                                        final status =
+                                            data['login_auth'] ??
+                                            "No status field";
+                                        if (_passwordController.text.trim() ==
+                                            status) {
+                                          passwordCorrect = true;
+                                          Navigator.of(context).pop();
+                                        } else {
+                                          // Optional: show error
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                "Incorrect password",
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text("Welcome"),
+                                            duration: Duration(seconds: 2),
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      print("Error : $e");
+                                    }
+                                  },
+                                  child: Text("OK"),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+
+                        // 3️⃣ Navigate only if password correct
+                        if (passwordCorrect) {
+                          Get.to(
+                            () => SendMessageScreen(serverKeys: serverKey),
+                          );
+                        }
+                      },
                       icon: Text(
                         'No',
                         style: TextStyle(color: AppConstant.whiteBackColor),
@@ -375,85 +475,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               );
             },
             icon: Icon(Icons.logout, color: AppConstant.appBarWhiteColor),
-            onLongPress: () async {
-              // 1️⃣ Fetch server key first
-              GetServerKey getServerKey = GetServerKey();
-              String? serverKey = await getServerKey.getServerKeyToken();
-              print("----------------------");
-              print(serverKey);
-              print("------------------------");
-
-              // 2️⃣ Show password dialog
-              TextEditingController _passwordController =
-                  TextEditingController();
-              bool passwordCorrect = false;
-
-              await showDialog(
-                context: context,
-                barrierDismissible: false, // user must tap OK or Cancel
-                builder: (context) {
-                  return AlertDialog(
-                    title: Text("Enter Password"),
-                    content: TextField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      decoration: InputDecoration(hintText: "Password"),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop(); // Cancel pressed
-                        },
-                        child: Text("Cancel"),
-                      ),
-                      ElevatedButton(
-                        onPressed: () async {
-                          try {
-                            final snapshot = await FirebaseFirestore.instance
-                                .collection("admin")
-                                .get();
-                            if (snapshot.docs.isEmpty) {
-                              print("No documents found in auth_id_status");
-                            }
-                            // Loop through each document
-                            for (var doc in snapshot.docs) {
-                              final data = doc.data();
-
-                              // Safely access 'status'
-                              final status =
-                                  data['login_auth'] ?? "No status field";
-                              if (_passwordController.text.trim() == status) {
-                                passwordCorrect = true;
-                                Navigator.of(context).pop();
-                              } else {
-                                // Optional: show error
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text("Incorrect password")),
-                                );
-                              }
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text("Welcome"),
-                                  duration: Duration(seconds: 2),
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            print("Error : $e");
-                          }
-                        },
-                        child: Text("OK"),
-                      ),
-                    ],
-                  );
-                },
-              );
-
-              // 3️⃣ Navigate only if password correct
-              if (passwordCorrect) {
-                Get.to(() => SendMessageScreen(serverKeys: serverKey));
-              }
-            },
           ),
         ],
       ),

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../view/widget/get_notification_screen.dart';
 
@@ -130,11 +131,12 @@ class NotificationService {
       print('🔁 Skipping duplicate notification: $msgId');
       return;
     }
-
+    print(message.data['url']);
     await ref.add({
       'messageId': msgId,
       'title': message.notification?.title ?? '',
       'body': message.notification?.body ?? '',
+      'url': message.data['url'],
       'sentTime':
           message.sentTime?.toIso8601String() ??
           DateTime.now().toIso8601String(),
@@ -216,6 +218,14 @@ class NotificationService {
     RemoteMessage message,
   ) async {
     await saveNotificationToFirebase(message);
+    final url = message.data['url'];
+    if (url != null && url.isNotEmpty) {
+      final Uri uri = Uri.parse(url);
+      print(uri);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    }
     Get.to(() => GetNotificationScreen());
     //Get.to(() => DashboardScreen());
   }

@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:geocoding/geocoding.dart';
@@ -250,18 +249,10 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
     super.initState();
     _getLocation();
     // load user data and then fetch initial leads
-    checkWorkingApi().then((status) {
-      if (status == "200") {
-        loadUserData().then((_) {
-          setState(() {
-            leads = _fetchLeadsFromApi();
-          });
-        });
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("something went wrong.!!")),
-        );
-      }
+    loadUserData().then((_) {
+      setState(() {
+        leads = _fetchLeadsFromApi();
+      });
     });
   }
 
@@ -781,27 +772,5 @@ class _ReceivedLeadScreenState extends State<ReceivedLeadScreen> {
         child: const Icon(Icons.refresh, color: AppConstant.whiteBackColor),
       ),
     );
-  }
-
-  Future<String> checkWorkingApi() async {
-    try {
-      final snapshot = await FirebaseFirestore.instance
-          .collection("testing")
-          .get();
-
-      if (snapshot.docs.isEmpty) {
-        return "No testing documents";
-      }
-
-      // Get the first document's data
-      final data = snapshot.docs.first.data();
-      final status = data['status'] ?? "No status field";
-
-      print("Status: $status");
-      return status.toString();
-    } catch (e) {
-      print("Error fetching working_api: $e");
-      return "Error";
-    }
   }
 }
