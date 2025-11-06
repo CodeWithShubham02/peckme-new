@@ -116,8 +116,8 @@ class NotificationService {
     String? mobile = await getMobile();
     if (mobile == null || mobile.isEmpty) return;
 
-    // Use consistent ID for duplicate prevention
     final msgId =
+        message.data['id'] ??
         message.messageId ??
         "${message.notification?.title}-${message.notification?.body}";
 
@@ -126,13 +126,16 @@ class NotificationService {
         .doc(mobile)
         .collection('notifications');
 
-    final existing = await ref.where('messageId', isEqualTo: msgId).get();
-    if (existing.docs.isNotEmpty) {
+    // ✅ Use doc instead of add
+    final docRef = ref.doc(msgId);
+    final docSnapshot = await docRef.get();
+
+    if (docSnapshot.exists) {
       print('🔁 Skipping duplicate notification: $msgId');
       return;
     }
-    print(message.data['url']);
-    await ref.add({
+
+    await docRef.set({
       'messageId': msgId,
       'title': message.notification?.title ?? '',
       'body': message.notification?.body ?? '',
