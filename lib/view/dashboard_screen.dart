@@ -25,6 +25,7 @@ import '../controller/dashboard_counts_controller.dart';
 import '../controller/lead_status_services.dart';
 import '../model/dashboard_response_model.dart';
 import '../services/get_server_key.dart';
+import '../services/update_auth_id.dart';
 import '../utils/app_constant.dart';
 import 'auth/login.dart';
 
@@ -241,6 +242,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
           style: TextStyle(color: AppConstant.appBarWhiteColor),
         ),
         actions: [
+          Padding(
+            padding: const EdgeInsets.all(5.0),
+            child: IconButton(
+              icon: const Icon(Icons.refresh_outlined, color: Colors.white),
+              onPressed: () async {
+                try {
+                  final snapshot = await FirebaseFirestore.instance
+                      .collection("auth_id_status")
+                      .get();
+                  if (snapshot.docs.isEmpty) {
+                    print("No documents found in auth_id_status");
+                  }
+                  // Loop through each document
+                  for (var doc in snapshot.docs) {
+                    final data = doc.data() as Map<String, dynamic>;
+
+                    // Safely access 'status'
+                    final status = data['status'] ?? "No status field";
+                    print("------------------------------------------");
+                    print("Status: $status");
+                    print("-------------------------------------------");
+                    if (status == "active") {
+                      await updateAuthId(
+                        uid!,
+                        onUpdated: (newAuthId) {
+                          setState(() {
+                            authId = newAuthId; // ✅ Local UI state update
+                          });
+                        },
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Letest Ban ID : $authId updated.!!"),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    } else if (status == "inactive") {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Something went wrong."),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Working mode enabled"),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  print("Error : $e");
+                }
+              },
+            ),
+          ),
           mobile.isEmpty
               ? IconButton(
                   onPressed: null,
