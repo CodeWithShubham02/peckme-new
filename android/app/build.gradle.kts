@@ -34,7 +34,7 @@ android {
         minSdk = 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
-        versionName = "1.0.4"
+        versionName = "1.0.7"
         multiDexEnabled = true
     }
 
@@ -77,6 +77,7 @@ android {
 dependencies {
     // Firebase BoM
     implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
+
     implementation(files("libs/icici.aar"))
     implementation(files("libs/itext5-itextpdf-5.5.12.jar"))
 
