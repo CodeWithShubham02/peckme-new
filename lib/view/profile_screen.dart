@@ -1,9 +1,16 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:aws_s3_api/s3-2006-03-01.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:peckme/view/widget/terms_conditions_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../services/update_auth_id.dart';
+import '../handler/EncryptionHandler.dart';
 import '../utils/app_constant.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -78,6 +85,188 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   late String? address = '';
 
+  //----------------upload photo------------
+  File? _image;
+
+  void _openImageDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text("Upload Photo"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _image != null
+                      ? Image.file(_image!, height: 150)
+                      : const Text("No image selected"),
+
+                  const SizedBox(height: 10),
+
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.camera_alt),
+                    label: const Text("click here"),
+                    onPressed: () async {
+                      final picker = ImagePicker();
+                      final pickedFile = await picker.pickImage(
+                        source: ImageSource.camera,
+                        imageQuality: 70,
+                      );
+
+                      if (pickedFile != null) {
+                        setState(() {
+                          _image = File(pickedFile.path);
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (_image != null) {
+                      _uploadImage(_image!);
+                    }
+                  },
+                  child: const Text("Upload"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _uploadImage(File imageFile) async {
+    try {
+      print("UID: $uid");
+
+      // 1. Convert to bytes
+      Uint8List bytes = (await imageFile.readAsBytes());
+
+      // 2. Generate file name
+      String fileName =
+          "user_${uid}_${DateTime.now().millisecondsSinceEpoch}.jpg";
+
+      // 3. Upload to S3
+      String? imageUrl = await uploadImageToS3(
+        imageBytes: bytes,
+        bucket: "bizipac-s3",
+        objectKey: "user_images/$fileName",
+      );
+
+      if (imageUrl == null) {
+        print("S3 upload failed");
+        return;
+      }
+      print("---------------------");
+      print("S3 URL: $imageUrl");
+
+      // 4. Send URL to your PHP API
+      await _saveImageUrlToDB(context, uid!, imageUrl);
+      //show the snackbar and your profile images updated and please re login first
+      Navigator.pop(context);
+    } catch (e) {
+      print("Error: $e");
+    }
+  }
+
+  Future<String> uploadImageToS3({
+    required Uint8List imageBytes,
+    required String bucket,
+    required String objectKey,
+    String region = 'ap-south-1',
+  }) async {
+    final s3 = S3(
+      region: region,
+      credentials: AwsClientCredentials(
+        accessKey: decryptFMS(
+          "TohPtOvObC8NnBOp/1BM30tSr97U803JZ+gqI3Jf4uM=",
+          "QWRTEfnfdys635",
+        ),
+        secretKey: decryptFMS(
+          "Exz2WIEt2w1JRVZREvtIPeRX5Jti2p2mcHqs7Hh87/47BQidFAUAkLOxlzYFlctw",
+          "QWRTEfnfdys635",
+        ),
+      ),
+    );
+
+    await s3.putObject(
+      bucket: bucket,
+      key: objectKey,
+      contentType: 'image/jpeg',
+    );
+
+    return "https://$bucket.s3.$region.amazonaws.com/$objectKey";
+  }
+
+  Future<void> _saveImageUrlToDB(
+    BuildContext context,
+    String uid,
+    String imageUrl,
+  ) async {
+    var url = Uri.parse(
+      "https://fms.bizipac.com/apinew/ws_new/upload_user_image.php",
+    );
+
+    try {
+      var response = await http.post(
+        url,
+        body: {"uid": uid, "image_url": imageUrl},
+      );
+
+      var data = jsonDecode(response.body);
+
+      print("-----------------------------------------------");
+      print(data);
+      print("-------------------------------------------------");
+
+      if (!context.mounted) return;
+
+      if (data["success"] == 1) {
+        // ✅ Close dialog
+        Navigator.pop(context);
+
+        // ✅ Show success snackbar
+        Get.snackbar(
+          "Profile image updated ✅.",
+          " Please re-login. ",
+          icon: Image.asset("assets/logo/cmp_logo.png", height: 30, width: 30),
+          shouldIconPulse: true,
+          backgroundColor: AppConstant.snackBackColor,
+          colorText: AppConstant.snackFontColor,
+          snackPosition: SnackPosition.BOTTOM,
+          borderRadius: 15,
+          margin: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          duration: const Duration(seconds: 4),
+          isDismissible: true,
+          forwardAnimationCurve: Curves.easeOutBack,
+        );
+      } else {
+        // ❌ Error snackbar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(data["message"] ?? "Update failed")),
+        );
+      }
+    } catch (e) {
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: $e")));
+    }
+  }
+
+  //---------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -90,65 +279,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         iconTheme: IconThemeData(color: AppConstant.appBarWhiteColor),
         actions: [
-          Padding(
-            padding: const EdgeInsets.all(5.0),
-            child: IconButton(
-              icon: const Icon(Icons.refresh_outlined),
-              onPressed: () async {
-                try {
-                  final snapshot = await FirebaseFirestore.instance
-                      .collection("auth_id_status")
-                      .get();
-                  if (snapshot.docs.isEmpty) {
-                    print("No documents found in auth_id_status");
-                  }
-                  // Loop through each document
-                  for (var doc in snapshot.docs) {
-                    final data = doc.data() as Map<String, dynamic>;
-
-                    // Safely access 'status'
-                    final status = data['status'] ?? "No status field";
-                    print("------------------------------------------");
-                    print("Status: $status");
-                    print("-------------------------------------------");
-                    if (status == "active") {
-                      await updateAuthId(
-                        uid!,
-                        onUpdated: (newAuthId) {
-                          setState(() {
-                            authId = newAuthId; // ✅ Local UI state update
-                          });
-                        },
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text("Letest Ban ID : $authId updated.!!"),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    } else if (status == "inactive") {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Something went wrong."),
-                          duration: Duration(seconds: 1),
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Working mode enabled"),
-                          duration: Duration(seconds: 1),
-                        ),
-                      );
-                    }
-                  }
-                } catch (e) {
-                  print("Error : $e");
-                }
-              },
-            ),
+          IconButton(
+            icon: const Icon(Icons.photo_camera),
+            onPressed: () {
+              _openImageDialog(context);
+            },
           ),
-
           Padding(
             padding: const EdgeInsets.all(5.0),
             child: IconButton(

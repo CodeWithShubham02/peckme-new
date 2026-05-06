@@ -45,7 +45,6 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
     _loadUsers();
   }
 
-  /// 🔹 Firestore से सभी users load करना
   void _loadUsers() {
     FirebaseFirestore.instance.collection('users').snapshots().listen((snap) {
       setState(() {
@@ -69,7 +68,7 @@ class _SendMessageScreenState extends State<SendMessageScreen> {
     });
   }
 
-  /// 🔹 Multiple Users को message भेजना
+  /// 🔹 Send the Message Multiple Users
   Future<void> _sendMessage() async {
     if (selectedUsers.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(

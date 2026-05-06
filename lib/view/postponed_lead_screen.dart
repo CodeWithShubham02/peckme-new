@@ -194,7 +194,7 @@ class _PostponeLeadScreenState extends State<PostponeLeadScreen> {
                 textInputAction: TextInputAction.newline,
                 inputFormatters: [
                   FilteringTextInputFormatter.deny(
-                    RegExp(r"[!@#\$%\^&\*\(\)_\+]"),
+                    RegExp(r"[!@#\$%\^&\*\(\)_\+']"),
                   ),
                 ],
                 decoration: InputDecoration(

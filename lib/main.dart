@@ -66,7 +66,11 @@ class MyApp extends StatelessWidget {
           }
 
           if (!snapshot.hasData || snapshot.data == null) {
-            return const Center(child: Text("Unable to verify app version."));
+            return const Center(
+              child: Text(
+                "Your internet is off. Please check WiFi or Mobile Data.",
+              ),
+            );
           }
 
           final latestVersion = snapshot.data!;

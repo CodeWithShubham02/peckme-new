@@ -8,6 +8,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:peckme/services/fcm_service.dart';
 import 'package:peckme/services/notification_service.dart';
 import 'package:peckme/view/notification/send_notification_screen.dart';
@@ -25,7 +26,6 @@ import '../controller/dashboard_counts_controller.dart';
 import '../controller/lead_status_services.dart';
 import '../model/dashboard_response_model.dart';
 import '../services/get_server_key.dart';
-import '../services/update_auth_id.dart';
 import '../utils/app_constant.dart';
 import 'auth/login.dart';
 
@@ -58,7 +58,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       package: 'com.example.peckme', // ⚠️ यह आपके app का packageName होना चाहिए
       flags: <int>[Flag.FLAG_ACTIVITY_NEW_TASK],
     );
-
     await intent.launch();
   }
 
@@ -229,10 +228,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final String timeString =
-        '${_currentTime.hour.toString().padLeft(2, '0')}:'
-        '${_currentTime.minute.toString().padLeft(2, '0')}:'
-        '${_currentTime.second.toString().padLeft(2, '0')}';
+    final now = _currentTime;
+
+    final formatted = DateFormat('dd MMM yyyy, hh:mm:ss a').format(now);
     return Scaffold(
       appBar: AppBar(
         iconTheme: IconThemeData(color: Colors.black),
@@ -242,64 +240,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           style: TextStyle(color: AppConstant.appBarWhiteColor),
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.all(5.0),
-            child: IconButton(
-              icon: const Icon(Icons.refresh_outlined, color: Colors.white),
-              onPressed: () async {
-                try {
-                  final snapshot = await FirebaseFirestore.instance
-                      .collection("auth_id_status")
-                      .get();
-                  if (snapshot.docs.isEmpty) {
-                    print("No documents found in auth_id_status");
-                  }
-                  // Loop through each document
-                  for (var doc in snapshot.docs) {
-                    final data = doc.data() as Map<String, dynamic>;
-
-                    // Safely access 'status'
-                    final status = data['status'] ?? "No status field";
-                    print("------------------------------------------");
-                    print("Status: $status");
-                    print("-------------------------------------------");
-                    if (status == "active") {
-                      await updateAuthId(
-                        uid!,
-                        onUpdated: (newAuthId) {
-                          setState(() {
-                            authId = newAuthId; // ✅ Local UI state update
-                          });
-                        },
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text("Letest Ban ID : $authId updated.!!"),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    } else if (status == "inactive") {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Something went wrong."),
-                          duration: Duration(seconds: 1),
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Working mode enabled"),
-                          duration: Duration(seconds: 1),
-                        ),
-                      );
-                    }
-                  }
-                } catch (e) {
-                  print("Error : $e");
-                }
-              },
-            ),
-          ),
           mobile.isEmpty
               ? IconButton(
                   onPressed: null,
@@ -1308,7 +1248,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "Current Time : ".toUpperCase(),
+                  "Date/Time : ",
                   style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -1316,7 +1256,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 Text(
-                  timeString,
+                  formatted,
                   style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.normal,

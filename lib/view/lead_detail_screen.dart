@@ -157,11 +157,11 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
   }) async {
     try {
       final result = await platform.invokeMethod<String>('callNativeMethod', {
-        "client_id": clientId, // You can change this dynamically
-        "lead_id": leadId, // You can change this dynamically
-        "sessionId": sessionId, // You can change this dynamically
+        "client_id": clientId,
+        "lead_id": leadId,
+        "sessionId": sessionId,
         "amzAppID": amzAppID,
-        "customerName": customerName, // You can change this dynamically
+        "customerName": customerName,
         "user_id": user_id,
         "branch_id": branch_id,
         "auth_id": auth_id,
@@ -584,13 +584,6 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                                                   _infoRow(
                                                     "Client Name",
                                                     lead.clientName,
-                                                  ),
-                                                if (lead.doc != null &&
-                                                    lead.doc!.isNotEmpty)
-                                                  _infoRow(
-                                                    "Doc By Tc",
-                                                    lead.doc,
-                                                    maxLines: 5,
                                                   ),
                                                 if (lead.doc != null &&
                                                     lead.doc!.isNotEmpty)
@@ -1353,6 +1346,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                                           customerName: lead.customerName,
                                           client: lead.clientName,
                                           leadid: lead.leadId,
+                                          clientid: lead.clientId,
                                           //fidatal: lead.fiData,
                                         ),
                                       ),
@@ -1398,6 +1392,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                                           customerName: lead.customerName,
                                           client: lead.clientName,
                                           leadid: lead.leadId,
+                                          clientid: lead.clientId, //add
                                           //fidatal: lead.fiData,
                                         ),
                                       ),
@@ -1503,7 +1498,6 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                             ),
                           )
                         : SizedBox.shrink(),
-
                     (lead.client_mobile_app == "2" && lead.fiData == 1) ||
                             (lead.client_mobile_app == '1' &&
                                 lead.clientId == "89") ||
