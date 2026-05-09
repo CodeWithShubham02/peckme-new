@@ -43,6 +43,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       profile = prefs.getString('image') ?? '';
       address = prefs.getString('address') ?? '';
     });
+    fetchUserImage();
   }
 
   @override
@@ -53,6 +54,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
     print("-----");
     print(profile);
     print(company_name);
+  }
+
+  Future<void> fetchUserImage() async {
+    try {
+      var response = await http.post(
+        Uri.parse("https://fms.bizipac.com/apinew/ws_new/get_user_image.php"),
+        body: {"uid": uid},
+      );
+
+      print(response.body);
+
+      var data = jsonDecode(response.body);
+
+      if (data['success'] == 1) {
+        String imageUrl = data['avatar'];
+
+        setState(() {
+          profile = imageUrl;
+        });
+
+        // Save latest image locally
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+        await prefs.setString('image', imageUrl);
+
+        print("Profile Updated");
+      }
+    } catch (e) {
+      print("Fetch Image Error: $e");
+    }
   }
 
   String formatRoleName(String text) {
@@ -99,44 +130,92 @@ class _ProfileScreenState extends State<ProfileScreen> {
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Preview
                   _image != null
-                      ? Image.file(_image!, height: 150)
-                      : const Text("No image selected"),
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.file(
+                            _image!,
+                            height: 150,
+                            width: 150,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : const CircleAvatar(
+                          radius: 50,
+                          child: Icon(Icons.person, size: 50),
+                        ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 20),
 
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text("click here"),
-                    onPressed: () async {
-                      final picker = ImagePicker();
-                      final pickedFile = await picker.pickImage(
-                        source: ImageSource.camera,
-                        imageQuality: 70,
-                      );
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      // Camera Button
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.camera_alt),
+                        label: const Text("Camera"),
+                        onPressed: () async {
+                          final picker = ImagePicker();
 
-                      if (pickedFile != null) {
-                        setState(() {
-                          _image = File(pickedFile.path);
-                        });
-                      }
-                    },
+                          final pickedFile = await picker.pickImage(
+                            source: ImageSource.camera,
+                            imageQuality: 70,
+                          );
+
+                          if (pickedFile != null) {
+                            setState(() {
+                              _image = File(pickedFile.path);
+                            });
+                          }
+                        },
+                      ),
+
+                      // Gallery Button
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.photo),
+                        label: const Text("Gallery"),
+                        onPressed: () async {
+                          final picker = ImagePicker();
+
+                          final pickedFile = await picker.pickImage(
+                            source: ImageSource.gallery,
+                            imageQuality: 70,
+                          );
+
+                          if (pickedFile != null) {
+                            setState(() {
+                              _image = File(pickedFile.path);
+                            });
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () {
+                    setState(() {
+                      _image = null;
+                    });
+
+                    Navigator.pop(context);
+                  },
                   child: const Text("Cancel"),
                 ),
-                ElevatedButton(
-                  onPressed: () {
-                    if (_image != null) {
-                      _uploadImage(_image!);
-                    }
-                  },
-                  child: const Text("Upload"),
-                ),
+
+                _image == null
+                    ? const SizedBox.shrink()
+                    : ElevatedButton(
+                        onPressed: () {
+                          if (_image != null) {
+                            _uploadImage(_image!);
+                          }
+                        },
+                        child: const Text("Upload"),
+                      ),
               ],
             );
           },
@@ -152,6 +231,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // 1. Convert to bytes
       Uint8List bytes = (await imageFile.readAsBytes());
 
+      print("Image Size: ${bytes.lengthInBytes / 1024} KB");
       // 2. Generate file name
       String fileName =
           "user_${uid}_${DateTime.now().millisecondsSinceEpoch}.jpg";
@@ -203,6 +283,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       bucket: bucket,
       key: objectKey,
       contentType: 'image/jpeg',
+      body: imageBytes,
+      acl: ObjectCannedACL.publicRead,
     );
 
     return "https://$bucket.s3.$region.amazonaws.com/$objectKey";
@@ -238,7 +320,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // ✅ Show success snackbar
         Get.snackbar(
           "Profile image updated ✅.",
-          " Please re-login. ",
+          "Check your profile screen",
           icon: Image.asset("assets/logo/cmp_logo.png", height: 30, width: 30),
           shouldIconPulse: true,
           backgroundColor: AppConstant.snackBackColor,
@@ -357,14 +439,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     height: 120,
                     decoration: BoxDecoration(
                       border: Border.all(color: AppConstant.borderColor),
-                      image: DecorationImage(
-                        image: profile!.startsWith('http')
-                            ? NetworkImage(profile!)
-                            : AssetImage(profile!) as ImageProvider,
-                        // cast needed
-                        fit: BoxFit.cover,
-                      ),
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(16),
+                      image:
+                          profile != null &&
+                              profile!.isNotEmpty &&
+                              profile!.startsWith('http')
+                          ? DecorationImage(
+                              image: NetworkImage(profile!),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
                     ),
+
+                    child: profile == null || profile!.isEmpty
+                        ? const Center(
+                            child: Icon(
+                              Icons.person,
+                              size: 50,
+                              color: Colors.grey,
+                            ),
+                          )
+                        : null,
                   ),
                 ),
                 SizedBox(height: 20),

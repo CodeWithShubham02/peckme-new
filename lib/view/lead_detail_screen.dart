@@ -510,154 +510,128 @@ class _LeadDetailScreenState extends State<LeadDetailScreen> {
                                                 ),
 
                                                 //----------------------
-                                                if (lead.product != null &&
-                                                    lead.product!.isNotEmpty)
+                                                if (lead.product.isNotEmpty)
                                                   _infoRow(
                                                     "Product",
                                                     lead.product,
                                                   ),
-                                                if (lead.source != null &&
-                                                    lead.source!.isNotEmpty)
+                                                if (lead.source.isNotEmpty)
                                                   _infoRow(
                                                     "Source",
                                                     lead.source,
                                                   ),
-                                                if (lead.appLoc != null &&
-                                                    lead.appLoc!.isNotEmpty)
+                                                if (lead.appLoc.isNotEmpty)
                                                   _infoRow(
                                                     "App Location",
                                                     lead.appLoc,
                                                   ),
-                                                if (lead.empName != null &&
-                                                    lead.empName!.isNotEmpty)
+                                                if (lead.empName.isNotEmpty)
                                                   _infoRow(
                                                     "Corp Name",
                                                     lead.empName,
                                                   ),
-                                                if (lead.compId != null &&
-                                                    lead.compId!.isNotEmpty)
+                                                if (lead.compId.isNotEmpty)
                                                   _infoRow(
                                                     "Corp Id",
                                                     lead.compId,
                                                   ),
-                                                if (lead.productCode != null &&
-                                                    lead
-                                                        .productCode!
-                                                        .isNotEmpty)
+                                                if (lead.productCode.isNotEmpty)
                                                   _infoRow(
                                                     "Product code",
                                                     lead.productCode,
                                                     maxLines: 5,
                                                   ),
-                                                if (lead.source2 != null &&
-                                                    lead.source2!.isNotEmpty)
+                                                if (lead.source2.isNotEmpty)
                                                   _infoRow(
                                                     "Product Category",
                                                     lead.source2,
                                                     maxLines: 5,
                                                   ),
-                                                if (lead.formNo != null &&
-                                                    lead.formNo!.isNotEmpty)
+                                                if (lead.formNo.isNotEmpty)
                                                   _infoRow(
                                                     "Card No",
                                                     lead.formNo,
                                                     maxLines: 5,
                                                   ),
-                                                if (lead.source3 != null &&
-                                                    lead.source3!.isNotEmpty)
+                                                if (lead.source3.isNotEmpty)
                                                   _infoRow(
                                                     "Proxy No",
                                                     lead.source3,
                                                     maxLines: 5,
                                                   ),
-                                                if (lead.city != null &&
-                                                    lead.city!.isNotEmpty)
+                                                if (lead.city.isNotEmpty)
                                                   _infoRow("City", lead.city),
-                                                if (lead.offPincode != null &&
-                                                    lead.offPincode!.isNotEmpty)
+                                                if (lead.offPincode.isNotEmpty)
                                                   _infoRow(
                                                     "Office Pin Code",
                                                     lead.offPincode,
                                                   ),
-                                                if (lead.clientName != null &&
-                                                    lead.clientName!.isNotEmpty)
+                                                if (lead.clientName.isNotEmpty)
                                                   _infoRow(
                                                     "Client Name",
                                                     lead.clientName,
                                                   ),
-                                                if (lead.doc != null &&
-                                                    lead.doc!.isNotEmpty)
+                                                if (lead.doc.isNotEmpty)
                                                   _infoRow(
                                                     "Doc By Tc",
                                                     lead.doc,
                                                     maxLines: 5,
                                                   ),
-                                                if (lead.accHolder != null &&
-                                                    lead.accHolder!.isNotEmpty)
+                                                if (lead.accHolder.isNotEmpty)
                                                   _infoRow(
                                                     "SIM No",
                                                     lead.accHolder,
                                                   ),
-                                                if (lead.aadharCard != null &&
-                                                    lead.aadharCard!.isNotEmpty)
+                                                if (lead.aadharCard.isNotEmpty)
                                                   _infoRow(
                                                     "Aadharcard",
                                                     lead.aadharCard,
                                                   ),
-                                                if (lead.athenaLeadId != null &&
-                                                    lead
-                                                        .athenaLeadId!
-                                                        .isNotEmpty)
+                                                if (lead
+                                                    .athenaLeadId
+                                                    .isNotEmpty)
                                                   _infoRow(
                                                     "App No",
                                                     lead.athenaLeadId,
                                                   ),
-                                                if (lead.appAdd != null &&
-                                                    lead.appAdd!.isNotEmpty)
+                                                if (lead.appAdd.isNotEmpty)
                                                   _infoRow(
                                                     "App Add",
                                                     lead.appAdd,
                                                   ),
-                                                if (lead.secCode != null &&
-                                                    lead.secCode!.isNotEmpty)
+                                                if (lead.secCode.isNotEmpty)
                                                   _infoRow(
                                                     "Device Id ",
                                                     lead.secCode,
                                                   ),
-                                                if (lead.compName != null &&
-                                                    lead.compName!.isNotEmpty)
+                                                if (lead.compName.isNotEmpty)
                                                   _infoRow(
                                                     "UPI Id",
                                                     lead.compName,
                                                   ),
-                                                if (lead.resPin != null &&
-                                                    lead.resPin!.isNotEmpty)
+                                                if (lead.resPin.isNotEmpty)
                                                   _infoRow(
                                                     "Res Pin Code",
                                                     lead.resPin,
                                                   ),
-                                                if (lead.location != null &&
-                                                    lead.location!.isNotEmpty)
+                                                if (lead.location.isNotEmpty)
                                                   _infoRow(
                                                     "Location",
                                                     lead.location,
                                                   ),
-                                                if (lead.appAdd != null &&
-                                                    lead.appAdd!.isNotEmpty)
+                                                if (lead.appAdd.isNotEmpty)
                                                   _infoRow(
                                                     "App Address",
                                                     lead.appAdd,
                                                     maxLines: 5,
                                                   ),
-                                                if (lead.offAddress != null &&
-                                                    lead.offAddress!.isNotEmpty)
+                                                if (lead.offAddress.isNotEmpty)
                                                   _infoRow(
                                                     "Off Address",
                                                     lead.offAddress,
                                                     maxLines: 5,
                                                   ),
-                                                if (lead.resAddress != null &&
-                                                    lead.resAddress!.isNotEmpty)
+                                                if (lead.resAddress.isNotEmpty)
                                                   _infoRow(
                                                     "Res Address",
                                                     lead.resAddress,
