@@ -34,7 +34,7 @@ android {
         minSdk = 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
-        versionName = "1.0.7"
+        versionName = "1.0.8"
         multiDexEnabled = true
     }
 
@@ -43,6 +43,7 @@ android {
         create("release") {
             val keyProperties = Properties()
             val keyFile = rootProject.file("key.properties")
+
             if (keyFile.exists()) {
                 keyFile.inputStream().use { keyProperties.load(it) }
                 storeFile = file(keyProperties["storeFile"]!!)
